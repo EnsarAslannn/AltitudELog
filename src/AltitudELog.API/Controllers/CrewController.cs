@@ -19,6 +19,7 @@ public class CrewController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Captain")]
     public async Task<ActionResult<Guid>> Create(CreateCrewCommand command, CancellationToken cancellationToken)
     {
         var id = await _mediator.Send(command, cancellationToken);
