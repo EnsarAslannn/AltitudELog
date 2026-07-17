@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AltitudELog.API/AltitudELog.API.csproj" />
+    <Project Path="src/AltitudELog.Application/AltitudELog.Application.csproj" />
+    <Project Path="src/AltitudELog.Domain/AltitudELog.Domain.csproj" />
+    <Project Path="src/AltitudELog.Infrastructure/AltitudELog.Infrastructure.csproj" />
+  </Folder>
+</Solution>
