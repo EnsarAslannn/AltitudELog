@@ -30,6 +30,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             throw new InvalidOperationException($"Username '{request.Username}' is already taken.");
         }
 
+        var licenseNumberTaken = await _context.Pilots
+            .AnyAsync(p => p.LicenseNumber == request.LicenseNumber, cancellationToken);
+
+        if (licenseNumberTaken)
+        {
+            throw new InvalidOperationException($"License number '{request.LicenseNumber}' is already registered.");
+        }
+
         var pilot = new Pilot
         {
             Id = Guid.NewGuid(),
@@ -42,7 +50,15 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         pilot.PasswordHash = _passwordHasher.HashPassword(pilot, request.Password);
 
         _context.Pilots.Add(pilot);
-        await _context.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new InvalidOperationException("Username or license number is already registered.", ex);
+        }
 
         _logger.LogInformation(
             "Pilot {PilotId} registered with username {Username}", pilot.Id, pilot.Username);

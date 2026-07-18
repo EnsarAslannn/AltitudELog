@@ -59,4 +59,20 @@ public class RegisterCommandHandlerTests
 
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
+
+    [Fact]
+    public async Task Handle_Should_Throw_When_LicenseNumber_Already_Taken()
+    {
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+        var licenseNumber = $"LIC-{Guid.NewGuid():N}";
+
+        await handler.Handle(
+            new RegisterCommand("pilot_one", "P@ssw0rd123!", "Test Pilot", licenseNumber), CancellationToken.None);
+
+        var act = () => handler.Handle(
+            new RegisterCommand("pilot_two", "P@ssw0rd123!", "Test Pilot", licenseNumber), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
 }
