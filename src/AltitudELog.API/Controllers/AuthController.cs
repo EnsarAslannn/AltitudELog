@@ -26,14 +26,7 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginCommand command, CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await _mediator.Send(command, cancellationToken);
-            return Ok(result);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Unauthorized();
-        }
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(result);
     }
 }

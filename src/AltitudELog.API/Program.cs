@@ -39,6 +39,7 @@ try
     builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
     builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+    builder.Services.AddExceptionHandler<DomainExceptionHandler>();
     builder.Services.AddProblemDetails();
 
     builder.Services
