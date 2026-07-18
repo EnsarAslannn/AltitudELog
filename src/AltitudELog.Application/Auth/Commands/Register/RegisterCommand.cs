@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Caching;
 using AltitudELog.Domain.Enums;
 using MediatR;
 
@@ -9,4 +10,7 @@ public record RegisterCommand(
     string Name,
     string LicenseNumber,
     PilotRank Rank
-) : IRequest<Guid>;
+) : IRequest<Guid>, ICacheInvalidatorCommand
+{
+    public string[] CacheKeysToInvalidate => [CacheKeys.AllPilots];
+}

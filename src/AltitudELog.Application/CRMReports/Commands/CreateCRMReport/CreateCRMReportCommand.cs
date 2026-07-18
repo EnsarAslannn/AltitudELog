@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Caching;
 using AltitudELog.Domain.Enums;
 using MediatR;
 
@@ -9,4 +10,7 @@ public record CreateCRMReportCommand(
     string Description,
     bool IsAnonymous,
     SeverityLevel SeverityLevel
-) : IRequest<Guid>;
+) : IRequest<Guid>, ICacheInvalidatorCommand
+{
+    public string[] CacheKeysToInvalidate => [CacheKeys.CrmReportsByFlight(FlightId)];
+}

@@ -12,6 +12,9 @@ public class CRMReportConfiguration : IEntityTypeConfiguration<CRMReport>
 
         builder.HasKey(r => r.Id);
 
+        builder.HasIndex(r => r.FlightId);
+        builder.HasIndex(r => r.ReporterId);
+
         builder.Property(r => r.Title)
             .IsRequired()
             .HasMaxLength(200);

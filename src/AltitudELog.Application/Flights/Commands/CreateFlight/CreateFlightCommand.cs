@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Caching;
 using MediatR;
 
 namespace AltitudELog.Application.Flights.Commands.CreateFlight;
@@ -9,4 +10,7 @@ public record CreateFlightCommand(
     string AircraftType,
     DateOnly Date,
     string? METARInfo
-) : IRequest<Guid>;
+) : IRequest<Guid>, ICacheInvalidatorCommand
+{
+    public string[] CacheKeysToInvalidate => [CacheKeys.AllFlights];
+}

@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  # 🐘 PostgreSQL Veritabanı Servisi
+  altitudelog-db:
+    image: postgres:17
+    container_name: altitudelog-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: AltitudELogDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - altitudelog-network
+
+  # 🔴 Redis Önbellek Servisi
+  altitudelog-cache:
+    image: redis:alpine
+    container_name: altitudelog-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - altitudelog-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  altitudelog-network:
+    driver: bridge

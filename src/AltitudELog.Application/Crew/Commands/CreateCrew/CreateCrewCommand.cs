@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Caching;
 using AltitudELog.Domain.Enums;
 using MediatR;
 
@@ -7,4 +8,7 @@ public record CreateCrewCommand(
     Guid FlightId,
     Guid PilotId,
     DutyRole DutyRole
-) : IRequest<Guid>;
+) : IRequest<Guid>, ICacheInvalidatorCommand
+{
+    public string[] CacheKeysToInvalidate => [CacheKeys.CrewByFlight(FlightId)];
+}

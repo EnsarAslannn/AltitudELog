@@ -12,6 +12,8 @@ public class CrewConfiguration : IEntityTypeConfiguration<Crew>
 
         builder.HasKey(c => c.Id);
 
+        builder.HasIndex(c => c.PilotId);
+
         builder.Property(c => c.DutyRole)
             .IsRequired()
             .HasConversion<string>()
