@@ -5,6 +5,8 @@ using AltitudELog.API.Services;
 using AltitudELog.Application;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Infrastructure;
+using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
@@ -80,6 +82,11 @@ try
     app.MapHealthChecks("/health", new HealthCheckOptions
     {
         ResponseWriter = HealthCheckResponseWriter.WriteJson
+    });
+
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireBasicAuthFilter(app.Configuration)]
     });
 
     app.Run();

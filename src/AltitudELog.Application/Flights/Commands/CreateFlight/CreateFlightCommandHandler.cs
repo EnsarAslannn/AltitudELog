@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Flights.Events;
 using AltitudELog.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -8,11 +9,13 @@ namespace AltitudELog.Application.Flights.Commands.CreateFlight;
 public class CreateFlightCommandHandler : IRequestHandler<CreateFlightCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPublisher _publisher;
     private readonly ILogger<CreateFlightCommandHandler> _logger;
 
-    public CreateFlightCommandHandler(IApplicationDbContext context, ILogger<CreateFlightCommandHandler> logger)
+    public CreateFlightCommandHandler(IApplicationDbContext context, IPublisher publisher, ILogger<CreateFlightCommandHandler> logger)
     {
         _context = context;
+        _publisher = publisher;
         _logger = logger;
     }
 
@@ -34,6 +37,8 @@ public class CreateFlightCommandHandler : IRequestHandler<CreateFlightCommand, G
 
         _logger.LogInformation(
             "Flight {FlightId} created: {Origin} -> {Destination}", flight.Id, flight.OriginICAO, flight.DestinationICAO);
+
+        await _publisher.Publish(new FlightCreatedEvent(flight.Id, flight.OriginICAO), cancellationToken);
 
         return flight.Id;
     }
