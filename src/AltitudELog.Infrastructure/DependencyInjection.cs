@@ -22,6 +22,10 @@ public static class DependencyInjection
         services.AddStackExchangeRedisCache(options =>
             options.Configuration = configuration.GetConnectionString("Redis"));
 
+        services.AddHealthChecks()
+            .AddNpgSql(configuration.GetConnectionString("DefaultConnection")!, name: "postgresql")
+            .AddRedis(configuration.GetConnectionString("Redis")!, name: "redis");
+
         return services;
     }
 }
