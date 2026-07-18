@@ -63,6 +63,13 @@ try
 
     var app = builder.Build();
 
+    var jwtKey = app.Configuration["Jwt:Key"];
+    if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    {
+        throw new InvalidOperationException(
+            "Jwt:Key must be configured and at least 32 bytes long (HS256 requires a 256-bit signing key).");
+    }
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
