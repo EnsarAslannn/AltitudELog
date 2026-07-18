@@ -5,4 +5,8 @@
     <Project Path="src/AltitudELog.Domain/AltitudELog.Domain.csproj" />
     <Project Path="src/AltitudELog.Infrastructure/AltitudELog.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AltitudELog.Application.UnitTests/AltitudELog.Application.UnitTests.csproj" />
+    <Project Path="tests/AltitudELog.IntegrationTests/AltitudELog.IntegrationTests.csproj" />
+  </Folder>
 </Solution>

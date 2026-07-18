@@ -20,5 +20,9 @@ public class CreateFlightCommandValidator : AbstractValidator<CreateFlightComman
         RuleFor(f => f.FlightTime)
             .Must(t => t > TimeSpan.Zero)
             .WithMessage("FlightTime must be greater than zero.");
+
+        RuleFor(f => f.Date)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage("Date cannot be in the future.");
     }
 }
