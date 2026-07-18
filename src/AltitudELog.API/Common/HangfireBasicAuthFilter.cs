@@ -46,8 +46,14 @@ public class HangfireBasicAuthFilter : IDashboardAuthorizationFilter
             return false;
         }
 
-        var expectedUsername = _configuration["Hangfire:DashboardUsername"] ?? string.Empty;
-        var expectedPassword = _configuration["Hangfire:DashboardPassword"] ?? string.Empty;
+        var expectedUsername = _configuration["Hangfire:DashboardUsername"];
+        var expectedPassword = _configuration["Hangfire:DashboardPassword"];
+
+        if (string.IsNullOrEmpty(expectedUsername) || string.IsNullOrEmpty(expectedPassword))
+        {
+            Challenge(httpContext);
+            return false;
+        }
 
         var usernameMatches = FixedTimeEquals(username, expectedUsername);
         var passwordMatches = FixedTimeEquals(password, expectedPassword);
