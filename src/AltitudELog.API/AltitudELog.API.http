@@ -8,8 +8,7 @@ Content-Type: application/json
   "username": "jdoe",
   "password": "P@ssw0rd123",
   "name": "John Doe",
-  "licenseNumber": "TR-12345",
-  "rank": "Captain"
+  "licenseNumber": "TR-12345"
 }
 
 ###

@@ -36,10 +36,19 @@ public class CreateFlightHappyPathTests : IAsyncLifetime
     private async Task<string> RegisterAndLoginAsync(PilotRank rank, string usernameSuffix)
     {
         var username = $"pilot_{usernameSuffix}_{Guid.NewGuid():N}";
-        var registerCommand = new RegisterCommand(username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", rank);
+        var registerCommand = new RegisterCommand(username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}");
 
         var registerResponse = await _client.PostAsJsonAsync("/Auth/register", registerCommand);
         registerResponse.EnsureSuccessStatusCode();
+
+        if (rank != PilotRank.Trainee)
+        {
+            using var scope = _factory.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var pilot = await context.Pilots.SingleAsync(p => p.Username == username);
+            pilot.Rank = rank;
+            await context.SaveChangesAsync();
+        }
 
         var loginCommand = new LoginCommand(username, "P@ssw0rd123!");
         var loginResponse = await _client.PostAsJsonAsync("/Auth/login", loginCommand);

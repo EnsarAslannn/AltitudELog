@@ -1,5 +1,6 @@
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Domain.Entities;
+using AltitudELog.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             Id = Guid.NewGuid(),
             Name = request.Name,
             LicenseNumber = request.LicenseNumber,
-            Rank = request.Rank,
+            Rank = PilotRank.Trainee,
             Username = request.Username
         };
 
