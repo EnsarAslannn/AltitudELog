@@ -42,6 +42,15 @@ try
     builder.Services.AddExceptionHandler<DomainExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    const string FrontendCorsPolicy = "FrontendCorsPolicy";
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(FrontendCorsPolicy, policy => policy
+            .WithOrigins("http://localhost:5180")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+    });
+
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -81,6 +90,8 @@ try
     app.UseSerilogRequestLogging();
 
     app.UseHttpsRedirection();
+
+    app.UseCors(FrontendCorsPolicy);
 
     app.UseAuthentication();
     app.UseAuthorization();
