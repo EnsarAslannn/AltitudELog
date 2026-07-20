@@ -7,6 +7,7 @@ using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace AltitudELog.Infrastructure;
 
@@ -23,7 +24,17 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         services.AddStackExchangeRedisCache(options =>
-            options.Configuration = configuration.GetConnectionString("Redis"));
+        {
+            options.ConfigurationOptions = new ConfigurationOptions
+            {
+                EndPoints = { configuration.GetConnectionString("Redis")! },
+                ConnectTimeout = 200,
+                SyncTimeout = 200,
+                AsyncTimeout = 200,
+                ConnectRetry = 0,
+                AbortOnConnectFail = true,
+            };
+        });
 
         services.AddHealthChecks()
             .AddNpgSql(configuration.GetConnectionString("DefaultConnection")!, name: "postgresql")
