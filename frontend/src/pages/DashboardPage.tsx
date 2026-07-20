@@ -116,13 +116,13 @@ function StatTile({
   value: number
 }) {
   return (
-    <Card className="flex items-center gap-3 p-4">
-      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/10 text-blue-500">
-        <Icon className="h-4 w-4" />
+    <Card className="flex items-center gap-4 p-5">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-900/5 text-slate-700">
+        <Icon className="h-5 w-5" />
       </span>
       <div>
-        <p className="text-lg font-bold leading-none text-slate-900">{value}</p>
-        <p className="mt-1 text-xs text-slate-500">{label}</p>
+        <p className="text-3xl font-bold leading-none tabular-nums text-slate-900">{value}</p>
+        <p className="mt-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
       </div>
     </Card>
   )

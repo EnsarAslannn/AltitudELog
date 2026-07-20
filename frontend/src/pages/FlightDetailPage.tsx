@@ -154,12 +154,12 @@ export function FlightDetailPage() {
         )}
       </Card>
 
-      <div className="inline-flex w-fit gap-1 rounded-full border border-slate-200 bg-white/60 p-1">
+      <div className="inline-flex w-fit gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
         <button
           onClick={() => setTab('crew')}
           className={cn(
             'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-            tab === 'crew' ? 'bg-blue-600 text-slate-50' : 'text-slate-500 hover:text-slate-900',
+            tab === 'crew' ? 'bg-slate-900 text-slate-50' : 'text-slate-500 hover:text-slate-900',
           )}
         >
           <Users className="h-4 w-4" />
@@ -169,7 +169,7 @@ export function FlightDetailPage() {
           onClick={() => setTab('crm')}
           className={cn(
             'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-            tab === 'crm' ? 'bg-blue-600 text-slate-50' : 'text-slate-500 hover:text-slate-900',
+            tab === 'crm' ? 'bg-slate-900 text-slate-50' : 'text-slate-500 hover:text-slate-900',
           )}
         >
           <ShieldAlert className="h-4 w-4" />
@@ -238,7 +238,7 @@ function CrewTab({
                 </span>
                 <span className="text-slate-900">{member.pilotName}</span>
               </div>
-              <Badge tone="neutral" icon={RoleIcon}>
+              <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
                 {member.dutyRole}
               </Badge>
             </Card>
@@ -356,7 +356,7 @@ function CrmTab({
               onChange={(e) => setDescription(e.target.value)}
               required
               rows={3}
-              className="rounded-md border border-slate-300 bg-white/80 px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-blue-600"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
             />
           </div>
           <Select

@@ -2,7 +2,7 @@ import { Plane } from 'lucide-react'
 
 export function AuthHero() {
   return (
-    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900 p-10 md:flex">
+    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-10 md:flex">
       <div
         className="pointer-events-none absolute inset-0 opacity-20"
         style={{
@@ -35,8 +35,8 @@ export function AuthHero() {
         />
         <circle cx="80" cy="300" r="5" fill="white" />
         <circle cx="80" cy="300" r="11" fill="none" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        <circle cx="320" cy="140" r="5" fill="#93c5fd" />
-        <circle cx="320" cy="140" r="11" fill="none" stroke="#93c5fd" strokeWidth="1.5" opacity="0.4" />
+        <circle cx="320" cy="140" r="5" fill="#fbbf24" />
+        <circle cx="320" cy="140" r="11" fill="none" stroke="#fbbf24" strokeWidth="1.5" opacity="0.4" />
         <g transform="translate(200,150) rotate(-35)">
           <path d="M0,-16 L6,12 L0,7 L-6,12 Z" fill="white" />
         </g>
@@ -57,7 +57,7 @@ export function AuthHero() {
           <br />
           tek panelde.
         </h1>
-        <p className="mt-3 max-w-xs text-sm text-blue-100">
+        <p className="mt-3 max-w-xs text-sm text-slate-300">
           Mürettebat atamaları, CRM raporları ve uçuş geçmişi — pilotlar için tasarlanmış bir kokpit.
         </p>
       </div>

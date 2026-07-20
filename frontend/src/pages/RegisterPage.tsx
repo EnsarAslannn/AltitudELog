@@ -4,6 +4,7 @@ import { BadgeCheck, IdCard, Lock, User, UserPlus } from 'lucide-react'
 import { authService } from '../services/authService'
 import { AuthHero } from '../components/layout/AuthHero'
 import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import type { ApiError } from '../types/problemDetails'
 
@@ -50,54 +51,56 @@ export function RegisterPage() {
         <div className="w-full max-w-sm">
           <h1 className="mb-1 text-2xl font-bold text-slate-900">Pilot Kaydı</h1>
           <p className="mb-6 text-sm text-slate-500">Trainee rütbesiyle hesabınızı oluşturun.</p>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
-              label="Ad Soyad"
-              name="name"
-              icon={BadgeCheck}
-              value={form.name}
-              onChange={updateField('name')}
-              errors={fieldErrors?.Name ?? fieldErrors?.name}
-              required
-            />
-            <Input
-              label="Lisans Numarası"
-              name="licenseNumber"
-              icon={IdCard}
-              value={form.licenseNumber}
-              onChange={updateField('licenseNumber')}
-              errors={fieldErrors?.LicenseNumber ?? fieldErrors?.licenseNumber}
-              required
-            />
-            <Input
-              label="Kullanıcı Adı"
-              name="username"
-              icon={User}
-              autoComplete="username"
-              value={form.username}
-              onChange={updateField('username')}
-              errors={fieldErrors?.Username ?? fieldErrors?.username}
-              required
-            />
-            <Input
-              label="Şifre"
-              name="password"
-              type="password"
-              icon={Lock}
-              autoComplete="new-password"
-              value={form.password}
-              onChange={updateField('password')}
-              errors={fieldErrors?.Password ?? fieldErrors?.password}
-              required
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
-              {isSubmitting ? 'Kayıt olunuyor…' : 'Kayıt Ol'}
-            </Button>
-          </form>
+          <Card>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Input
+                label="Ad Soyad"
+                name="name"
+                icon={BadgeCheck}
+                value={form.name}
+                onChange={updateField('name')}
+                errors={fieldErrors?.Name ?? fieldErrors?.name}
+                required
+              />
+              <Input
+                label="Lisans Numarası"
+                name="licenseNumber"
+                icon={IdCard}
+                value={form.licenseNumber}
+                onChange={updateField('licenseNumber')}
+                errors={fieldErrors?.LicenseNumber ?? fieldErrors?.licenseNumber}
+                required
+              />
+              <Input
+                label="Kullanıcı Adı"
+                name="username"
+                icon={User}
+                autoComplete="username"
+                value={form.username}
+                onChange={updateField('username')}
+                errors={fieldErrors?.Username ?? fieldErrors?.username}
+                required
+              />
+              <Input
+                label="Şifre"
+                name="password"
+                type="password"
+                icon={Lock}
+                autoComplete="new-password"
+                value={form.password}
+                onChange={updateField('password')}
+                errors={fieldErrors?.Password ?? fieldErrors?.password}
+                required
+              />
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
+                {isSubmitting ? 'Kayıt olunuyor…' : 'Kayıt Ol'}
+              </Button>
+            </form>
+          </Card>
           <p className="mt-4 text-sm text-slate-500">
             Zaten hesabın var mı?{' '}
-            <Link to="/login" className="font-medium text-blue-500 hover:underline">
+            <Link to="/login" className="font-medium text-blue-600 hover:underline">
               Giriş yap
             </Link>
           </p>

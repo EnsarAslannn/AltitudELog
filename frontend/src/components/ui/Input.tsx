@@ -24,7 +24,7 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
         <input
           id={inputId}
           className={cn(
-            'w-full rounded-md border bg-white/80 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition-colors focus:border-blue-600',
+            'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition-colors focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10',
             Icon && 'pl-9',
             hasError ? 'border-red-500' : 'border-slate-300',
             className,
