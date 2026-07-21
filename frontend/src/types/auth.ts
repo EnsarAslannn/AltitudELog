@@ -10,6 +10,7 @@ export interface RegisterRequest {
   password: string
   name: string
   licenseNumber: string
+  rank: PilotRank
 }
 
 export interface AuthResponseDto {

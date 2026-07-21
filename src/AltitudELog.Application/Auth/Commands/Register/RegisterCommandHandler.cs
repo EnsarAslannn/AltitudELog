@@ -43,7 +43,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             Id = Guid.NewGuid(),
             Name = request.Name,
             LicenseNumber = request.LicenseNumber,
-            Rank = PilotRank.Trainee,
+            // Honour the requested rank, guarding against out-of-range enum values.
+            Rank = Enum.IsDefined(request.Rank) ? request.Rank : PilotRank.Trainee,
             Username = request.Username
         };
 
