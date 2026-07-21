@@ -46,10 +46,22 @@ export function RegisterPage() {
 
   return (
     <div className="flex min-h-screen">
-      <AuthHero />
-      <div className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="w-full max-w-sm">
-          <h1 className="mb-1 text-2xl font-bold text-slate-900">Pilot Kaydı</h1>
+      <AuthHero
+        image="/images/flightdeck.jpg"
+        eyebrow="New Crew Onboarding"
+        title={
+          <>
+            Ekibe katılın,
+            <br />
+            göreve hazırlanın.
+          </>
+        }
+        subtitle="Kaydınız Trainee rütbesiyle açılır. Rütbe yükseltmeleri operasyon tarafından yapılır."
+        stat={{ value: 'TRN', label: 'Başlangıç rütbesi — Trainee' }}
+      />
+      <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
+        <div className="w-full max-w-sm rise">
+          <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-[#0b1220]">Pilot Kaydı</h1>
           <p className="mb-6 text-sm text-slate-500">Trainee rütbesiyle hesabınızı oluşturun.</p>
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -100,7 +112,7 @@ export function RegisterPage() {
           </Card>
           <p className="mt-4 text-sm text-slate-500">
             Zaten hesabın var mı?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:underline">
+            <Link to="/login" className="font-medium text-[#00205b] hover:underline">
               Giriş yap
             </Link>
           </p>

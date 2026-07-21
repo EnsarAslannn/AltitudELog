@@ -38,10 +38,22 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      <AuthHero />
-      <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm">
-          <h1 className="mb-1 text-2xl font-bold text-slate-900">Giriş Yap</h1>
+      <AuthHero
+        image="/images/hero-approach.jpg"
+        eyebrow="Flight Operations Console"
+        title={
+          <>
+            Uçuş kayıtlarınız,
+            <br />
+            tek kokpitte.
+          </>
+        }
+        subtitle="Mürettebat atamaları, CRM raporları ve METAR akışı — uçuş ekipleri için tasarlanmış tek panel."
+        stat={{ value: 'METAR', label: 'Her uçuşta otomatik hava durumu' }}
+      />
+      <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
+        <div className="w-full max-w-sm rise">
+          <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-[#0b1220]">Giriş Yap</h1>
           <p className="mb-6 text-sm text-slate-500">Hesabınıza erişmek için bilgilerinizi girin.</p>
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -72,7 +84,7 @@ export function LoginPage() {
           </Card>
           <p className="mt-4 text-sm text-slate-500">
             Hesabın yok mu?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:underline">
+            <Link to="/register" className="font-medium text-[#00205b] hover:underline">
               Kayıt ol
             </Link>
           </p>

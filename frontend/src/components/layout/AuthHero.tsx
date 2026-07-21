@@ -1,65 +1,61 @@
-import { Plane } from 'lucide-react'
+import { PlaneTakeoff } from 'lucide-react'
+import { Eyebrow } from '../ui/Eyebrow'
 
-export function AuthHero() {
+interface AuthHeroProps {
+  image?: string
+  eyebrow: string
+  title: React.ReactNode
+  subtitle: string
+  stat?: { value: string; label: string }
+}
+
+export function AuthHero({
+  image = '/images/hero-approach.jpg',
+  eyebrow,
+  title,
+  subtitle,
+  stat,
+}: AuthHeroProps) {
   return (
-    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-10 md:flex">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
+    <div className="relative hidden flex-1 overflow-hidden bg-[#00205b] lg:flex">
+      <img
+        src={image}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="eager"
       />
+      {/* navy wash for legibility */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#001235] via-[#00205b]/70 to-[#00205b]/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#00205b]/60 to-transparent" />
 
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <div
-          className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 animate-[spin_18s_linear_infinite] rounded-full"
-          style={{
-            background: 'conic-gradient(from 0deg, rgba(255,255,255,0.3), transparent 30%, transparent 100%)',
-          }}
-        />
-      </div>
+      <div className="relative flex flex-1 flex-col justify-between p-12">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-white/10 ring-1 ring-white/20 backdrop-blur">
+            <PlaneTakeoff className="h-5 w-5 text-white" strokeWidth={2.5} />
+          </span>
+          <span className="font-display text-xl font-bold tracking-tight text-white">
+            Altitud<span className="text-[#f59e0b]">E</span>Log
+          </span>
+        </div>
 
-      <svg
-        viewBox="0 0 400 400"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2"
-      >
-        <path
-          d="M80,300 Q200,80 320,140"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeDasharray="2 10"
-          strokeLinecap="round"
-          opacity="0.55"
-        />
-        <circle cx="80" cy="300" r="5" fill="white" />
-        <circle cx="80" cy="300" r="11" fill="none" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        <circle cx="320" cy="140" r="5" fill="#fbbf24" />
-        <circle cx="320" cy="140" r="11" fill="none" stroke="#fbbf24" strokeWidth="1.5" opacity="0.4" />
-        <g transform="translate(200,150) rotate(-35)">
-          <path d="M0,-16 L6,12 L0,7 L-6,12 Z" fill="white" />
-        </g>
-      </svg>
+        <div className="max-w-md">
+          <Eyebrow tone="light" rule={false} className="mb-5">
+            {eyebrow}
+          </Eyebrow>
+          <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight text-white">
+            {title}
+          </h1>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-200">{subtitle}</p>
 
-      <div className="relative flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 backdrop-blur">
-          <Plane className="h-5 w-5 text-white" strokeWidth={2.5} />
-        </span>
-        <span className="text-xl font-bold tracking-tight text-white">
-          Altitud<span className="text-blue-200">E</span>Log
-        </span>
-      </div>
-
-      <div className="relative">
-        <h1 className="text-3xl font-bold leading-tight text-white">
-          Uçuş kayıtlarınız,
-          <br />
-          tek panelde.
-        </h1>
-        <p className="mt-3 max-w-xs text-sm text-slate-300">
-          Mürettebat atamaları, CRM raporları ve uçuş geçmişi — pilotlar için tasarlanmış bir kokpit.
-        </p>
+          {stat && (
+            <div className="mt-10 flex items-center gap-4 border-t border-white/15 pt-6">
+              <span className="data text-3xl font-semibold tabular-nums text-white">{stat.value}</span>
+              <span className="eyebrow max-w-[10rem] text-[10px] leading-tight text-slate-300">
+                {stat.label}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
