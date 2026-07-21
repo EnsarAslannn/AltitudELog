@@ -1,19 +1,29 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BadgeCheck, IdCard, Lock, User, UserPlus } from 'lucide-react'
+import { BadgeCheck, IdCard, Lock, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { authService } from '../services/authService'
 import { AuthHero } from '../components/layout/AuthHero'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
+import type { PilotRank, RegisterRequest } from '../types/auth'
 import type { ApiError } from '../types/problemDetails'
 
+const rankOptions: { value: PilotRank; label: string }[] = [
+  { value: 'Trainee', label: 'Trainee — Stajyer' },
+  { value: 'FirstOfficer', label: 'First Officer — İkinci Pilot' },
+  { value: 'Captain', label: 'Captain — Kaptan Pilot' },
+  { value: 'ChiefPilot', label: 'Chief Pilot — Baş Pilot' },
+]
+
 export function RegisterPage() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<RegisterRequest>({
     username: '',
     password: '',
     name: '',
     licenseNumber: '',
+    rank: 'Trainee',
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +31,7 @@ export function RegisterPage() {
 
   const navigate = useNavigate()
 
-  function updateField(field: keyof typeof form) {
+  function updateField(field: 'username' | 'password' | 'name' | 'licenseNumber') {
     return (event: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [field]: event.target.value }))
   }
@@ -56,13 +66,13 @@ export function RegisterPage() {
             göreve hazırlanın.
           </>
         }
-        subtitle="Kaydınız Trainee rütbesiyle açılır. Rütbe yükseltmeleri operasyon tarafından yapılır."
-        stat={{ value: 'TRN', label: 'Başlangıç rütbesi — Trainee' }}
+        subtitle="Rütbenizi seçin ve hesabınızı oluşturun. Captain rütbesi uçuş ve mürettebat kaydı oluşturma yetkisi verir."
+        stat={{ value: 'CPT', label: 'Captain: uçuş & mürettebat yetkisi' }}
       />
       <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
         <div className="w-full max-w-sm rise">
           <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-[#0b1220]">Pilot Kaydı</h1>
-          <p className="mb-6 text-sm text-slate-500">Trainee rütbesiyle hesabınızı oluşturun.</p>
+          <p className="mb-6 text-sm text-slate-500">Rütbenizi seçerek hesabınızı oluşturun.</p>
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input
@@ -104,6 +114,24 @@ export function RegisterPage() {
                 errors={fieldErrors?.Password ?? fieldErrors?.password}
                 required
               />
+              <div className="flex flex-col gap-1.5">
+                <Select
+                  label="Rütbe"
+                  name="rank"
+                  value={form.rank}
+                  onChange={(e) => setForm((prev) => ({ ...prev, rank: e.target.value as PilotRank }))}
+                >
+                  {rankOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#f59e0b]" />
+                  Captain seçerseniz uçuş ve mürettebat oluşturabilirsiniz.
+                </p>
+              </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
                 {isSubmitting ? 'Kayıt olunuyor…' : 'Kayıt Ol'}

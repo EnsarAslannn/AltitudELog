@@ -55,8 +55,10 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
 - `Entities/`: `Pilot`, `Flight`, `Crew`, `CRMReport`. All use `Guid` ids.
   - `Pilot` doubles as the auth identity — it carries `Username` and `PasswordHash` directly (no separate `User`
     entity/table). `Rank` is embedded as the JWT role claim on login, so a pilot's rank *is* their authorization role.
-    Registration always forces `PilotRank.Trainee` server-side regardless of client input (privilege-escalation
-    fix) — rank changes are not self-service.
+    Registration accepts a self-selected `Rank` (`RegisterCommand.Rank`, optional, defaults to `Trainee`,
+    validated with `Enum.IsDefined`) — a deliberate demo choice so visitors to the public deployment can pick
+    Captain and try the Captain-only write features. This intentionally trades away the earlier "force Trainee"
+    privilege-escalation guard; do not re-add that guard without a go-ahead.
   - `Crew` is an explicit join entity between `Flight` and `Pilot` (not an EF Core implicit skip-navigation) — it
     carries a flight-specific `DutyRole`, separate from `Pilot.Rank` (a pilot's general rank vs. their role on one
     particular flight can differ). A unique composite index on `(FlightId, PilotId)` plus a handler-level check
@@ -189,8 +191,8 @@ value is unset/empty, it challenges/401s rather than allowing access — do not 
 
 ### API — Auth endpoints
 
-`Controllers/AuthController.cs`: `POST /Auth/register` (→ `RegisterCommand`, returns the new Pilot `Guid`, always
-registers as `Trainee` regardless of any rank in the request body), `POST /Auth/login` (→ `LoginCommand`, returns
+`Controllers/AuthController.cs`: `POST /Auth/register` (→ `RegisterCommand`, returns the new Pilot `Guid`,
+registers with the caller-supplied `Rank`, defaulting to `Trainee` when omitted), `POST /Auth/login` (→ `LoginCommand`, returns
 `AuthResponseDto` with the JWT, or `401` on bad credentials via a caught `UnauthorizedAccessException`). Both
 anonymous — registering/logging in obviously can't require a token.
 
