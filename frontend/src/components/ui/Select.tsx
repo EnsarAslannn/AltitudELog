@@ -10,15 +10,15 @@ export function Select({ label, id, className, children, ...props }: SelectProps
   const selectId = id ?? props.name
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={selectId} className="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={selectId} className="eyebrow text-[11px] text-slate-500">
         {label}
       </label>
       <div className="relative">
         <select
           id={selectId}
           className={cn(
-            'w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 pr-9 text-sm text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10',
+            'w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-9 text-sm text-[#0b1220] outline-none transition-colors focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10',
             className,
           )}
           {...props}

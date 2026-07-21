@@ -13,8 +13,8 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
   const hasError = !!errors?.length
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={inputId} className="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={inputId} className="eyebrow text-[11px] text-slate-500">
         {label}
       </label>
       <div className="relative">
@@ -24,7 +24,8 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
         <input
           id={inputId}
           className={cn(
-            'w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition-colors focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10',
+            'w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none placeholder:text-slate-400 transition-colors',
+            'focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10',
             Icon && 'pl-9',
             hasError ? 'border-red-500' : 'border-slate-300',
             className,

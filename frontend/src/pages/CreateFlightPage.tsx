@@ -4,7 +4,9 @@ import { CalendarDays, Clock3, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
 import { flightService } from '../services/flightService'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { Eyebrow } from '../components/ui/Eyebrow'
 import { Input } from '../components/ui/Input'
+import { RouteRibbon } from '../components/ui/RouteRibbon'
 import type { ApiError } from '../types/problemDetails'
 
 export function CreateFlightPage() {
@@ -46,26 +48,24 @@ export function CreateFlightPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-4">
+    <div className="mx-auto flex max-w-lg flex-col gap-6">
       <div>
-        <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-          <PlaneTakeoff className="h-5 w-5 text-blue-500" />
-          Yeni Uçuş Oluştur
-        </h1>
-        <p className="text-sm text-slate-500">Uçuş planını mürettebat ataması yapılmadan önce kaydedin.</p>
+        <Eyebrow className="mb-3">Captain · Flight Plan</Eyebrow>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-[#0b1220]">Yeni Uçuş Oluştur</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Uçuş planını mürettebat ataması yapılmadan önce kaydedin.
+        </p>
       </div>
 
-      {(originICAO || destinationICAO) && (
-        <Card className="flex items-center justify-center gap-3 py-4">
-          <span className="text-lg font-bold text-slate-900">{originICAO.toUpperCase() || '····'}</span>
-          <span className="flex items-center gap-1 text-blue-500">
-            <span className="h-px w-8 border-t border-dashed border-slate-400" />
-            <PlaneTakeoff className="h-4 w-4" />
-            <span className="h-px w-8 border-t border-dashed border-slate-400" />
-          </span>
-          <span className="text-lg font-bold text-slate-900">{destinationICAO.toUpperCase() || '····'}</span>
-        </Card>
-      )}
+      <Card className="bg-[#00205b] py-6">
+        <RouteRibbon
+          origin={originICAO.toUpperCase()}
+          destination={destinationICAO.toUpperCase()}
+          size="md"
+          tone="dark"
+          animated={!!(originICAO && destinationICAO)}
+        />
+      </Card>
 
       <Card>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -129,7 +129,7 @@ export function CreateFlightPage() {
             errors={fieldErrors?.METARInfo ?? fieldErrors?.metarInfo}
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" icon={PlaneTakeoff} disabled={isSubmitting}>
+          <Button type="submit" variant="command" icon={PlaneTakeoff} disabled={isSubmitting}>
             {isSubmitting ? 'Oluşturuluyor…' : 'Uçuşu Oluştur'}
           </Button>
         </form>

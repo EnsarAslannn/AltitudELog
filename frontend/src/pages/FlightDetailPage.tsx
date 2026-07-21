@@ -26,7 +26,9 @@ import { useAuthStore } from '../store/authStore'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { Eyebrow } from '../components/ui/Eyebrow'
 import { Input } from '../components/ui/Input'
+import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Select } from '../components/ui/Select'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { cn } from '../lib/cn'
@@ -114,67 +116,76 @@ export function FlightDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-6">
-        <Skeleton className="h-24" />
+        <Skeleton className="h-40 rounded-3xl" />
         <SkeletonCard />
       </div>
     )
   }
 
   if (error || !flight) {
-    return <p className="text-sm text-red-600">{error ?? 'Uçuş bulunamadı.'}</p>
+    return (
+      <Card className="border-red-200 bg-red-50/50">
+        <p className="text-sm text-red-700">{error ?? 'Uçuş bulunamadı.'}</p>
+      </Card>
+    )
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-slate-900">{flight.originICAO}</span>
-          <span className="h-px w-10 border-t border-dashed border-slate-400" />
-          <span className="text-2xl font-bold text-slate-900">{flight.destinationICAO}</span>
+    <div className="flex flex-col gap-8">
+      {/* Boarding-pass header */}
+      <section className="relative overflow-hidden rounded-3xl bg-[#00205b]">
+        <img
+          src="/images/clouds.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-60"
+          loading="eager"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#001235] via-[#00205b]/80 to-[#00205b]/40" />
+        <div className="relative flex flex-col gap-6 p-8 sm:p-10">
+          <Eyebrow tone="light" rule={false}>
+            Flight Record
+          </Eyebrow>
+          <RouteRibbon
+            origin={flight.originICAO}
+            destination={flight.destinationICAO}
+            size="lg"
+            tone="dark"
+            animated
+          />
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-200">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="h-4 w-4" />
+              <span className="data">{flight.date}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock3 className="h-4 w-4" />
+              <span className="data">{flight.flightTime}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Wrench className="h-4 w-4" />
+              <span className="data">{flight.aircraftType}</span>
+            </span>
+          </div>
+          {flight.metarInfo && (
+            <div className="glass flex items-start gap-2 rounded-xl px-4 py-3">
+              <Radio className="mt-0.5 h-4 w-4 shrink-0 text-[#f59e0b]" />
+              <div>
+                <p className="eyebrow text-[10px] text-slate-300">METAR</p>
+                <p className="data mt-1 text-xs leading-relaxed text-white">{flight.metarInfo}</p>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <CalendarDays className="h-4 w-4" />
-            {flight.date}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock3 className="h-4 w-4" />
-            {flight.flightTime}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Wrench className="h-4 w-4" />
-            {flight.aircraftType}
-          </span>
-        </div>
-        {flight.metarInfo && (
-          <p className="mt-3 flex items-start gap-1.5 text-xs text-sky-600">
-            <Radio className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            {flight.metarInfo}
-          </p>
-        )}
-      </Card>
+      </section>
 
+      {/* Tabs */}
       <div className="inline-flex w-fit gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
-        <button
-          onClick={() => setTab('crew')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-            tab === 'crew' ? 'bg-slate-900 text-slate-50' : 'text-slate-500 hover:text-slate-900',
-          )}
-        >
-          <Users className="h-4 w-4" />
+        <TabButton active={tab === 'crew'} onClick={() => setTab('crew')} icon={Users}>
           Mürettebat
-        </button>
-        <button
-          onClick={() => setTab('crm')}
-          className={cn(
-            'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-            tab === 'crm' ? 'bg-slate-900 text-slate-50' : 'text-slate-500 hover:text-slate-900',
-          )}
-        >
-          <ShieldAlert className="h-4 w-4" />
+        </TabButton>
+        <TabButton active={tab === 'crm'} onClick={() => setTab('crm')} icon={ShieldAlert}>
           CRM Raporları
-        </button>
+        </TabButton>
       </div>
 
       {tab === 'crew' && (
@@ -188,6 +199,31 @@ export function FlightDetailPage() {
       )}
       {tab === 'crm' && <CrmTab flightId={flightId} reports={reports} onCreated={refreshReports} />}
     </div>
+  )
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  icon: typeof Users
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors',
+        active ? 'bg-[#00205b] text-white' : 'text-slate-500 hover:text-[#00205b]',
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {children}
+    </button>
   )
 }
 
@@ -225,18 +261,28 @@ function CrewTab({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        {crew.length === 0 && <p className="text-slate-500">Henüz mürettebat atanmadı.</p>}
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="flex flex-col gap-3">
+        <Eyebrow>Atanan Mürettebat</Eyebrow>
+        {crew.length === 0 && (
+          <Card className="py-10 text-center text-sm text-slate-500">Henüz mürettebat atanmadı.</Card>
+        )}
         {crew.map((member) => {
           const RoleIcon = dutyRoleIcon[member.dutyRole]
           return (
-            <Card key={member.id} className="flex items-center justify-between py-3">
+            <Card key={member.id} className="flex items-center justify-between py-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-900">
+                <span
+                  className={cn(
+                    'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
+                    member.dutyRole === 'PIC'
+                      ? 'bg-[#f59e0b]/15 text-[#b45309]'
+                      : 'bg-[#00205b]/8 text-[#00205b]',
+                  )}
+                >
                   {initials(member.pilotName)}
                 </span>
-                <span className="text-slate-900">{member.pilotName}</span>
+                <span className="font-medium text-[#0b1220]">{member.pilotName}</span>
               </div>
               <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
                 {member.dutyRole}
@@ -247,9 +293,9 @@ function CrewTab({
       </div>
 
       {isCaptain && (
-        <Card>
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <UserPlus className="h-4 w-4 text-blue-500" />
+        <Card className="h-fit lg:sticky lg:top-24">
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#0b1220]">
+            <UserPlus className="h-4 w-4 text-[#00205b]" />
             Mürettebat Ata
           </h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -319,44 +365,49 @@ function CrmTab({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        {reports.length === 0 && <p className="text-slate-500">Henüz CRM raporu yok.</p>}
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="flex flex-col gap-3">
+        <Eyebrow>CRM Raporları</Eyebrow>
+        {reports.length === 0 && (
+          <Card className="py-10 text-center text-sm text-slate-500">Henüz CRM raporu yok.</Card>
+        )}
         {reports.map((report) => {
           const SeverityIcon = severityIcon[report.severityLevel]
           return (
             <Card key={report.id} className={cn('border-l-4', severityBorder[report.severityLevel])}>
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-slate-900">{report.title}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-[#0b1220]">{report.title}</p>
                 <Badge tone={severityTone[report.severityLevel]} icon={SeverityIcon}>
                   {report.severityLevel}
                 </Badge>
               </div>
-              <p className="mt-1 text-sm text-slate-500">{report.description}</p>
-              <p className="mt-2 text-xs text-slate-400">
-                {report.isAnonymous ? 'Anonim' : (report.reporterName ?? 'Bilinmiyor')} ·{' '}
-                {new Date(report.createdDate).toLocaleString()}
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{report.description}</p>
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+                <span className="font-medium text-slate-500">
+                  {report.isAnonymous ? 'Anonim' : (report.reporterName ?? 'Bilinmiyor')}
+                </span>
+                ·<span className="data">{new Date(report.createdDate).toLocaleString()}</span>
               </p>
             </Card>
           )
         })}
       </div>
 
-      <Card>
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <ShieldAlert className="h-4 w-4 text-blue-500" />
+      <Card className="h-fit lg:sticky lg:top-24">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#0b1220]">
+          <ShieldAlert className="h-4 w-4 text-[#00205b]" />
           Yeni CRM Raporu
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input label="Başlık" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium uppercase tracking-wide text-slate-500">Açıklama</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="eyebrow text-[11px] text-slate-500">Açıklama</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
-              rows={3}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+              rows={4}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none transition-colors focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10"
             />
           </div>
           <Select
@@ -370,12 +421,12 @@ function CrmTab({
               </option>
             ))}
           </Select>
-          <label className="flex items-center gap-2 text-sm text-slate-500">
+          <label className="flex items-center gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 bg-white accent-blue-600"
+              className="h-4 w-4 rounded border-slate-300 bg-white accent-[#00205b]"
             />
             Anonim olarak gönder
           </label>
