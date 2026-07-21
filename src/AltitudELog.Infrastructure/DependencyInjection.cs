@@ -23,17 +23,19 @@ public static class DependencyInjection
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
+        // Parse the full StackExchange.Redis connection string so managed Redis
+        // (e.g. Railway) with a password works — `host:port,password=…`. Fail-fast
+        // timeouts are layered on top; the caching pipeline stays fail-open.
+        var redisOptions = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis")!);
+        redisOptions.ConnectTimeout = 200;
+        redisOptions.SyncTimeout = 200;
+        redisOptions.AsyncTimeout = 200;
+        redisOptions.ConnectRetry = 0;
+        redisOptions.AbortOnConnectFail = true;
+
         services.AddStackExchangeRedisCache(options =>
         {
-            options.ConfigurationOptions = new ConfigurationOptions
-            {
-                EndPoints = { configuration.GetConnectionString("Redis")! },
-                ConnectTimeout = 200,
-                SyncTimeout = 200,
-                AsyncTimeout = 200,
-                ConnectRetry = 0,
-                AbortOnConnectFail = true,
-            };
+            options.ConfigurationOptions = redisOptions;
         });
 
         services.AddHealthChecks()

@@ -5,10 +5,13 @@ using AltitudELog.API.Services;
 using AltitudELog.Application;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Infrastructure;
+using AltitudELog.Infrastructure.Persistence;
 using Hangfire;
 using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
@@ -42,11 +45,23 @@ try
     builder.Services.AddExceptionHandler<DomainExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // Behind Railway's TLS-terminating proxy the app receives HTTP with the original
+    // scheme in X-Forwarded-Proto; honour it so redirects/URLs stay https.
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     const string FrontendCorsPolicy = "FrontendCorsPolicy";
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? ["http://localhost:5180"];
     builder.Services.AddCors(options =>
     {
         options.AddPolicy(FrontendCorsPolicy, policy => policy
-            .WithOrigins("http://localhost:5180")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod());
     });
@@ -79,17 +94,47 @@ try
             "Jwt:Key must be configured and at least 32 bytes long (HS256 requires a 256-bit signing key).");
     }
 
+    // Apply pending EF Core migrations on startup so a fresh managed database
+    // (e.g. Railway Postgres) gets the schema without a manual `dotnet ef` step.
+    // Retry a few times: managed DBs / private networking can be briefly unready
+    // at container start, and we must not crash-loop on that race.
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                db.Database.Migrate();
+                break;
+            }
+            catch (Exception ex) when (attempt < 10)
+            {
+                startupLogger.LogWarning(ex,
+                    "Database not ready for migration (attempt {Attempt}/10); retrying in 3s.", attempt);
+                Thread.Sleep(TimeSpan.FromSeconds(3));
+            }
+        }
+    }
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
     }
 
+    app.UseForwardedHeaders();
+
     app.UseExceptionHandler();
 
     app.UseSerilogRequestLogging();
 
-    app.UseHttpsRedirection();
+    // TLS is terminated by the platform proxy in production; only redirect locally.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     app.UseCors(FrontendCorsPolicy);
 
