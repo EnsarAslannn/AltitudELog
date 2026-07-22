@@ -12,5 +12,5 @@ public record CreateCRMReportCommand(
     SeverityLevel SeverityLevel
 ) : IRequest<Guid>, ICacheInvalidatorCommand
 {
-    public string[] CacheKeysToInvalidate => [CacheKeys.CrmReportsByFlight(FlightId)];
+    public string[] CacheKeysToInvalidate => [CacheKeys.CrmReportsByFlight(FlightId), CacheKeys.Stats];
 }
