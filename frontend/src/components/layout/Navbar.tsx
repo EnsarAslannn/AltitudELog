@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
+import { BarChart3, Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -56,6 +56,12 @@ export function Navbar() {
               <NavLink to={`/pilots/${pilotId}`} className={linkClass}>
                 <User className="h-3.5 w-3.5" />
                 Profil
+              </NavLink>
+            )}
+            {isCommand && (
+              <NavLink to="/admin/stats" className={linkClass}>
+                <BarChart3 className="h-3.5 w-3.5" />
+                İstatistikler
               </NavLink>
             )}
           </nav>

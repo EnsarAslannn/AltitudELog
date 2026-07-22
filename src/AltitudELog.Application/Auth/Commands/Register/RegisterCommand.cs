@@ -16,5 +16,5 @@ public record RegisterCommand(
     PilotRank Rank = PilotRank.Trainee
 ) : IRequest<Guid>, ICacheInvalidatorCommand
 {
-    public string[] CacheKeysToInvalidate => [CacheKeys.AllPilots];
+    public string[] CacheKeysToInvalidate => [CacheKeys.AllPilots, CacheKeys.Stats];
 }

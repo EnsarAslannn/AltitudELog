@@ -43,7 +43,16 @@ public class UpdateFlightMetarJob
 
         flight.METARInfo = metar;
         await _context.SaveChangesAsync(cancellationToken);
-        await _cache.RemoveAsync(CacheKeys.AllFlights, cancellationToken);
+
+        try
+        {
+            await _cache.RemoveAsync(CacheKeys.AllFlights, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex, "Failed to invalidate cache key {CacheKey}; continuing without cache.", CacheKeys.AllFlights);
+        }
 
         _logger.LogInformation("Updated METAR for flight {FlightId}: {Metar}", flightId, metar);
     }

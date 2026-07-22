@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -119,10 +120,10 @@ try
     }
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-    }
+    // OpenAPI/Scalar are always mapped (not dev-gated) so reviewers can explore the
+    // API on the live deployment, not just locally.
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 
     app.UseForwardedHeaders();
 
