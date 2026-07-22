@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck } from 'lucide-react'
+import { Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -14,7 +14,7 @@ const rankIcon: Record<PilotRank, typeof Shield> = {
 }
 
 export function Navbar() {
-  const { username, rank, logout } = useAuthStore()
+  const { username, rank, pilotId, logout } = useAuthStore()
   const navigate = useNavigate()
   const isCommand = rank === 'Captain' || rank === 'ChiefPilot'
 
@@ -50,6 +50,12 @@ export function Navbar() {
               <NavLink to="/flights/new" className={linkClass}>
                 <PlaneTakeoff className="h-3.5 w-3.5" />
                 Yeni Uçuş
+              </NavLink>
+            )}
+            {pilotId && (
+              <NavLink to={`/pilots/${pilotId}`} className={linkClass}>
+                <User className="h-3.5 w-3.5" />
+                Profil
               </NavLink>
             )}
           </nav>

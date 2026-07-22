@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   AlertCircle,
   AlertOctagon,
@@ -270,24 +270,26 @@ function CrewTab({
         {crew.map((member) => {
           const RoleIcon = dutyRoleIcon[member.dutyRole]
           return (
-            <Card key={member.id} className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
-                <span
-                  className={cn(
-                    'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
-                    member.dutyRole === 'PIC'
-                      ? 'bg-[#f59e0b]/15 text-[#b45309]'
-                      : 'bg-[#00205b]/8 text-[#00205b]',
-                  )}
-                >
-                  {initials(member.pilotName)}
-                </span>
-                <span className="font-medium text-[#0b1220]">{member.pilotName}</span>
-              </div>
-              <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
-                {member.dutyRole}
-              </Badge>
-            </Card>
+            <Link key={member.id} to={`/pilots/${member.pilotId}`} className="group block">
+              <Card interactive className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
+                      member.dutyRole === 'PIC'
+                        ? 'bg-[#f59e0b]/15 text-[#b45309]'
+                        : 'bg-[#00205b]/8 text-[#00205b]',
+                    )}
+                  >
+                    {initials(member.pilotName)}
+                  </span>
+                  <span className="font-medium text-[#0b1220]">{member.pilotName}</span>
+                </div>
+                <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
+                  {member.dutyRole}
+                </Badge>
+              </Card>
+            </Link>
           )
         })}
       </div>

@@ -7,4 +7,5 @@ public static class CacheKeys
 
     public static string CrewByFlight(Guid flightId) => $"crew:flight:{flightId}";
     public static string CrmReportsByFlight(Guid flightId) => $"crmreports:flight:{flightId}";
+    public static string PilotProfile(Guid pilotId) => $"pilot:profile:{pilotId}";
 }

@@ -10,5 +10,5 @@ public record CreateCrewCommand(
     DutyRole DutyRole
 ) : IRequest<Guid>, ICacheInvalidatorCommand
 {
-    public string[] CacheKeysToInvalidate => [CacheKeys.CrewByFlight(FlightId)];
+    public string[] CacheKeysToInvalidate => [CacheKeys.CrewByFlight(FlightId), CacheKeys.PilotProfile(PilotId)];
 }

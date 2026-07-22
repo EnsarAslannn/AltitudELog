@@ -1,3 +1,4 @@
+using AltitudELog.Application.Pilots.Queries.GetPilotProfile;
 using AltitudELog.Application.Pilots.Queries.GetPilots;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -22,5 +23,13 @@ public class PilotsController : ControllerBase
     {
         var pilots = await _mediator.Send(new GetPilotsQuery(), cancellationToken);
         return Ok(pilots);
+    }
+
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    public async Task<ActionResult<PilotProfileDto>> GetProfile(Guid id, CancellationToken cancellationToken)
+    {
+        var profile = await _mediator.Send(new GetPilotProfileQuery(id), cancellationToken);
+        return profile is null ? NotFound() : Ok(profile);
     }
 }

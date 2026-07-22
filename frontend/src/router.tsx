@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FlightDetailPage } from './pages/FlightDetailPage'
+import { PilotProfilePage } from './pages/PilotProfilePage'
 import { CreateFlightPage } from './pages/CreateFlightPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <DashboardPage /> },
           { path: '/flights/:id', element: <FlightDetailPage /> },
+          { path: '/pilots/:id', element: <PilotProfilePage /> },
           { path: '/unauthorized', element: <UnauthorizedPage /> },
           {
             element: <CaptainRoute />,
