@@ -9,6 +9,7 @@ public class Flight
     public string AircraftType { get; set; } = string.Empty;
     public DateOnly Date { get; set; }
     public string? METARInfo { get; set; }
+    public bool IsCancelled { get; set; }
 
     public ICollection<Crew> CrewAssignments { get; set; } = new List<Crew>();
     public ICollection<CRMReport> CRMReports { get; set; } = new List<CRMReport>();

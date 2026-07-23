@@ -10,6 +10,9 @@ public class Pilot
     public PilotRank Rank { get; set; }
     public string Username { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? PasswordResetTokenHash { get; set; }
+    public DateTime? PasswordResetTokenExpiresAtUtc { get; set; }
 
     public ICollection<Crew> CrewAssignments { get; set; } = new List<Crew>();
 }

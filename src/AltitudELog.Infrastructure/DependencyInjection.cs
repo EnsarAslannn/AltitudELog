@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Infrastructure.ExternalServices.Email;
 using AltitudELog.Infrastructure.ExternalServices.Metar;
 using AltitudELog.Infrastructure.Identity;
 using AltitudELog.Infrastructure.Persistence;
@@ -22,6 +23,7 @@ public static class DependencyInjection
             provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
 
         // Parse the full StackExchange.Redis connection string so managed Redis
         // (e.g. Railway) with a password works — `host:port,password=…`. Fail-fast

@@ -9,4 +9,5 @@ public class FlightDto
     public string AircraftType { get; init; } = string.Empty;
     public DateOnly Date { get; init; }
     public string? METARInfo { get; init; }
+    public bool IsCancelled { get; init; }
 }

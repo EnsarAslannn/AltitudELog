@@ -9,6 +9,7 @@ public record RegisterCommand(
     string Password,
     string Name,
     string LicenseNumber,
+    string Email,
     // Self-selected at registration. Optional for backward compatibility; defaults to
     // Trainee when omitted. (This is a deliberate demo choice — the app previously forced
     // Trainee to prevent privilege escalation; here we let visitors pick their rank so they

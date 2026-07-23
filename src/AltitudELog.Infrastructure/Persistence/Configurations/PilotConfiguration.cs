@@ -38,5 +38,14 @@ public class PilotConfiguration : IEntityTypeConfiguration<Pilot>
         builder.Property(p => p.PasswordHash)
             .IsRequired()
             .HasMaxLength(500);
+
+        builder.Property(p => p.Email)
+            .HasMaxLength(256);
+
+        builder.HasIndex(p => p.Email)
+            .IsUnique();
+
+        builder.Property(p => p.PasswordResetTokenHash)
+            .HasMaxLength(500);
     }
 }

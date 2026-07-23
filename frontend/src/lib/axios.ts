@@ -22,11 +22,28 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
+  async (error: AxiosError) => {
+    // Only treat a 401 as "session expired" if the request actually carried a
+    // bearer token — anonymous endpoints (login, register, reset-password) can
+    // legitimately 401 for bad-credentials/invalid-token reasons that have
+    // nothing to do with an active session, and must not trigger a logout/redirect.
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
       useAuthStore.getState().logout()
       navigateToLogin?.()
     }
+
+    // A `responseType: 'blob'` request (e.g. file export) still gets its error body
+    // back as a Blob, not parsed JSON — decode it here so toApiError sees the same
+    // ProblemDetails shape it expects from every other request.
+    if (error.config?.responseType === 'blob' && error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text()
+        error.response.data = JSON.parse(text)
+      } catch {
+        // leave error.response.data as-is; toApiError falls back to error.message
+      }
+    }
+
     return Promise.reject(toApiError(error))
   },
 )

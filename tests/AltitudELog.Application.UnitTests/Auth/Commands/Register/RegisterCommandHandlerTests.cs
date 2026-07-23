@@ -20,7 +20,7 @@ public class RegisterCommandHandlerTests
     }
 
     private static RegisterCommand ValidCommand(string username) => new(
-        username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}");
+        username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", $"{username}@example.com");
 
     [Fact]
     public async Task Handle_Should_Always_Register_Pilot_As_Trainee()
@@ -68,10 +68,12 @@ public class RegisterCommandHandlerTests
         var licenseNumber = $"LIC-{Guid.NewGuid():N}";
 
         await handler.Handle(
-            new RegisterCommand("pilot_one", "P@ssw0rd123!", "Test Pilot", licenseNumber), CancellationToken.None);
+            new RegisterCommand("pilot_one", "P@ssw0rd123!", "Test Pilot", licenseNumber, "pilot_one@example.com"),
+            CancellationToken.None);
 
         var act = () => handler.Handle(
-            new RegisterCommand("pilot_two", "P@ssw0rd123!", "Test Pilot", licenseNumber), CancellationToken.None);
+            new RegisterCommand("pilot_two", "P@ssw0rd123!", "Test Pilot", licenseNumber, "pilot_two@example.com"),
+            CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
     }

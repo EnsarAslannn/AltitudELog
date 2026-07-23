@@ -25,7 +25,8 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, List<Flig
                 FlightTime = f.FlightTime,
                 AircraftType = f.AircraftType,
                 Date = f.Date,
-                METARInfo = f.METARInfo
+                METARInfo = f.METARInfo,
+                IsCancelled = f.IsCancelled
             })
             .ToListAsync(cancellationToken);
     }

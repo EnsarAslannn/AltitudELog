@@ -6,6 +6,7 @@ export interface FlightDto {
   aircraftType: string
   date: string
   metarInfo: string | null
+  isCancelled: boolean
 }
 
 export interface CreateFlightRequest {
@@ -15,4 +16,12 @@ export interface CreateFlightRequest {
   aircraftType: string
   date: string
   metarInfo: string | null
+}
+
+export interface UpdateFlightRequest {
+  originICAO: string
+  destinationICAO: string
+  flightTime: string
+  aircraftType: string
+  date: string
 }

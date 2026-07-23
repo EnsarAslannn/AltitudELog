@@ -13,12 +13,18 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
+
+// QuestPDF Community license — free for this use case (personal/portfolio project,
+// well under the revenue threshold), same revenue-gated license shape already
+// documented for MediatR in CLAUDE.md.
+QuestPDF.Settings.License = LicenseType.Community;
 
 try
 {

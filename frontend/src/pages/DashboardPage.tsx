@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
+import { Ban, CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
 import { flightService } from '../services/flightService'
+import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
+import { cn } from '../lib/cn'
 import type { FlightDto } from '../types/flight'
 import type { ApiError } from '../types/problemDetails'
 
@@ -102,7 +104,7 @@ export function DashboardPage() {
           <div className="flex flex-col gap-4">
             {flights.map((flight) => (
               <Link key={flight.id} to={`/flights/${flight.id}`} className="group block">
-                <Card interactive className="overflow-hidden p-0">
+                <Card interactive className={cn('overflow-hidden p-0', flight.isCancelled && 'opacity-60')}>
                   <div className="flex flex-col sm:flex-row">
                     {/* boarding-pass stub */}
                     <div className="flex items-center gap-3 border-b border-dashed border-slate-200 bg-[#f4f6fb] px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
@@ -113,7 +115,14 @@ export function DashboardPage() {
                     </div>
                     {/* route + meta */}
                     <div className="flex flex-1 flex-col gap-4 px-6 py-5">
-                      <RouteRibbon origin={flight.originICAO} destination={flight.destinationICAO} size="md" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <RouteRibbon origin={flight.originICAO} destination={flight.destinationICAO} size="md" />
+                        {flight.isCancelled && (
+                          <Badge tone="red" icon={Ban}>
+                            İptal Edildi
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500">
                         <span className="flex items-center gap-1.5">
                           <CalendarDays className="h-3.5 w-3.5" />

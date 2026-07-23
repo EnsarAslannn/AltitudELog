@@ -10,6 +10,7 @@ export interface RegisterRequest {
   password: string
   name: string
   licenseNumber: string
+  email: string
   rank: PilotRank
 }
 
@@ -18,4 +19,13 @@ export interface AuthResponseDto {
   expiresAtUtc: string
   pilotId: string
   rank: PilotRank
+}
+
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
 }

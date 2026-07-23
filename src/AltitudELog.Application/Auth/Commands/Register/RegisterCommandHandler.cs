@@ -45,7 +45,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             LicenseNumber = request.LicenseNumber,
             // Honour the requested rank, guarding against out-of-range enum values.
             Rank = Enum.IsDefined(request.Rank) ? request.Rank : PilotRank.Trainee,
-            Username = request.Username
+            Username = request.Username,
+            Email = request.Email
         };
 
         pilot.PasswordHash = _passwordHasher.HashPassword(pilot, request.Password);
