@@ -9,4 +9,7 @@ export const pilotService = {
     apiClient
       .get<Blob>(`/Pilots/${id}/logbook`, { params: { format }, responseType: 'blob' })
       .then((res) => res.data),
+
+  updateCertificates: (licenseExpiryDate: string | null, medicalExpiryDate: string | null) =>
+    apiClient.put('/Pilots/me/certificates', { licenseExpiryDate, medicalExpiryDate }),
 }

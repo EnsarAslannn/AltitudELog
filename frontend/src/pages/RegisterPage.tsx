@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BadgeCheck, IdCard, Lock, Mail, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BadgeCheck, CalendarDays, IdCard, Lock, Mail, ShieldCheck, Stethoscope, User, UserPlus } from 'lucide-react'
 import { authService } from '../services/authService'
 import { AuthHero } from '../components/layout/AuthHero'
 import { Button } from '../components/ui/Button'
@@ -25,6 +25,8 @@ export function RegisterPage() {
     licenseNumber: '',
     email: '',
     rank: 'Trainee',
+    licenseExpiryDate: '',
+    medicalExpiryDate: '',
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +34,9 @@ export function RegisterPage() {
 
   const navigate = useNavigate()
 
-  function updateField(field: 'username' | 'password' | 'name' | 'licenseNumber' | 'email') {
+  function updateField(
+    field: 'username' | 'password' | 'name' | 'licenseNumber' | 'email' | 'licenseExpiryDate' | 'medicalExpiryDate',
+  ) {
     return (event: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [field]: event.target.value }))
   }
@@ -44,7 +48,11 @@ export function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      await authService.register(form)
+      await authService.register({
+        ...form,
+        licenseExpiryDate: form.licenseExpiryDate || null,
+        medicalExpiryDate: form.medicalExpiryDate || null,
+      })
       navigate('/login')
     } catch (err) {
       const apiError = err as ApiError
@@ -126,6 +134,24 @@ export function RegisterPage() {
                 errors={fieldErrors?.Password ?? fieldErrors?.password}
                 required
               />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Lisans Bitiş (opsiyonel)"
+                  name="licenseExpiryDate"
+                  type="date"
+                  icon={CalendarDays}
+                  value={form.licenseExpiryDate ?? ''}
+                  onChange={updateField('licenseExpiryDate')}
+                />
+                <Input
+                  label="Medical Bitiş (opsiyonel)"
+                  name="medicalExpiryDate"
+                  type="date"
+                  icon={Stethoscope}
+                  value={form.medicalExpiryDate ?? ''}
+                  onChange={updateField('medicalExpiryDate')}
+                />
+              </div>
               <div className="flex flex-col gap-1.5">
                 <Select
                   label="Rütbe"

@@ -12,6 +12,8 @@ export interface RegisterRequest {
   licenseNumber: string
   email: string
   rank: PilotRank
+  licenseExpiryDate?: string | null
+  medicalExpiryDate?: string | null
 }
 
 export interface AuthResponseDto {

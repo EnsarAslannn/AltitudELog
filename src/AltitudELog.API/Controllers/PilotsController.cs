@@ -1,4 +1,5 @@
 using AltitudELog.API.Common.Export;
+using AltitudELog.Application.Pilots.Commands.UpdatePilotCertificates;
 using AltitudELog.Application.Pilots.Queries.GetPilotLogbook;
 using AltitudELog.Application.Pilots.Queries.GetPilotProfile;
 using AltitudELog.Application.Pilots.Queries.GetPilots;
@@ -53,5 +54,14 @@ public class PilotsController : ControllerBase
         return format == "csv"
             ? File(CsvLogbookWriter.Write(logbook), "text/csv", $"logbook-{id}.csv")
             : File(PdfLogbookWriter.Write(logbook), "application/pdf", $"logbook-{id}.pdf");
+    }
+
+    [HttpPut("me/certificates")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMyCertificates(
+        UpdatePilotCertificatesCommand command, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
     }
 }

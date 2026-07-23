@@ -14,7 +14,9 @@ public record RegisterCommand(
     // Trainee when omitted. (This is a deliberate demo choice — the app previously forced
     // Trainee to prevent privilege escalation; here we let visitors pick their rank so they
     // can try Captain-only features.)
-    PilotRank Rank = PilotRank.Trainee
+    PilotRank Rank = PilotRank.Trainee,
+    DateOnly? LicenseExpiryDate = null,
+    DateOnly? MedicalExpiryDate = null
 ) : IRequest<Guid>, ICacheInvalidatorCommand
 {
     public string[] CacheKeysToInvalidate => [CacheKeys.AllPilots, CacheKeys.Stats];

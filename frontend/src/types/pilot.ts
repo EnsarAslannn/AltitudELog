@@ -30,4 +30,10 @@ export interface PilotProfileDto extends PilotDto {
   totalFlightHours: string
   hoursByAircraftType: AircraftHoursDto[]
   recentFlights: PilotFlightSummaryDto[]
+  flightsLast90Days: number
+  hoursLast90Days: string
+  lastFlightDate: string | null
+  isCurrent: boolean
+  licenseExpiryDate: string | null
+  medicalExpiryDate: string | null
 }

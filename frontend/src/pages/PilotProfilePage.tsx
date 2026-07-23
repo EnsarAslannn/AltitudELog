@@ -1,26 +1,34 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
+  AlertOctagon,
+  AlertTriangle,
   BadgeCheck,
   CalendarDays,
+  CheckCircle2,
   Clock3,
   Crown,
   Eye,
   FileDown,
   FileText,
   GraduationCap,
+  HelpCircle,
   PlaneTakeoff,
   Shield,
   ShieldCheck,
+  ShieldX,
+  Stethoscope,
   User,
   UserCheck,
   Wrench,
 } from 'lucide-react'
 import { pilotService } from '../services/pilotService'
+import { useAuthStore } from '../store/authStore'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
+import { Input } from '../components/ui/Input'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
@@ -29,6 +37,42 @@ import type { PilotProfileDto } from '../types/pilot'
 import type { PilotRank } from '../types/auth'
 import type { DutyRole } from '../types/crew'
 import type { ApiError } from '../types/problemDetails'
+
+const CERT_WARNING_DAYS = 30
+
+type CertStatus = 'unknown' | 'valid' | 'expiringSoon' | 'expired'
+
+function certStatus(date: string | null): CertStatus {
+  if (!date) return 'unknown'
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const expiry = new Date(date)
+  const diffDays = Math.floor((expiry.getTime() - today.getTime()) / 86_400_000)
+  if (diffDays < 0) return 'expired'
+  if (diffDays <= CERT_WARNING_DAYS) return 'expiringSoon'
+  return 'valid'
+}
+
+const certStatusTone: Record<CertStatus, 'neutral' | 'green' | 'amber' | 'red'> = {
+  unknown: 'neutral',
+  valid: 'green',
+  expiringSoon: 'amber',
+  expired: 'red',
+}
+
+const certStatusIcon: Record<CertStatus, typeof CheckCircle2> = {
+  unknown: HelpCircle,
+  valid: CheckCircle2,
+  expiringSoon: AlertTriangle,
+  expired: AlertOctagon,
+}
+
+const certStatusLabel: Record<CertStatus, string> = {
+  unknown: 'Belirtilmemiş',
+  valid: 'Geçerli',
+  expiringSoon: 'Yakında Doluyor',
+  expired: 'Süresi Doldu',
+}
 
 const rankIcon: Record<PilotRank, typeof Shield> = {
   Trainee: GraduationCap,
@@ -69,22 +113,53 @@ export function PilotProfilePage() {
     }
   }
 
-  useEffect(() => {
+  const ownPilotId = useAuthStore((state) => state.pilotId)
+  const isOwnProfile = profile !== null && profile.id === ownPilotId
+
+  const [licenseExpiryDraft, setLicenseExpiryDraft] = useState('')
+  const [medicalExpiryDraft, setMedicalExpiryDraft] = useState('')
+  const [isSavingCerts, setIsSavingCerts] = useState(false)
+  const [certSaveError, setCertSaveError] = useState<string | null>(null)
+
+  function loadProfile() {
+    setIsLoading(true)
     pilotService
       .getProfile(pilotId)
-      .then(setProfile)
+      .then((data) => {
+        setProfile(data)
+        setLicenseExpiryDraft(data.licenseExpiryDate ?? '')
+        setMedicalExpiryDraft(data.medicalExpiryDate ?? '')
+      })
       .catch((err) => {
         const apiError = err as ApiError
         setError(apiError.status === 404 ? 'Pilot bulunamadı.' : (apiError.title ?? 'Pilot bilgisi yüklenemedi.'))
       })
       .finally(() => setIsLoading(false))
-  }, [pilotId])
+  }
+
+  useEffect(loadProfile, [pilotId])
+
+  async function handleSaveCertificates(event: FormEvent) {
+    event.preventDefault()
+    setIsSavingCerts(true)
+    setCertSaveError(null)
+    try {
+      await pilotService.updateCertificates(licenseExpiryDraft || null, medicalExpiryDraft || null)
+      loadProfile()
+    } catch (err) {
+      const apiError = err as ApiError
+      setCertSaveError(apiError.title ?? 'Sertifika bilgileri kaydedilemedi.')
+    } finally {
+      setIsSavingCerts(false)
+    }
+  }
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8">
         <Skeleton className="h-40 rounded-3xl" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <Skeleton className="h-24 rounded-2xl" />
           <Skeleton className="h-24 rounded-2xl" />
           <Skeleton className="h-24 rounded-2xl" />
           <Skeleton className="h-24 rounded-2xl" />
@@ -124,6 +199,9 @@ export function PilotProfilePage() {
           <Badge tone="sky" icon={BadgeCheck}>
             {profile.licenseNumber}
           </Badge>
+          <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
+            {profile.isCurrent ? 'Current' : 'Not Current'}
+          </Badge>
           <Button
             variant="secondary"
             icon={FileText}
@@ -144,10 +222,11 @@ export function PilotProfilePage() {
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={profile.totalFlights} />
         <StatTile icon={Clock3} label="Toplam Saat" value={profile.totalFlightHours} />
         <StatTile icon={Wrench} label="Uçak Tipi Çeşidi" value={profile.hoursByAircraftType.length} />
+        <StatTile icon={CalendarDays} label="Son 90 Gün" value={profile.hoursLast90Days} />
       </div>
 
       {/* Hours by aircraft type */}
@@ -172,6 +251,64 @@ export function PilotProfilePage() {
               </Card>
             ))}
           </div>
+        )}
+      </section>
+
+      {/* Certificates */}
+      <section className="flex flex-col gap-4">
+        <Eyebrow>Sertifikalar</Eyebrow>
+        <div className="flex flex-col gap-3">
+          {(
+            [
+              { key: 'license' as const, label: 'Lisans', icon: BadgeCheck, date: profile.licenseExpiryDate },
+              { key: 'medical' as const, label: 'Medical', icon: Stethoscope, date: profile.medicalExpiryDate },
+            ]
+          ).map((cert) => {
+            const status = certStatus(cert.date)
+            const StatusIcon = certStatusIcon[status]
+            return (
+              <Card key={cert.key} className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00205b]/6 text-[#00205b]">
+                    <cert.icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-medium text-[#0b1220]">{cert.label}</p>
+                    <p className="data text-xs text-slate-500">{cert.date ?? 'Tarih belirtilmemiş'}</p>
+                  </div>
+                </div>
+                <Badge tone={certStatusTone[status]} icon={StatusIcon}>
+                  {certStatusLabel[status]}
+                </Badge>
+              </Card>
+            )
+          })}
+        </div>
+
+        {isOwnProfile && (
+          <Card className="flex flex-col gap-4">
+            <p className="text-xs font-medium text-slate-500">Sertifika tarihlerini güncelle</p>
+            <form onSubmit={handleSaveCertificates} className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <Input
+                label="Lisans Bitiş Tarihi"
+                name="licenseExpiryDate"
+                type="date"
+                value={licenseExpiryDraft}
+                onChange={(e) => setLicenseExpiryDraft(e.target.value)}
+              />
+              <Input
+                label="Medical Bitiş Tarihi"
+                name="medicalExpiryDate"
+                type="date"
+                value={medicalExpiryDraft}
+                onChange={(e) => setMedicalExpiryDraft(e.target.value)}
+              />
+              <Button type="submit" variant="secondary" disabled={isSavingCerts}>
+                {isSavingCerts ? 'Kaydediliyor…' : 'Kaydet'}
+              </Button>
+            </form>
+            {certSaveError && <p className="text-sm text-red-600">{certSaveError}</p>}
+          </Card>
         )}
       </section>
 

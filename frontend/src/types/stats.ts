@@ -8,4 +8,19 @@ export interface StatsDto {
   pilotsByRank: Partial<Record<PilotRank, number>>
   totalCrmReports: number
   crmReportsBySeverity: Partial<Record<SeverityLevel, number>>
+  expiringCertifications: ExpiringCertificationDto[]
+  crmTrendByMonth: MonthlyCrmTrendDto[]
+}
+
+export interface ExpiringCertificationDto {
+  pilotId: string
+  pilotName: string
+  licenseExpiryDate: string | null
+  medicalExpiryDate: string | null
+}
+
+export interface MonthlyCrmTrendDto {
+  year: number
+  month: number
+  countsBySeverity: Partial<Record<SeverityLevel, number>>
 }
