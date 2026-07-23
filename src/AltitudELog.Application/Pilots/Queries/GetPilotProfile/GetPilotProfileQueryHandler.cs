@@ -24,7 +24,9 @@ public class GetPilotProfileQueryHandler : IRequestHandler<GetPilotProfileQuery,
                 p.Name,
                 p.LicenseNumber,
                 p.Rank,
-                p.Username
+                p.Username,
+                p.LicenseExpiryDate,
+                p.MedicalExpiryDate
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -64,6 +66,11 @@ public class GetPilotProfileQueryHandler : IRequestHandler<GetPilotProfileQuery,
             .Take(5)
             .ToList();
 
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currencyCutoff = today.AddDays(-90);
+        var flightsLast90Days = flights.Where(f => f.Date >= currencyCutoff).ToList();
+        var lastFlightDate = flights.Count > 0 ? flights.Max(f => f.Date) : (DateOnly?)null;
+
         return new PilotProfileDto
         {
             Id = pilot.Id,
@@ -74,7 +81,13 @@ public class GetPilotProfileQueryHandler : IRequestHandler<GetPilotProfileQuery,
             TotalFlights = flights.Count,
             TotalFlightHours = TimeSpan.FromTicks(flights.Sum(f => f.FlightTime.Ticks)),
             HoursByAircraftType = hoursByAircraftType,
-            RecentFlights = recentFlights
+            RecentFlights = recentFlights,
+            FlightsLast90Days = flightsLast90Days.Count,
+            HoursLast90Days = TimeSpan.FromTicks(flightsLast90Days.Sum(f => f.FlightTime.Ticks)),
+            LastFlightDate = lastFlightDate,
+            IsCurrent = lastFlightDate is not null && lastFlightDate >= currencyCutoff,
+            LicenseExpiryDate = pilot.LicenseExpiryDate,
+            MedicalExpiryDate = pilot.MedicalExpiryDate
         };
     }
 }

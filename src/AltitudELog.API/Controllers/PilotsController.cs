@@ -1,3 +1,4 @@
+using AltitudELog.Application.Pilots.Commands.UpdatePilotCertificates;
 using AltitudELog.Application.Pilots.Queries.GetPilotProfile;
 using AltitudELog.Application.Pilots.Queries.GetPilots;
 using MediatR;
@@ -31,5 +32,14 @@ public class PilotsController : ControllerBase
     {
         var profile = await _mediator.Send(new GetPilotProfileQuery(id), cancellationToken);
         return profile is null ? NotFound() : Ok(profile);
+    }
+
+    [HttpPut("me/certificates")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMyCertificates(
+        UpdatePilotCertificatesCommand command, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
     }
 }

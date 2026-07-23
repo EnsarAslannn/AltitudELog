@@ -13,6 +13,12 @@ public class PilotProfileDto
     public TimeSpan TotalFlightHours { get; init; }
     public List<AircraftHoursDto> HoursByAircraftType { get; init; } = [];
     public List<PilotFlightDto> RecentFlights { get; init; } = [];
+    public int FlightsLast90Days { get; init; }
+    public TimeSpan HoursLast90Days { get; init; }
+    public DateOnly? LastFlightDate { get; init; }
+    public bool IsCurrent { get; init; }
+    public DateOnly? LicenseExpiryDate { get; init; }
+    public DateOnly? MedicalExpiryDate { get; init; }
 }
 
 public class AircraftHoursDto
