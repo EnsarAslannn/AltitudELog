@@ -81,7 +81,7 @@ export function FlightForm({
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <Card className="bg-[#00205b] py-6">
+      <Card className="bg-navy-900 py-6">
         <RouteRibbon
           origin={originICAO.toUpperCase()}
           destination={destinationICAO.toUpperCase()}
@@ -146,7 +146,7 @@ export function FlightForm({
             required
           />
           <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#00205b]" />
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-navy-900" />
             <p>METAR bilgisi, uçuş kaydedildikten sonra sistem tarafından otomatik olarak alınır.</p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}

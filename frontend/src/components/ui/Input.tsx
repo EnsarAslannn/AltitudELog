@@ -25,7 +25,7 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
           id={inputId}
           className={cn(
             'w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none placeholder:text-slate-400 transition-colors',
-            'focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10',
+            'focus:border-navy-900 focus:ring-4 focus:ring-navy-900/10',
             Icon && 'pl-9',
             hasError ? 'border-red-500' : 'border-slate-300',
             className,

@@ -12,7 +12,7 @@ export function Eyebrow({ rule = true, tone = 'navy', className, children, ...pr
     <div
       className={cn(
         'flex items-center gap-3',
-        tone === 'navy' ? 'text-[#00205b]' : 'text-white/70',
+        tone === 'navy' ? 'text-navy-900' : 'text-white/70',
         className,
       )}
       {...props}

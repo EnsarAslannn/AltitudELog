@@ -42,7 +42,7 @@ export function ForgotPasswordPage() {
       />
       <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 font-display text-2xl font-bold tracking-tight text-[#0b1220]">Şifremi Unuttum</h1>
+          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Şifremi Unuttum</h1>
           <p className="mb-6 text-sm text-slate-500">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</p>
           <Card>
             {submitted ? (

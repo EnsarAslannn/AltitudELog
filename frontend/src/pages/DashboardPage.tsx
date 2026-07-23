@@ -58,19 +58,19 @@ export function DashboardPage() {
   return (
     <div className="flex flex-col gap-10">
       {/* Hero band */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#00205b]">
+      <section className="relative min-h-[280px] overflow-hidden rounded-3xl bg-navy-900 rise sm:min-h-[340px]">
         <img
           src="/images/runway.jpg"
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00205b] via-[#00205b]/85 to-[#00205b]/25" />
-        <div className="relative flex flex-col gap-4 p-8 sm:p-10">
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative flex h-full flex-col justify-center gap-4 p-8 sm:p-10">
           <Eyebrow tone="light" rule={false}>
             Flight Log · Operasyon Özeti
           </Eyebrow>
-          <h1 className="max-w-xl font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
+          <h1 className="max-w-xl font-display text-display-xl font-bold tracking-tight text-white">
             Kayıtlı tüm uçuşlar, tek bakışta.
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-slate-200">
@@ -80,7 +80,7 @@ export function DashboardPage() {
       </section>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 rise sm:grid-cols-3" style={{ '--rise-delay': '80ms' } as React.CSSProperties}>
         <StatTile icon={Plane} label="Toplam Uçuş" value={flights.length} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={thisMonthCount} />
         <StatTile icon={Wrench} label="Uçak Tipi" value={aircraftTypeCount} />
@@ -102,8 +102,13 @@ export function DashboardPage() {
           </Card>
         ) : (
           <div className="flex flex-col gap-4">
-            {flights.map((flight) => (
-              <Link key={flight.id} to={`/flights/${flight.id}`} className="group block">
+            {flights.map((flight, index) => (
+              <Link
+                key={flight.id}
+                to={`/flights/${flight.id}`}
+                className="group block rise"
+                style={{ '--rise-delay': `${Math.min(index, 8) * 60}ms` } as React.CSSProperties}
+              >
                 <Card interactive className={cn('overflow-hidden p-0', flight.isCancelled && 'opacity-60')}>
                   <div className="flex flex-col sm:flex-row">
                     {/* boarding-pass stub */}

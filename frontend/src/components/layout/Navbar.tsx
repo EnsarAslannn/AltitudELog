@@ -31,11 +31,11 @@ export function Navbar() {
     )
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#00205b]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-navy-900">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 ring-1 ring-white/15">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-white/10 ring-1 ring-white/15">
               <PlaneTakeoff className="h-4 w-4 text-white" strokeWidth={2.5} />
             </span>
             <span className="font-display text-lg font-bold tracking-tight text-white">

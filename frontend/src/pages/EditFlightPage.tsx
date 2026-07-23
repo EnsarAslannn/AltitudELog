@@ -61,7 +61,7 @@ export function EditFlightPage() {
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-lg">
         <Eyebrow className="mb-3">Captain · Flight Plan</Eyebrow>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-[#0b1220]">Uçuşu Düzenle</h1>
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Uçuşu Düzenle</h1>
         <p className="mt-1 text-sm text-slate-500">
           Rota bilgisini güncelleyin. Kalkış havaalanı değişirse METAR yeniden çekilir.
         </p>

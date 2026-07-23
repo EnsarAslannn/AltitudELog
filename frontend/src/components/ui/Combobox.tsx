@@ -129,7 +129,7 @@ export function Combobox({
           onKeyDown={handleKeyDown}
           className={cn(
             'w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none placeholder:text-slate-400 transition-colors',
-            'focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10',
+            'focus:border-navy-900 focus:ring-4 focus:ring-navy-900/10',
             Icon && 'pl-9',
             hasError ? 'border-red-500' : 'border-slate-300',
           )}
@@ -138,7 +138,7 @@ export function Combobox({
           <ul
             id={listboxId}
             role="listbox"
-            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-[var(--shadow-card-hover)]"
           >
             {filtered.map((option, index) => (
               <li
@@ -152,7 +152,7 @@ export function Combobox({
                 onMouseEnter={() => setHighlightedIndex(index)}
                 className={cn(
                   'cursor-pointer px-3 py-2 text-sm',
-                  index === highlightedIndex ? 'bg-[#00205b]/5 text-[#00205b]' : 'text-[#0b1220]',
+                  index === highlightedIndex ? 'bg-navy-900/5 text-navy-900' : 'text-[#0b1220]',
                 )}
               >
                 <div className="font-medium">{option.label}</div>

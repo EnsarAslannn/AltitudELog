@@ -112,12 +112,23 @@ export function AdminStatsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <Eyebrow rule={false}>Yönetim Paneli</Eyebrow>
-        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#0b1220]">
-          Operasyon İstatistikleri
-        </h1>
-      </div>
+      <section className="relative min-h-[180px] overflow-hidden rounded-3xl bg-navy-900 rise">
+        <img
+          src="/images/flightdeck.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+        />
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative flex h-full flex-col justify-center gap-2 p-8 sm:p-10">
+          <Eyebrow tone="light" rule={false}>
+            Yönetim Paneli
+          </Eyebrow>
+          <h1 className="font-display text-display-lg font-bold tracking-tight text-white">
+            Operasyon İstatistikleri
+          </h1>
+        </div>
+      </section>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">

@@ -140,15 +140,15 @@ export function FlightDetailPage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Boarding-pass header */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#00205b]">
+      <section className="relative min-h-[280px] overflow-hidden rounded-3xl bg-navy-900 rise sm:min-h-[340px]">
         <img
           src="/images/clouds.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-60"
+          className="absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#001235] via-[#00205b]/80 to-[#00205b]/40" />
-        <div className="relative flex flex-col gap-6 p-8 sm:p-10">
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative flex h-full flex-col justify-center gap-6 p-8 sm:p-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Eyebrow tone="light" rule={false}>
               Flight Record
@@ -294,7 +294,7 @@ function TabButton({
       onClick={onClick}
       className={cn(
         'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors',
-        active ? 'bg-[#00205b] text-white' : 'text-slate-500 hover:text-[#00205b]',
+        active ? 'bg-navy-900 text-white' : 'text-slate-500 hover:text-navy-900',
       )}
     >
       <Icon className="h-4 w-4" />
@@ -372,8 +372,8 @@ function CrewTab({
 
       {isCaptain && (
         <Card className="h-fit lg:sticky lg:top-24">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#0b1220]">
-            <UserPlus className="h-4 w-4 text-[#00205b]" />
+          <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-[#0b1220]">
+            <UserPlus className="h-4 w-4 text-navy-900" />
             Mürettebat Ata
           </h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -472,8 +472,8 @@ function CrmTab({
       </div>
 
       <Card className="h-fit lg:sticky lg:top-24">
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#0b1220]">
-          <ShieldAlert className="h-4 w-4 text-[#00205b]" />
+        <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-[#0b1220]">
+          <ShieldAlert className="h-4 w-4 text-navy-900" />
           Yeni CRM Raporu
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

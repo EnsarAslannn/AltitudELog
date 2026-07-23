@@ -110,7 +110,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
 
       {hovered && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-[var(--shadow-card-hover)]"
           style={{
             left: `${(hovered.x / CHART_WIDTH) * 100}%`,
             top: `${(hovered.y / CHART_HEIGHT) * 100}%`,

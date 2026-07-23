@@ -182,13 +182,13 @@ export function PilotProfilePage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Profile header */}
-      <Card className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+      <Card className="flex flex-col gap-5 p-6 rise sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div className="flex items-center gap-4">
-          <span className="data flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#00205b]/8 text-lg font-bold text-[#00205b]">
+          <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-navy-900/8 text-xl font-bold text-navy-900">
             {initials(profile.name)}
           </span>
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-[#0b1220]">{profile.name}</h1>
+            <h1 className="font-display text-display-lg font-bold tracking-tight text-[#0b1220]">{profile.name}</h1>
             <p className="data mt-1 text-sm text-slate-500">@{profile.username}</p>
           </div>
         </div>
