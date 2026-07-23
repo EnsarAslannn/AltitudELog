@@ -14,7 +14,7 @@ export function CreateFlightPage() {
       flightTime: values.flightTime,
       aircraftType: values.aircraftType,
       date: values.date,
-      metarInfo: values.metarInfo ?? null,
+      metarInfo: null,
     })
     navigate('/')
   }
@@ -30,7 +30,6 @@ export function CreateFlightPage() {
       </div>
 
       <FlightForm
-        includeMetar
         submitLabel="Uçuşu Oluştur"
         submittingLabel="Oluşturuluyor…"
         submitIcon={PlaneTakeoff}
