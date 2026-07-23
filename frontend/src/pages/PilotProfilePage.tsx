@@ -6,6 +6,8 @@ import {
   Clock3,
   Crown,
   Eye,
+  FileDown,
+  FileText,
   GraduationCap,
   PlaneTakeoff,
   Shield,
@@ -16,11 +18,13 @@ import {
 } from 'lucide-react'
 import { pilotService } from '../services/pilotService'
 import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
+import { downloadBlob } from '../lib/download'
 import type { PilotProfileDto } from '../types/pilot'
 import type { PilotRank } from '../types/auth'
 import type { DutyRole } from '../types/crew'
@@ -53,6 +57,17 @@ export function PilotProfilePage() {
   const [profile, setProfile] = useState<PilotProfileDto | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [exportingFormat, setExportingFormat] = useState<'csv' | 'pdf' | null>(null)
+
+  async function handleExport(format: 'csv' | 'pdf') {
+    setExportingFormat(format)
+    try {
+      const blob = await pilotService.exportLogbook(pilotId, format)
+      downloadBlob(blob, `logbook-${pilotId}.${format}`)
+    } finally {
+      setExportingFormat(null)
+    }
+  }
 
   useEffect(() => {
     pilotService
@@ -109,6 +124,22 @@ export function PilotProfilePage() {
           <Badge tone="sky" icon={BadgeCheck}>
             {profile.licenseNumber}
           </Badge>
+          <Button
+            variant="secondary"
+            icon={FileText}
+            disabled={exportingFormat !== null}
+            onClick={() => handleExport('csv')}
+          >
+            {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
+          </Button>
+          <Button
+            variant="secondary"
+            icon={FileDown}
+            disabled={exportingFormat !== null}
+            onClick={() => handleExport('pdf')}
+          >
+            {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
+          </Button>
         </div>
       </Card>
 

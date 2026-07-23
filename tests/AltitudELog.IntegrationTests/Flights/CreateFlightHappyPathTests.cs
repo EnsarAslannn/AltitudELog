@@ -36,7 +36,8 @@ public class CreateFlightHappyPathTests : IAsyncLifetime
     private async Task<string> RegisterAndLoginAsync(PilotRank rank, string usernameSuffix)
     {
         var username = $"pilot_{usernameSuffix}_{Guid.NewGuid():N}";
-        var registerCommand = new RegisterCommand(username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}");
+        var registerCommand = new RegisterCommand(
+            username, "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", $"{username}@example.com");
 
         var registerResponse = await _client.PostAsJsonAsync("/Auth/register", registerCommand);
         registerResponse.EnsureSuccessStatusCode();

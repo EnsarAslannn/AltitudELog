@@ -113,6 +113,9 @@ namespace AltitudELog.Infrastructure.Persistence.Migrations
                     b.Property<TimeSpan>("FlightTime")
                         .HasColumnType("interval");
 
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("METARInfo")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -133,6 +136,10 @@ namespace AltitudELog.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("LicenseNumber")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -148,6 +155,13 @@ namespace AltitudELog.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime?>("PasswordResetTokenExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordResetTokenHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Rank")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -159,6 +173,9 @@ namespace AltitudELog.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("LicenseNumber")
                         .IsUnique();

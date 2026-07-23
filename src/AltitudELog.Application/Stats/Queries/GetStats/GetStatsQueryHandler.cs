@@ -17,9 +17,9 @@ public class GetStatsQueryHandler : IRequestHandler<GetStatsQuery, StatsDto>
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var totalFlights = await _context.Flights.CountAsync(cancellationToken);
+        var totalFlights = await _context.Flights.CountAsync(f => !f.IsCancelled, cancellationToken);
         var flightsThisMonth = await _context.Flights
-            .CountAsync(f => f.Date.Year == today.Year && f.Date.Month == today.Month, cancellationToken);
+            .CountAsync(f => !f.IsCancelled && f.Date.Year == today.Year && f.Date.Month == today.Month, cancellationToken);
 
         var totalPilots = await _context.Pilots.CountAsync(cancellationToken);
         var pilotsByRank = await _context.Pilots

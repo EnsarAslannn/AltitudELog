@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BadgeCheck, IdCard, Lock, ShieldCheck, User, UserPlus } from 'lucide-react'
+import { BadgeCheck, IdCard, Lock, Mail, ShieldCheck, User, UserPlus } from 'lucide-react'
 import { authService } from '../services/authService'
 import { AuthHero } from '../components/layout/AuthHero'
 import { Button } from '../components/ui/Button'
@@ -23,6 +23,7 @@ export function RegisterPage() {
     password: '',
     name: '',
     licenseNumber: '',
+    email: '',
     rank: 'Trainee',
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null)
@@ -31,7 +32,7 @@ export function RegisterPage() {
 
   const navigate = useNavigate()
 
-  function updateField(field: 'username' | 'password' | 'name' | 'licenseNumber') {
+  function updateField(field: 'username' | 'password' | 'name' | 'licenseNumber' | 'email') {
     return (event: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [field]: event.target.value }))
   }
@@ -101,6 +102,17 @@ export function RegisterPage() {
                 value={form.username}
                 onChange={updateField('username')}
                 errors={fieldErrors?.Username ?? fieldErrors?.username}
+                required
+              />
+              <Input
+                label="E-posta"
+                name="email"
+                type="email"
+                icon={Mail}
+                autoComplete="email"
+                value={form.email}
+                onChange={updateField('email')}
+                errors={fieldErrors?.Email ?? fieldErrors?.email}
                 required
               />
               <Input

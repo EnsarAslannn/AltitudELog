@@ -1,5 +1,11 @@
 import { apiClient } from '../lib/axios'
-import type { AuthResponseDto, LoginRequest, RegisterRequest } from '../types/auth'
+import type {
+  AuthResponseDto,
+  ForgotPasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+} from '../types/auth'
 
 export const authService = {
   register: (request: RegisterRequest) =>
@@ -7,4 +13,8 @@ export const authService = {
 
   login: (request: LoginRequest) =>
     apiClient.post<AuthResponseDto>('/Auth/login', request).then((res) => res.data),
+
+  forgotPassword: (request: ForgotPasswordRequest) => apiClient.post('/Auth/forgot-password', request),
+
+  resetPassword: (request: ResetPasswordRequest) => apiClient.post('/Auth/reset-password', request),
 }

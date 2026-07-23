@@ -35,7 +35,7 @@ public class GetPilotProfileQueryHandler : IRequestHandler<GetPilotProfileQuery,
 
         var flights = await _context.Crew
             .AsNoTracking()
-            .Where(c => c.PilotId == request.PilotId)
+            .Where(c => c.PilotId == request.PilotId && !c.Flight.IsCancelled)
             .Select(c => new PilotFlightDto
             {
                 FlightId = c.Flight.Id,

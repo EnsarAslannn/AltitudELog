@@ -4,12 +4,14 @@ import {
   AlertCircle,
   AlertOctagon,
   AlertTriangle,
+  Ban,
   CalendarDays,
   Clock3,
   Crown,
   Eye,
   GraduationCap,
   Info,
+  Pencil,
   Radio,
   ShieldAlert,
   User,
@@ -17,6 +19,7 @@ import {
   UserPlus,
   Users,
   Wrench,
+  XCircle,
 } from 'lucide-react'
 import { flightService } from '../services/flightService'
 import { crewService } from '../services/crewService'
@@ -105,6 +108,10 @@ export function FlightDetailPage() {
       .finally(() => setIsLoading(false))
   }, [flightId, isCaptain])
 
+  function refreshFlight() {
+    flightService.getById(flightId).then(setFlight)
+  }
+
   function refreshCrew() {
     crewService.getByFlight(flightId).then(setCrew)
   }
@@ -142,9 +149,29 @@ export function FlightDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#001235] via-[#00205b]/80 to-[#00205b]/40" />
         <div className="relative flex flex-col gap-6 p-8 sm:p-10">
-          <Eyebrow tone="light" rule={false}>
-            Flight Record
-          </Eyebrow>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Eyebrow tone="light" rule={false}>
+              Flight Record
+            </Eyebrow>
+            {flight.isCancelled ? (
+              <Badge tone="red" icon={Ban}>
+                İptal Edildi
+              </Badge>
+            ) : (
+              isCaptain && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/flights/${flightId}/edit`}
+                    className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Düzenle
+                  </Link>
+                  <CancelFlightControl flightId={flightId} onCancelled={refreshFlight} />
+                </div>
+              )
+            )}
+          </div>
           <RouteRibbon
             origin={flight.originICAO}
             destination={flight.destinationICAO}
@@ -199,6 +226,55 @@ export function FlightDetailPage() {
       )}
       {tab === 'crm' && <CrmTab flightId={flightId} reports={reports} onCreated={refreshReports} />}
     </div>
+  )
+}
+
+function CancelFlightControl({ flightId, onCancelled }: { flightId: string; onCancelled: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  async function handleConfirm() {
+    setIsCancelling(true)
+    try {
+      await flightService.cancel(flightId)
+      onCancelled()
+    } finally {
+      setIsCancelling(false)
+      setConfirming(false)
+    }
+  }
+
+  if (confirming) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium text-white">Emin misiniz?</span>
+        <button
+          onClick={handleConfirm}
+          disabled={isCancelling}
+          className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+        >
+          <Ban className="h-3.5 w-3.5" />
+          {isCancelling ? 'İptal ediliyor…' : 'Onayla'}
+        </button>
+        <button
+          onClick={() => setConfirming(false)}
+          disabled={isCancelling}
+          className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+        >
+          Vazgeç
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+    >
+      <XCircle className="h-3.5 w-3.5" />
+      İptal Et
+    </button>
   )
 }
 

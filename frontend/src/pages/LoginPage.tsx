@@ -66,16 +66,24 @@ export function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <Input
-                label="Şifre"
-                name="password"
-                type="password"
-                icon={Lock}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex flex-col gap-1.5">
+                <Input
+                  label="Şifre"
+                  name="password"
+                  type="password"
+                  icon={Lock}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Link
+                  to="/forgot-password"
+                  className="self-end text-xs font-medium text-[#00205b] hover:underline"
+                >
+                  Şifremi unuttum
+                </Link>
+              </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <Button type="submit" icon={LogIn} disabled={isSubmitting}>
                 {isSubmitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
