@@ -1,25 +1,15 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  AlertOctagon,
-  AlertTriangle,
   BadgeCheck,
   CalendarDays,
-  CheckCircle2,
   Clock3,
-  Crown,
-  Eye,
   FileDown,
   FileText,
-  GraduationCap,
-  HelpCircle,
   PlaneTakeoff,
-  Shield,
   ShieldCheck,
   ShieldX,
   Stethoscope,
-  User,
-  UserCheck,
   Wrench,
 } from 'lucide-react'
 import { pilotService } from '../services/pilotService'
@@ -33,61 +23,9 @@ import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
 import { downloadBlob } from '../lib/download'
+import { certStatus, certStatusIcon, certStatusLabel, certStatusTone, dutyRoleIcon, rankIcon } from '../lib/domainDisplay'
 import type { PilotProfileDto } from '../types/pilot'
-import type { PilotRank } from '../types/auth'
-import type { DutyRole } from '../types/crew'
 import type { ApiError } from '../types/problemDetails'
-
-const CERT_WARNING_DAYS = 30
-
-type CertStatus = 'unknown' | 'valid' | 'expiringSoon' | 'expired'
-
-function certStatus(date: string | null): CertStatus {
-  if (!date) return 'unknown'
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const expiry = new Date(date)
-  const diffDays = Math.floor((expiry.getTime() - today.getTime()) / 86_400_000)
-  if (diffDays < 0) return 'expired'
-  if (diffDays <= CERT_WARNING_DAYS) return 'expiringSoon'
-  return 'valid'
-}
-
-const certStatusTone: Record<CertStatus, 'neutral' | 'green' | 'amber' | 'red'> = {
-  unknown: 'neutral',
-  valid: 'green',
-  expiringSoon: 'amber',
-  expired: 'red',
-}
-
-const certStatusIcon: Record<CertStatus, typeof CheckCircle2> = {
-  unknown: HelpCircle,
-  valid: CheckCircle2,
-  expiringSoon: AlertTriangle,
-  expired: AlertOctagon,
-}
-
-const certStatusLabel: Record<CertStatus, string> = {
-  unknown: 'Belirtilmemiş',
-  valid: 'Geçerli',
-  expiringSoon: 'Yakında Doluyor',
-  expired: 'Süresi Doldu',
-}
-
-const rankIcon: Record<PilotRank, typeof Shield> = {
-  Trainee: GraduationCap,
-  FirstOfficer: Shield,
-  Captain: ShieldCheck,
-  ChiefPilot: Crown,
-}
-
-const dutyRoleIcon: Record<DutyRole, typeof Crown> = {
-  PIC: Crown,
-  SIC: UserCheck,
-  Instructor: GraduationCap,
-  Observer: Eye,
-  Trainee: User,
-}
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/)
@@ -121,23 +59,41 @@ export function PilotProfilePage() {
   const [isSavingCerts, setIsSavingCerts] = useState(false)
   const [certSaveError, setCertSaveError] = useState<string | null>(null)
 
+  const fetchProfile = useCallback(
+    (isCancelled: () => boolean) => {
+      setIsLoading(true)
+      setError(null)
+      return pilotService
+        .getProfile(pilotId)
+        .then((data) => {
+          if (isCancelled()) return
+          setProfile(data)
+          setLicenseExpiryDraft(data.licenseExpiryDate ?? '')
+          setMedicalExpiryDraft(data.medicalExpiryDate ?? '')
+        })
+        .catch((err) => {
+          if (isCancelled()) return
+          const apiError = err as ApiError
+          setError(apiError.status === 404 ? 'Pilot bulunamadı.' : (apiError.title ?? 'Pilot bilgisi yüklenemedi.'))
+        })
+        .finally(() => {
+          if (!isCancelled()) setIsLoading(false)
+        })
+    },
+    [pilotId],
+  )
+
   function loadProfile() {
-    setIsLoading(true)
-    pilotService
-      .getProfile(pilotId)
-      .then((data) => {
-        setProfile(data)
-        setLicenseExpiryDraft(data.licenseExpiryDate ?? '')
-        setMedicalExpiryDraft(data.medicalExpiryDate ?? '')
-      })
-      .catch((err) => {
-        const apiError = err as ApiError
-        setError(apiError.status === 404 ? 'Pilot bulunamadı.' : (apiError.title ?? 'Pilot bilgisi yüklenemedi.'))
-      })
-      .finally(() => setIsLoading(false))
+    fetchProfile(() => false)
   }
 
-  useEffect(loadProfile, [pilotId])
+  useEffect(() => {
+    let cancelled = false
+    fetchProfile(() => cancelled)
+    return () => {
+      cancelled = true
+    }
+  }, [fetchProfile])
 
   async function handleSaveCertificates(event: FormEvent) {
     event.preventDefault()
@@ -156,7 +112,8 @@ export function PilotProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8" aria-busy="true">
+        <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-40 rounded-3xl" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Skeleton className="h-24 rounded-2xl" />
@@ -172,7 +129,9 @@ export function PilotProfilePage() {
   if (error || !profile) {
     return (
       <Card className="border-red-200 bg-red-50/50">
-        <p className="text-sm text-red-700">{error ?? 'Pilot bulunamadı.'}</p>
+        <p role="alert" className="text-sm text-red-700">
+          {error ?? 'Pilot bulunamadı.'}
+        </p>
       </Card>
     )
   }
@@ -288,7 +247,11 @@ export function PilotProfilePage() {
         {isOwnProfile && (
           <Card className="flex flex-col gap-4">
             <p className="text-xs font-medium text-slate-500">Sertifika tarihlerini güncelle</p>
-            <form onSubmit={handleSaveCertificates} className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <form
+              onSubmit={handleSaveCertificates}
+              aria-busy={isSavingCerts}
+              className="flex flex-col gap-4 sm:flex-row sm:items-end"
+            >
               <Input
                 label="Lisans Bitiş Tarihi"
                 name="licenseExpiryDate"
@@ -307,7 +270,11 @@ export function PilotProfilePage() {
                 {isSavingCerts ? 'Kaydediliyor…' : 'Kaydet'}
               </Button>
             </form>
-            {certSaveError && <p className="text-sm text-red-600">{certSaveError}</p>}
+            {certSaveError && (
+              <p role="alert" className="text-sm text-red-600">
+                {certSaveError}
+              </p>
+            )}
           </Card>
         )}
       </section>
