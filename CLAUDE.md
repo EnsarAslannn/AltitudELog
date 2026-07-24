@@ -297,10 +297,20 @@ solution/build — it's a separate `npm` project.
   `ApiError` shape matching the API's `ProblemDetails`/`ValidationProblemDetails` output.
 - `src/services/`: one thin service module per backend resource (`authService`, `flightService`, `crewService`,
   `crmReportService`, `pilotService`), all going through `apiClient`.
-- `src/components/ui/`: shared primitives (`Button`, `Card`, `Input`, `Select`, `Badge`, `Skeleton`, `Spinner`).
-  Visual language is a "Trust Navy" enterprise look — dark navy (`slate-900`) top nav over a light content area,
-  amber used specifically as a Captain/PIC "command" accent, everything else blue/slate. Keep new UI consistent
-  with these primitives rather than one-off styling in pages.
+- `src/components/ui/`: shared primitives (`Button`, `Card`, `Input`, `Select`, `Combobox`, `Badge`, `Skeleton`,
+  `Spinner`, `Eyebrow`, `StatTile`, `RouteRibbon`, `Pagination`, `CrmTrendChart`).
+  Visual language is **"Night Ops"** — a dark ATC-radar-scope / black-box-flight-recorder aesthetic: near-black
+  green-tinted backgrounds (`void-*` tokens), phosphor-green (`phosphor-*`) as the primary interactive/accent
+  color, amber (`command-*`) reserved specifically for Captain/PIC "command" significance (badges, the `command`
+  `Button` variant, brand accent) exactly as amber was used before the redesign, and alert-red (`alert-*`) for
+  errors/cancelled state. Sharp/near-square panel corners (`rounded-sm`, not the old soft `rounded-2xl`/`3xl`),
+  hairline glow borders instead of soft ambient shadows (`--shadow-panel`/`--shadow-panel-hover`), a
+  `Oxanium` display font + `IBM Plex Sans` body + `IBM Plex Mono` (unchanged) for data/eyebrow labels. Utility
+  classes in `src/index.css` carry the signature flourishes and are reused as-is across pages: `.data`/`.eyebrow`
+  (mono), `.glass`/`.hero-scrim` (photo overlays), `.hero-photo` (grayscale+green duotone filter for the stock
+  hero photography in `public/images/`), `.scanlines` (CRT texture), `.hud-corners` (glowing corner-bracket
+  framing on hero panels), `.rise` (now a CRT "power-on flicker" instead of the old fade-up). Keep new UI
+  consistent with these primitives/tokens rather than one-off styling in pages.
 - Config: `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:5264` (must match the API's http
   launch profile). `vite.config.ts` pins the dev server to port `5180` with `strictPort: true` — this exact port
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.

@@ -56,12 +56,12 @@ export function AdminStatsPage() {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
-        <Skeleton className="h-24 rounded-2xl" />
+        <Skeleton className="h-24 rounded-sm" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
         </div>
         <SkeletonCard />
       </div>
@@ -70,8 +70,8 @@ export function AdminStatsPage() {
 
   if (error || !stats) {
     return (
-      <Card className="border-red-200 bg-red-50/50">
-        <p role="alert" className="text-sm text-red-700">
+      <Card className="border-alert-500/30 bg-alert-500/5">
+        <p role="alert" className="text-sm text-alert-400">
           {error ?? 'İstatistikler yüklenemedi.'}
         </p>
       </Card>
@@ -80,11 +80,11 @@ export function AdminStatsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="relative min-h-[180px] overflow-hidden rounded-3xl bg-navy-900 rise">
+      <section className="relative min-h-[180px] overflow-hidden rounded-sm bg-void-950 hud-corners scanlines rise">
         <img
           src="/images/flightdeck.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover hero-photo"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
@@ -92,7 +92,7 @@ export function AdminStatsPage() {
           <Eyebrow tone="light" rule={false}>
             Yönetim Paneli
           </Eyebrow>
-          <h1 className="font-display text-display-lg font-bold tracking-tight text-white">
+          <h1 className="font-display text-display-lg font-bold tracking-tight text-mist-100">
             Operasyon İstatistikleri
           </h1>
         </div>
@@ -115,12 +115,12 @@ export function AdminStatsPage() {
             return (
               <Card key={rank} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00205b]/6 text-[#00205b]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-phosphor-500/10 text-phosphor-400">
                     <RankIcon className="h-4 w-4" />
                   </span>
-                  <span className="font-medium text-[#0b1220]">{rank}</span>
+                  <span className="font-medium text-mist-100">{rank}</span>
                 </div>
-                <span className="data text-sm font-semibold text-[#0b1220]">
+                <span className="data text-sm font-semibold text-mist-100">
                   {stats.pilotsByRank[rank] ?? 0}
                 </span>
               </Card>
@@ -141,7 +141,7 @@ export function AdminStatsPage() {
       <section className="flex flex-col gap-4">
         <Eyebrow>Yaklaşan Sertifika Süreleri</Eyebrow>
         {stats.expiringCertifications.length === 0 ? (
-          <Card className="py-8 text-center text-sm text-slate-500">
+          <Card className="py-8 text-center text-sm text-mist-300">
             Yaklaşan veya süresi dolmuş sertifika yok.
           </Card>
         ) : (
@@ -152,7 +152,7 @@ export function AdminStatsPage() {
               return (
                 <Link key={cert.pilotId} to={`/pilots/${cert.pilotId}`} className="group block">
                   <Card interactive className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="font-medium text-[#0b1220]">{cert.pilotName}</p>
+                    <p className="font-medium text-mist-100">{cert.pilotName}</p>
                     <div className="flex flex-wrap items-center gap-3">
                       {cert.licenseExpiryDate && (
                         <Badge tone={certStatusTone[licenseStatus]} icon={BadgeCheck}>
@@ -184,7 +184,7 @@ export function AdminStatsPage() {
                 <Badge tone={severityTone[level]} icon={SeverityIcon}>
                   {level}
                 </Badge>
-                <span className="data text-sm font-semibold text-[#0b1220]">
+                <span className="data text-sm font-semibold text-mist-100">
                   {stats.crmReportsBySeverity[level] ?? 0}
                 </span>
               </Card>

@@ -78,10 +78,10 @@ export function RegisterPage() {
         subtitle="Rütbenizi seçin ve hesabınızı oluşturun. Captain rütbesi uçuş ve mürettebat kaydı oluşturma yetkisi verir."
         stat={{ value: 'CPT', label: 'Captain: uçuş & mürettebat yetkisi' }}
       />
-      <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
+      <div className="flex flex-1 items-center justify-center bg-void-950 px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Pilot Kaydı</h1>
-          <p className="mb-6 text-sm text-slate-500">Rütbenizi seçerek hesabınızı oluşturun.</p>
+          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-mist-100">Pilot Kaydı</h1>
+          <p className="mb-6 text-sm text-mist-300">Rütbenizi seçerek hesabınızı oluşturun.</p>
           <Card>
             <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
               <Input
@@ -165,13 +165,13 @@ export function RegisterPage() {
                     </option>
                   ))}
                 </Select>
-                <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#f59e0b]" />
+                <p className="flex items-center gap-1.5 text-xs text-mist-300">
+                  <ShieldCheck className="h-3.5 w-3.5 text-command-500" />
                   Captain seçerseniz uçuş ve mürettebat oluşturabilirsiniz.
                 </p>
               </div>
               {error && (
-                <p role="alert" className="text-sm text-red-600">
+                <p role="alert" className="text-sm text-alert-400">
                   {error}
                 </p>
               )}
@@ -180,9 +180,9 @@ export function RegisterPage() {
               </Button>
             </form>
           </Card>
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm text-mist-300">
             Zaten hesabın var mı?{' '}
-            <Link to="/login" className="font-medium text-[#00205b] hover:underline">
+            <Link to="/login" className="font-medium text-phosphor-500 hover:underline">
               Giriş yap
             </Link>
           </p>

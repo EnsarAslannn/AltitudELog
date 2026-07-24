@@ -11,16 +11,16 @@ export function Button({ variant = 'primary', icon: Icon, className, children, .
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold tracking-tight transition-all',
-        'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-navy-900/25',
+        'inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-sm font-semibold tracking-tight transition-all',
+        'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-phosphor-500/30',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' &&
-          'bg-navy-900 text-white shadow-sm shadow-navy-900/25 hover:bg-navy-800 hover:shadow-md active:translate-y-px',
+          'bg-phosphor-500 text-void-950 shadow-[0_0_0_1px_rgba(52,224,138,0.4),0_0_16px_-2px_rgba(52,224,138,0.5)] hover:bg-phosphor-400 hover:shadow-[0_0_0_1px_rgba(85,240,163,0.55),0_0_24px_-2px_rgba(85,240,163,0.7)] active:translate-y-px',
         variant === 'secondary' &&
-          'border border-slate-300 bg-white text-[#0b1220] hover:border-navy-900/40 hover:bg-slate-50 active:translate-y-px',
+          'border border-void-600 bg-void-900 text-mist-100 hover:border-phosphor-500/50 hover:bg-void-800 active:translate-y-px',
         variant === 'command' &&
-          'bg-[#f59e0b] text-[#3a2500] shadow-sm shadow-amber-500/30 hover:bg-[#e8940a] hover:shadow-md active:translate-y-px focus-visible:ring-amber-500/30',
-        variant === 'ghost' && 'text-slate-500 hover:text-navy-900',
+          'bg-command-500 text-void-950 shadow-[0_0_0_1px_rgba(255,176,32,0.4),0_0_16px_-2px_rgba(255,176,32,0.5)] hover:bg-command-400 hover:shadow-[0_0_0_1px_rgba(255,194,71,0.55),0_0_24px_-2px_rgba(255,194,71,0.7)] active:translate-y-px focus-visible:ring-command-500/30',
+        variant === 'ghost' && 'text-mist-300 hover:text-phosphor-400',
         className,
       )}
       {...props}

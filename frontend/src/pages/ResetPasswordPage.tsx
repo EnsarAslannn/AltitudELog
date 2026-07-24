@@ -58,10 +58,10 @@ export function ResetPasswordPage() {
         subtitle="Güçlü bir şifre seçin ve hesabınıza tekrar erişim sağlayın."
         stat={{ value: '8+', label: 'Minimum karakter uzunluğu' }}
       />
-      <div className="flex flex-1 items-center justify-center bg-[#f4f6fb] px-4 py-10">
+      <div className="flex flex-1 items-center justify-center bg-void-950 px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Şifre Sıfırla</h1>
-          <p className="mb-6 text-sm text-slate-500">Yeni şifrenizi girin.</p>
+          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-mist-100">Şifre Sıfırla</h1>
+          <p className="mb-6 text-sm text-mist-300">Yeni şifrenizi girin.</p>
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input
@@ -86,14 +86,14 @@ export function ResetPasswordPage() {
                 minLength={8}
                 required
               />
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-alert-400">{error}</p>}
               <Button type="submit" icon={KeyRound} disabled={isSubmitting}>
                 {isSubmitting ? 'Kaydediliyor…' : 'Şifreyi Sıfırla'}
               </Button>
             </form>
           </Card>
-          <p className="mt-4 text-sm text-slate-500">
-            <Link to="/login" className="font-medium text-[#00205b] hover:underline">
+          <p className="mt-4 text-sm text-mist-300">
+            <Link to="/login" className="font-medium text-phosphor-500 hover:underline">
               Girişe dön
             </Link>
           </p>

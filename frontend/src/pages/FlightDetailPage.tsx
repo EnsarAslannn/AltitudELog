@@ -37,10 +37,10 @@ const dutyRoles: DutyRole[] = ['PIC', 'SIC', 'Instructor', 'Observer', 'Trainee'
 const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 
 const severityBorder: Record<SeverityLevel, string> = {
-  Low: 'border-l-emerald-500',
-  Medium: 'border-l-amber-500',
-  High: 'border-l-amber-500',
-  Critical: 'border-l-red-500',
+  Low: 'border-l-phosphor-500',
+  Medium: 'border-l-command-500',
+  High: 'border-l-command-500',
+  Critical: 'border-l-alert-500',
 }
 
 function initials(name: string) {
@@ -109,7 +109,7 @@ export function FlightDetailPage() {
     return (
       <div className="flex flex-col gap-6" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-sm" />
         <SkeletonCard />
       </div>
     )
@@ -117,8 +117,8 @@ export function FlightDetailPage() {
 
   if (error || !flight) {
     return (
-      <Card className="border-red-200 bg-red-50/50">
-        <p role="alert" className="text-sm text-red-700">
+      <Card className="border-alert-500/30 bg-alert-500/5">
+        <p role="alert" className="text-sm text-alert-400">
           {error ?? 'Uçuş bulunamadı.'}
         </p>
       </Card>
@@ -128,11 +128,11 @@ export function FlightDetailPage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Boarding-pass header */}
-      <section className="relative min-h-[280px] overflow-hidden rounded-3xl bg-navy-900 rise sm:min-h-[340px]">
+      <section className="relative min-h-[280px] overflow-hidden rounded-sm bg-void-950 hud-corners scanlines rise sm:min-h-[340px]">
         <img
           src="/images/clouds.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover hero-photo"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
@@ -150,7 +150,7 @@ export function FlightDetailPage() {
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/flights/${flightId}/edit`}
-                    className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+                    className="flex items-center gap-1.5 rounded-sm border border-phosphor-500/25 bg-phosphor-500/10 px-3 py-1.5 text-xs font-medium text-mist-100 transition-colors hover:bg-phosphor-500/20"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Düzenle
@@ -167,7 +167,7 @@ export function FlightDetailPage() {
             tone="dark"
             animated
           />
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-200">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-mist-300">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="h-4 w-4" />
               <span className="data">{flight.date}</span>
@@ -182,11 +182,11 @@ export function FlightDetailPage() {
             </span>
           </div>
           {flight.metarInfo && (
-            <div className="glass flex items-start gap-2 rounded-xl px-4 py-3">
-              <Radio className="mt-0.5 h-4 w-4 shrink-0 text-[#f59e0b]" />
+            <div className="glass flex items-start gap-2 rounded-sm px-4 py-3">
+              <Radio className="mt-0.5 h-4 w-4 shrink-0 text-phosphor-400" />
               <div>
-                <p className="eyebrow text-[10px] text-slate-300">METAR</p>
-                <p className="data mt-1 text-xs leading-relaxed text-white">{flight.metarInfo}</p>
+                <p className="eyebrow text-[10px] text-mist-300">METAR</p>
+                <p className="data mt-1 text-xs leading-relaxed text-mist-100">{flight.metarInfo}</p>
               </div>
             </div>
           )}
@@ -194,7 +194,7 @@ export function FlightDetailPage() {
       </section>
 
       {/* Tabs */}
-      <div className="inline-flex w-fit gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+      <div className="inline-flex w-fit gap-1 rounded-sm border border-void-700 bg-void-900 p-1 shadow-sm">
         <TabButton active={tab === 'crew'} onClick={() => setTab('crew')} icon={Users}>
           Mürettebat
         </TabButton>
@@ -240,11 +240,11 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
     return (
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-white">Emin misiniz?</span>
+          <span className="text-xs font-medium text-mist-100">Emin misiniz?</span>
           <button
             onClick={handleConfirm}
             disabled={isCancelling}
-            className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-sm bg-alert-500 px-3 py-1.5 text-xs font-medium text-mist-100 transition-colors hover:bg-alert-600 disabled:opacity-50"
           >
             <Ban className="h-3.5 w-3.5" />
             {isCancelling ? 'İptal ediliyor…' : 'Onayla'}
@@ -255,13 +255,13 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
               setError(null)
             }}
             disabled={isCancelling}
-            className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+            className="flex items-center gap-1.5 rounded-sm border border-phosphor-500/25 bg-phosphor-500/10 px-3 py-1.5 text-xs font-medium text-mist-100 transition-colors hover:bg-phosphor-500/20"
           >
             Vazgeç
           </button>
         </div>
         {error && (
-          <p role="alert" className="text-xs font-medium text-red-300">
+          <p role="alert" className="text-xs font-medium text-alert-400">
             {error}
           </p>
         )}
@@ -272,7 +272,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+      className="flex items-center gap-1.5 rounded-sm border border-phosphor-500/25 bg-phosphor-500/10 px-3 py-1.5 text-xs font-medium text-mist-100 transition-colors hover:bg-phosphor-500/20"
     >
       <XCircle className="h-3.5 w-3.5" />
       İptal Et
@@ -295,8 +295,10 @@ function TabButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors',
-        active ? 'bg-navy-900 text-white' : 'text-slate-500 hover:text-navy-900',
+        'flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-medium transition-colors',
+        active
+          ? 'bg-phosphor-500 text-void-950'
+          : 'border border-void-600 bg-void-800 text-mist-300 hover:text-phosphor-400',
       )}
     >
       <Icon className="h-4 w-4" />
@@ -343,7 +345,7 @@ function CrewTab({
       <div className="flex flex-col gap-3">
         <Eyebrow>Atanan Mürettebat</Eyebrow>
         {crew.length === 0 && (
-          <Card className="py-10 text-center text-sm text-slate-500">Henüz mürettebat atanmadı.</Card>
+          <Card className="py-10 text-center text-sm text-mist-300">Henüz mürettebat atanmadı.</Card>
         )}
         {crew.map((member) => {
           const RoleIcon = dutyRoleIcon[member.dutyRole]
@@ -355,13 +357,13 @@ function CrewTab({
                     className={cn(
                       'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
                       member.dutyRole === 'PIC'
-                        ? 'bg-[#f59e0b]/15 text-[#b45309]'
-                        : 'bg-[#00205b]/8 text-[#00205b]',
+                        ? 'bg-command-500/15 text-command-400'
+                        : 'bg-phosphor-500/10 text-phosphor-400',
                     )}
                   >
                     {initials(member.pilotName)}
                   </span>
-                  <span className="font-medium text-[#0b1220]">{member.pilotName}</span>
+                  <span className="font-medium text-mist-100">{member.pilotName}</span>
                 </div>
                 <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
                   {member.dutyRole}
@@ -374,8 +376,8 @@ function CrewTab({
 
       {isCaptain && (
         <Card className="h-fit lg:sticky lg:top-24">
-          <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-[#0b1220]">
-            <UserPlus className="h-4 w-4 text-navy-900" />
+          <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-mist-100">
+            <UserPlus className="h-4 w-4 text-phosphor-400" />
             Mürettebat Ata
           </h2>
           <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
@@ -401,7 +403,7 @@ function CrewTab({
               ))}
             </Select>
             {error && (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-sm text-alert-400">
                 {error}
               </p>
             )}
@@ -453,21 +455,21 @@ function CrmTab({
       <div className="flex flex-col gap-3">
         <Eyebrow>CRM Raporları</Eyebrow>
         {reports.length === 0 && (
-          <Card className="py-10 text-center text-sm text-slate-500">Henüz CRM raporu yok.</Card>
+          <Card className="py-10 text-center text-sm text-mist-300">Henüz CRM raporu yok.</Card>
         )}
         {reports.map((report) => {
           const SeverityIcon = severityIcon[report.severityLevel]
           return (
             <Card key={report.id} className={cn('border-l-4', severityBorder[report.severityLevel])}>
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[#0b1220]">{report.title}</p>
+                <p className="font-semibold text-mist-100">{report.title}</p>
                 <Badge tone={severityTone[report.severityLevel]} icon={SeverityIcon}>
                   {report.severityLevel}
                 </Badge>
               </div>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{report.description}</p>
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
-                <span className="font-medium text-slate-500">
+              <p className="mt-1.5 text-sm leading-relaxed text-mist-300">{report.description}</p>
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-mist-500">
+                <span className="font-medium text-mist-300">
                   {report.isAnonymous ? 'Anonim' : (report.reporterName ?? 'Bilinmiyor')}
                 </span>
                 ·<span className="data">{new Date(report.createdDate).toLocaleString()}</span>
@@ -478,20 +480,20 @@ function CrmTab({
       </div>
 
       <Card className="h-fit lg:sticky lg:top-24">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-[#0b1220]">
-          <ShieldAlert className="h-4 w-4 text-navy-900" />
+        <h2 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-mist-100">
+          <ShieldAlert className="h-4 w-4 text-phosphor-400" />
           Yeni CRM Raporu
         </h2>
         <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
           <Input label="Başlık" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <div className="flex flex-col gap-1.5">
-            <label className="eyebrow text-[11px] text-slate-500">Açıklama</label>
+            <label className="eyebrow text-[11px] text-mist-500">Açıklama</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
               rows={4}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none transition-colors focus:border-[#00205b] focus:ring-4 focus:ring-[#00205b]/10"
+              className="rounded-sm border border-void-600 bg-void-900 px-3 py-2.5 text-sm text-mist-100 outline-none transition-colors focus:border-phosphor-500 focus:ring-4 focus:ring-phosphor-500/15"
             />
           </div>
           <Select
@@ -505,17 +507,17 @@ function CrmTab({
               </option>
             ))}
           </Select>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
+          <label className="flex items-center gap-2 text-sm text-mist-300">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 bg-white accent-[#00205b]"
+              className="h-4 w-4 rounded border-void-600 bg-void-900 accent-phosphor-500"
             />
             Anonim olarak gönder
           </label>
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-alert-400">
               {error}
             </p>
           )}

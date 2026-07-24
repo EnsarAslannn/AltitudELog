@@ -8,12 +8,12 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const toneClasses: Record<NonNullable<BadgeProps['tone']>, string> = {
-  neutral: 'border-slate-300 bg-slate-100 text-slate-700',
-  blue: 'border-navy-900/25 bg-navy-900/8 text-navy-900',
-  amber: 'border-amber-500/40 bg-amber-500/10 text-amber-700',
-  red: 'border-red-500/40 bg-red-500/10 text-red-700',
-  green: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700',
-  sky: 'border-sky-500/40 bg-sky-500/10 text-sky-700',
+  neutral: 'border-void-600 bg-void-800 text-mist-300',
+  blue: 'border-phosphor-500/40 bg-phosphor-500/10 text-phosphor-400',
+  amber: 'border-command-500/40 bg-command-500/10 text-command-400',
+  red: 'border-alert-500/40 bg-alert-500/10 text-alert-400',
+  green: 'border-phosphor-500/40 bg-phosphor-500/10 text-phosphor-400',
+  sky: 'border-phosphor-300/40 bg-phosphor-300/10 text-phosphor-300',
 }
 
 export function Badge({ tone = 'neutral', icon: Icon, className, children, ...props }: BadgeProps) {

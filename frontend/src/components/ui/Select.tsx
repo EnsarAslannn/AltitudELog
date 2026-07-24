@@ -11,21 +11,21 @@ export function Select({ label, id, className, children, ...props }: SelectProps
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={selectId} className="eyebrow text-[11px] text-slate-500">
+      <label htmlFor={selectId} className="eyebrow text-[11px] text-mist-300">
         {label}
       </label>
       <div className="relative">
         <select
           id={selectId}
           className={cn(
-            'w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-9 text-sm text-[#0b1220] outline-none transition-colors focus:border-navy-900 focus:ring-4 focus:ring-navy-900/10',
+            'w-full appearance-none rounded-sm border border-void-600 bg-void-900 px-3 py-2.5 pr-9 text-sm text-mist-100 outline-none transition-colors focus:border-phosphor-500 focus:ring-4 focus:ring-phosphor-500/15',
             className,
           )}
           {...props}
         >
           {children}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
       </div>
     </div>
   )

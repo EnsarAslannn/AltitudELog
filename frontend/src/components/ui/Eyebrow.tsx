@@ -12,18 +12,18 @@ export function Eyebrow({ rule = true, tone = 'navy', className, children, ...pr
     <div
       className={cn(
         'flex items-center gap-3',
-        tone === 'navy' ? 'text-navy-900' : 'text-white/70',
+        tone === 'navy' ? 'text-phosphor-400' : 'text-white/70',
         className,
       )}
       {...props}
     >
-      <span className="h-1.5 w-1.5 shrink-0 rotate-45 bg-[#f59e0b]" aria-hidden />
+      <span className="h-1.5 w-1.5 shrink-0 rotate-45 bg-command-500" aria-hidden />
       <span className="eyebrow text-[11px] font-medium">{children}</span>
       {rule && (
         <span
           className={cn(
             'h-px flex-1',
-            tone === 'navy' ? 'bg-slate-900/10' : 'bg-white/20',
+            tone === 'navy' ? 'bg-void-600' : 'bg-white/20',
           )}
           aria-hidden
         />
