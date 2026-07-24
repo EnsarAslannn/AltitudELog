@@ -102,12 +102,12 @@ export function Combobox({
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="eyebrow text-[11px] text-slate-500">
+      <label htmlFor={inputId} className="eyebrow text-[11px] text-mist-300">
         {label}
       </label>
       <div className="relative">
         {Icon && (
-          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
         )}
         <input
           id={inputId}
@@ -128,17 +128,17 @@ export function Combobox({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-[#0b1220] outline-none placeholder:text-slate-400 transition-colors',
-            'focus:border-navy-900 focus:ring-4 focus:ring-navy-900/10',
+            'w-full rounded-sm border bg-void-900 px-3 py-2.5 text-sm text-mist-100 outline-none placeholder:text-mist-500 transition-colors',
+            'focus:border-phosphor-500 focus:ring-4 focus:ring-phosphor-500/15',
             Icon && 'pl-9',
-            hasError ? 'border-red-500' : 'border-slate-300',
+            hasError ? 'border-alert-500' : 'border-void-600',
           )}
         />
         {showDropdown && (
           <ul
             id={listboxId}
             role="listbox"
-            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-[var(--shadow-card-hover)]"
+            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-sm border border-void-700 bg-void-900 py-1 shadow-[var(--shadow-panel-hover)]"
           >
             {filtered.map((option, index) => (
               <li
@@ -152,17 +152,17 @@ export function Combobox({
                 onMouseEnter={() => setHighlightedIndex(index)}
                 className={cn(
                   'cursor-pointer px-3 py-2 text-sm',
-                  index === highlightedIndex ? 'bg-navy-900/5 text-navy-900' : 'text-[#0b1220]',
+                  index === highlightedIndex ? 'bg-phosphor-500/10 text-phosphor-400' : 'text-mist-100',
                 )}
               >
                 <div className="font-medium">{option.label}</div>
-                {option.sublabel && <div className="text-xs text-slate-500">{option.sublabel}</div>}
+                {option.sublabel && <div className="text-xs text-mist-300">{option.sublabel}</div>}
               </li>
             ))}
           </ul>
         )}
       </div>
-      {hasError && <p className="text-xs text-red-600">{errors!.join(', ')}</p>}
+      {hasError && <p className="text-xs text-alert-400">{errors!.join(', ')}</p>}
     </div>
   )
 }

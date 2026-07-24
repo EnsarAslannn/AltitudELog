@@ -21,7 +21,7 @@ export function Pagination({ pageNumber, totalPages, onPageChange, disabled }: P
       >
         Önceki
       </Button>
-      <span className="data text-sm text-slate-500" aria-live="polite">
+      <span className="data text-sm text-mist-300" aria-live="polite">
         Sayfa {pageNumber} / {totalPages}
       </span>
       <Button

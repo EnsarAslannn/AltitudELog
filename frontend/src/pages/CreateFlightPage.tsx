@@ -23,8 +23,8 @@ export function CreateFlightPage() {
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-lg">
         <Eyebrow className="mb-3">Captain · Flight Plan</Eyebrow>
-        <h1 className="font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Yeni Uçuş Oluştur</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-mist-100">Yeni Uçuş Oluştur</h1>
+        <p className="mt-1 text-sm text-mist-300">
           Uçuş planını mürettebat ataması yapılmadan önce kaydedin.
         </p>
       </div>

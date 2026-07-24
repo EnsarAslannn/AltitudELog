@@ -114,12 +114,12 @@ export function PilotProfilePage() {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-sm" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-sm" />
         </div>
         <SkeletonCard />
       </div>
@@ -128,8 +128,8 @@ export function PilotProfilePage() {
 
   if (error || !profile) {
     return (
-      <Card className="border-red-200 bg-red-50/50">
-        <p role="alert" className="text-sm text-red-700">
+      <Card className="border-alert-500/30 bg-alert-500/5">
+        <p role="alert" className="text-sm text-alert-400">
           {error ?? 'Pilot bulunamadı.'}
         </p>
       </Card>
@@ -143,12 +143,12 @@ export function PilotProfilePage() {
       {/* Profile header */}
       <Card className="flex flex-col gap-5 p-6 rise sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div className="flex items-center gap-4">
-          <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-navy-900/8 text-xl font-bold text-navy-900">
+          <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-phosphor-500/10 text-xl font-bold text-phosphor-400">
             {initials(profile.name)}
           </span>
           <div>
-            <h1 className="font-display text-display-lg font-bold tracking-tight text-[#0b1220]">{profile.name}</h1>
-            <p className="data mt-1 text-sm text-slate-500">@{profile.username}</p>
+            <h1 className="font-display text-display-lg font-bold tracking-tight text-mist-100">{profile.name}</h1>
+            <p className="data mt-1 text-sm text-mist-300">@{profile.username}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -192,21 +192,21 @@ export function PilotProfilePage() {
       <section className="flex flex-col gap-4">
         <Eyebrow>Uçak Tipine Göre Saatler</Eyebrow>
         {profile.hoursByAircraftType.length === 0 ? (
-          <Card className="py-8 text-center text-sm text-slate-500">Henüz uçuş kaydı yok.</Card>
+          <Card className="py-8 text-center text-sm text-mist-300">Henüz uçuş kaydı yok.</Card>
         ) : (
           <div className="flex flex-col gap-3">
             {profile.hoursByAircraftType.map((entry) => (
               <Card key={entry.aircraftType} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00205b]/6 text-[#00205b]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-phosphor-500/10 text-phosphor-400">
                     <Wrench className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="font-medium text-[#0b1220]">{entry.aircraftType}</p>
-                    <p className="text-xs text-slate-500">{entry.flightCount} uçuş</p>
+                    <p className="font-medium text-mist-100">{entry.aircraftType}</p>
+                    <p className="text-xs text-mist-300">{entry.flightCount} uçuş</p>
                   </div>
                 </div>
-                <span className="data text-sm font-semibold text-[#0b1220]">{entry.totalHours}</span>
+                <span className="data text-sm font-semibold text-mist-100">{entry.totalHours}</span>
               </Card>
             ))}
           </div>
@@ -228,12 +228,12 @@ export function PilotProfilePage() {
             return (
               <Card key={cert.key} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00205b]/6 text-[#00205b]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-phosphor-500/10 text-phosphor-400">
                     <cert.icon className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="font-medium text-[#0b1220]">{cert.label}</p>
-                    <p className="data text-xs text-slate-500">{cert.date ?? 'Tarih belirtilmemiş'}</p>
+                    <p className="font-medium text-mist-100">{cert.label}</p>
+                    <p className="data text-xs text-mist-300">{cert.date ?? 'Tarih belirtilmemiş'}</p>
                   </div>
                 </div>
                 <Badge tone={certStatusTone[status]} icon={StatusIcon}>
@@ -246,7 +246,7 @@ export function PilotProfilePage() {
 
         {isOwnProfile && (
           <Card className="flex flex-col gap-4">
-            <p className="text-xs font-medium text-slate-500">Sertifika tarihlerini güncelle</p>
+            <p className="text-xs font-medium text-mist-300">Sertifika tarihlerini güncelle</p>
             <form
               onSubmit={handleSaveCertificates}
               aria-busy={isSavingCerts}
@@ -271,7 +271,7 @@ export function PilotProfilePage() {
               </Button>
             </form>
             {certSaveError && (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-sm text-alert-400">
                 {certSaveError}
               </p>
             )}
@@ -284,10 +284,10 @@ export function PilotProfilePage() {
         <Eyebrow>Son Uçuşlar</Eyebrow>
         {profile.recentFlights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#00205b]/5 text-[#00205b]">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-phosphor-500/10 text-phosphor-400">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            <p className="font-medium text-[#0b1220]">Henüz kayıtlı uçuş yok.</p>
+            <p className="font-medium text-mist-100">Henüz kayıtlı uçuş yok.</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-4">
@@ -297,7 +297,7 @@ export function PilotProfilePage() {
                 <Link key={flight.flightId} to={`/flights/${flight.flightId}`} className="group block">
                   <Card interactive className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <RouteRibbon origin={flight.originICAO} destination={flight.destinationICAO} size="md" />
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-mist-300">
                       <span className="flex items-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5" />
                         <span className="data">{flight.date}</span>

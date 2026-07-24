@@ -1,40 +1,56 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Oxanium", "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  /* Flight Deck palette */
-  --color-navy-50: #eef2fb;
-  --color-navy-100: #d6e0f5;
-  --color-navy-600: #123a7a;
-  --color-navy-700: #0a2a63;
-  --color-navy-800: #06214f;
-  --color-navy-900: #00205b;
-  --color-navy-925: #001a49;
-  --color-navy-950: #001235;
+  /* Night Ops palette — ATC radar scope / black-box flight recorder */
+  --color-void-950: #070908;
+  --color-void-900: #0c1210;
+  --color-void-850: #101815;
+  --color-void-800: #17221d;
+  --color-void-700: #223029;
+  --color-void-600: #34473c;
 
-  --color-signal: #2563eb;
-  --color-command: #f59e0b;
+  --color-phosphor-300: #8affc4;
+  --color-phosphor-400: #55f0a3;
+  --color-phosphor-500: #34e08a;
+  --color-phosphor-600: #1fb96e;
+
+  --color-command-400: #ffc247;
+  --color-command-500: #ffb020;
+  --color-command-600: #e89a0a;
+
+  --color-alert-400: #ff6b78;
+  --color-alert-500: #ff4d5e;
+  --color-alert-600: #e23a4a;
+
+  --color-mist-100: #e7f3ec;
+  --color-mist-300: #93a89d;
+  --color-mist-500: #5b6d63;
 
   /* Cinematic hero display type */
   --text-display-xl: 3.75rem;
   --text-display-xl--line-height: 1.05;
-  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--letter-spacing: -0.01em;
   --text-display-lg: 2.75rem;
   --text-display-lg--line-height: 1.1;
-  --text-display-lg--letter-spacing: -0.015em;
+  --text-display-lg--letter-spacing: -0.01em;
 
-  /* Card elevation */
-  --shadow-card: 0 1px 2px rgba(0, 18, 53, 0.04), 0 8px 24px -12px rgba(0, 18, 53, 0.12);
-  --shadow-card-hover: 0 1px 2px rgba(0, 18, 53, 0.06), 0 20px 48px -16px rgba(0, 18, 53, 0.28);
+  /* Panel elevation — hairline glow instead of soft ambient shadow */
+  --shadow-panel: 0 0 0 1px rgba(52, 224, 138, 0.06), 0 12px 32px -16px rgba(0, 0, 0, 0.7);
+  --shadow-panel-hover: 0 0 0 1px rgba(52, 224, 138, 0.24), 0 0 28px -4px rgba(52, 224, 138, 0.3),
+    0 20px 48px -16px rgba(0, 0, 0, 0.8);
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f4f6fb;
-  color: #0b1220;
+  background-color: var(--color-void-950);
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(52, 224, 138, 0.06), transparent 60%),
+    repeating-linear-gradient(rgba(255, 255, 255, 0.022) 0px, rgba(255, 255, 255, 0.022) 1px, transparent 1px, transparent 3px);
+  background-attachment: fixed;
+  color: var(--color-mist-100);
   font-feature-settings: "tnum" 1;
   -webkit-font-smoothing: antialiased;
 }
@@ -55,22 +71,69 @@ body {
 
 /* Glass overlay for text sitting on photography */
 .glass {
-  background-color: rgba(0, 18, 53, 0.35);
+  background-color: rgba(7, 9, 8, 0.55);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(52, 224, 138, 0.16);
 }
 
 /* Cinematic overlay recipe for full-bleed hero photography */
 .hero-scrim {
   background: linear-gradient(
     to top,
-    var(--color-navy-950) 0%,
-    rgba(0, 32, 91, 0.82) 45%,
-    rgba(0, 32, 91, 0.25) 100%
+    var(--color-void-950) 0%,
+    rgba(7, 9, 8, 0.88) 45%,
+    rgba(7, 9, 8, 0.18) 100%
   );
 }
 
-/* Great-circle arc dash drift on the signature route ribbon */
+/* Grayscale + green duotone treatment so stock photography reads as night-vision/IR footage */
+.hero-photo {
+  filter: grayscale(1) sepia(1) hue-rotate(90deg) saturate(1.7) brightness(0.55) contrast(1.25);
+}
+
+/* Localized CRT scanline texture — layer on top of hero panels for more presence than the page-wide wash */
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* HUD corner-bracket framing for hero panels — drawn from gradients, no extra markup */
+.hud-corners {
+  position: relative;
+}
+.hud-corners::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.75;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(to right, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to bottom, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to left, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to bottom, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to right, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to top, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to left, var(--color-phosphor-500) 2px, transparent 2px),
+    linear-gradient(to top, var(--color-phosphor-500) 2px, transparent 2px);
+  background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px;
+  background-position: top left, top left, top right, top right, bottom right, bottom right, bottom left,
+    bottom left;
+}
+
+/* Great-circle arc dash drift on the signature route ribbon, now a glowing radar trace */
 @keyframes arc-drift {
   to {
     stroke-dashoffset: -24;
@@ -80,23 +143,34 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .arc-live {
     animation: arc-drift 1.6s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(52, 224, 138, 0.55));
   }
 }
 
+/* CRT power-on flicker-in, replacing the old fade-and-rise */
 @keyframes rise {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(6px);
+    filter: brightness(1.9);
   }
-  to {
+  55% {
     opacity: 1;
     transform: translateY(0);
+    filter: brightness(1.15);
+  }
+  72% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--rise-delay, 0ms);
   }
 }
