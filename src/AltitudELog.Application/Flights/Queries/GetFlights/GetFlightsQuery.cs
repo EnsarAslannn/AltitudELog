@@ -1,10 +1,9 @@
-using AltitudELog.Application.Common.Caching;
 using MediatR;
 
 namespace AltitudELog.Application.Flights.Queries.GetFlights;
 
-public record GetFlightsQuery : IRequest<List<FlightDto>>, ICacheableQuery
+public record GetFlightsQuery : IRequest<FlightsPageResult>
 {
-    public string CacheKey => CacheKeys.AllFlights;
-    public TimeSpan? Expiry => TimeSpan.FromMinutes(5);
+    public int PageNumber { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
 }

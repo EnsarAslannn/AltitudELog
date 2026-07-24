@@ -9,6 +9,15 @@ export interface FlightDto {
   isCancelled: boolean
 }
 
+export interface FlightsPageResult {
+  items: FlightDto[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  thisMonthCount: number
+  distinctAircraftTypeCount: number
+}
+
 export interface CreateFlightRequest {
   originICAO: string
   destinationICAO: string

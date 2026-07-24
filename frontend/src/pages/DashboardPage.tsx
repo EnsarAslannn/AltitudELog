@@ -1,43 +1,57 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Ban, CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
 import { flightService } from '../services/flightService'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
+import { Pagination } from '../components/ui/Pagination'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
 import { cn } from '../lib/cn'
-import type { FlightDto } from '../types/flight'
+import type { FlightsPageResult } from '../types/flight'
 import type { ApiError } from '../types/problemDetails'
 
+const PAGE_SIZE = 20
+
 export function DashboardPage() {
-  const [flights, setFlights] = useState<FlightDto[]>([])
+  const [page, setPage] = useState(1)
+  const [pageResult, setPageResult] = useState<FlightsPageResult | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isPageLoading, setIsPageLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedOnceRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
-    setIsLoading(true)
+    if (hasLoadedOnceRef.current) {
+      setIsPageLoading(true)
+    } else {
+      setIsLoading(true)
+    }
     setError(null)
 
     flightService
-      .getAll()
+      .getAll(page, PAGE_SIZE)
       .then((data) => {
-        if (!cancelled) setFlights(data)
+        if (!cancelled) setPageResult(data)
       })
       .catch((err) => {
         if (!cancelled) setError((err as ApiError).title ?? 'Uçuşlar yüklenemedi.')
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false)
+        if (!cancelled) {
+          hasLoadedOnceRef.current = true
+          setIsLoading(false)
+          setIsPageLoading(false)
+        }
       })
 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [page])
 
   if (isLoading) {
     return (
@@ -55,22 +69,18 @@ export function DashboardPage() {
     )
   }
 
-  if (error) {
+  if (error || !pageResult) {
     return (
       <Card className="border-red-200 bg-red-50/50">
         <p role="alert" className="text-sm text-red-700">
-          {error}
+          {error ?? 'Uçuşlar yüklenemedi.'}
         </p>
       </Card>
     )
   }
 
-  const now = new Date()
-  const thisMonthCount = flights.filter((f) => {
-    const [year, month] = f.date.split('-').map(Number)
-    return year === now.getFullYear() && month === now.getMonth() + 1
-  }).length
-  const aircraftTypeCount = new Set(flights.map((f) => f.aircraftType)).size
+  const { items: flights, totalCount, thisMonthCount, distinctAircraftTypeCount, pageSize } = pageResult
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
 
   return (
     <div className="flex flex-col gap-10">
@@ -98,13 +108,13 @@ export function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 rise sm:grid-cols-3" style={{ '--rise-delay': '80ms' } as React.CSSProperties}>
-        <StatTile icon={Plane} label="Toplam Uçuş" value={flights.length} />
+        <StatTile icon={Plane} label="Toplam Uçuş" value={totalCount} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={thisMonthCount} />
-        <StatTile icon={Wrench} label="Uçak Tipi" value={aircraftTypeCount} />
+        <StatTile icon={Wrench} label="Uçak Tipi" value={distinctAircraftTypeCount} />
       </div>
 
       {/* Flight strips */}
-      <section className="flex flex-col gap-5">
+      <section className="flex flex-col gap-5" aria-busy={isPageLoading}>
         <Eyebrow>Uçuş Kayıtları</Eyebrow>
 
         {flights.length === 0 ? (
@@ -168,6 +178,13 @@ export function DashboardPage() {
             ))}
           </div>
         )}
+
+        <Pagination
+          pageNumber={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          disabled={isPageLoading}
+        />
       </section>
     </div>
   )

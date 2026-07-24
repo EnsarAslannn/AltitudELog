@@ -5,7 +5,6 @@ using AltitudELog.Infrastructure.Persistence;
 using AltitudELog.IntegrationTests.Infrastructure;
 using AwesomeAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -52,7 +51,6 @@ public class UpdateFlightMetarJobTests : IAsyncLifetime
         var job = new UpdateFlightMetarJob(
             context,
             metarService,
-            scope.ServiceProvider.GetRequiredService<IDistributedCache>(),
             scope.ServiceProvider.GetRequiredService<ILogger<UpdateFlightMetarJob>>());
 
         var act = () => job.ExecuteAsync(flight.Id, flight.OriginICAO, CancellationToken.None);
@@ -79,7 +77,6 @@ public class UpdateFlightMetarJobTests : IAsyncLifetime
         var job = new UpdateFlightMetarJob(
             context,
             metarService,
-            scope.ServiceProvider.GetRequiredService<IDistributedCache>(),
             scope.ServiceProvider.GetRequiredService<ILogger<UpdateFlightMetarJob>>());
 
         await job.ExecuteAsync(flight.Id, flight.OriginICAO, CancellationToken.None);
