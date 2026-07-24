@@ -28,18 +28,20 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         var pilot = await _context.Pilots
             .FirstOrDefaultAsync(p => p.Email == request.Email, cancellationToken);
 
-        // Always behave identically whether or not the email matches a pilot —
-        // otherwise the response timing/shape leaks which emails are registered.
+        // Always generate + hash a token, whether or not the email matches a pilot, so the
+        // CPU-bound cost of this path doesn't itself leak which emails are registered via
+        // response timing (the response shape/return value already doesn't leak it).
+        var tokenBytes = RandomNumberGenerator.GetBytes(32);
+        var token = Convert.ToBase64String(tokenBytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+        var tokenHash = TokenHasher.Hash(token);
+
         if (pilot is null)
         {
             _logger.LogInformation("Password reset requested for unregistered email {Email}", request.Email);
             return;
         }
 
-        var tokenBytes = RandomNumberGenerator.GetBytes(32);
-        var token = Convert.ToBase64String(tokenBytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-
-        pilot.PasswordResetTokenHash = TokenHasher.Hash(token);
+        pilot.PasswordResetTokenHash = tokenHash;
         pilot.PasswordResetTokenExpiresAtUtc = DateTime.UtcNow.Add(TokenLifetime);
         await _context.SaveChangesAsync(cancellationToken);
 

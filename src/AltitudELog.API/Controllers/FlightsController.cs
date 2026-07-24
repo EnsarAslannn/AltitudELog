@@ -29,6 +29,7 @@ public class FlightsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<List<FlightDto>>> GetAll(CancellationToken cancellationToken)
     {
         var flights = await _mediator.Send(new GetFlightsQuery(), cancellationToken);
@@ -36,6 +37,7 @@ public class FlightsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<FlightDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var flight = await _mediator.Send(new GetFlightByIdQuery(id), cancellationToken);

@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ public class CancelFlightCommandHandler : IRequestHandler<CancelFlightCommand>
     public async Task Handle(CancelFlightCommand request, CancellationToken cancellationToken)
     {
         var flight = await _context.Flights.FirstOrDefaultAsync(f => f.Id == request.FlightId, cancellationToken)
-            ?? throw new InvalidOperationException($"Flight '{request.FlightId}' does not exist.");
+            ?? throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
 
         flight.IsCancelled = true;
         await _context.SaveChangesAsync(cancellationToken);

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using AltitudELog.Application.Pilots.Queries.GetPilotLogbook;
 
@@ -25,8 +26,20 @@ public static class CsvLogbookWriter
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    private static string Quote(string value) =>
-        value.Contains(',') || value.Contains('"')
+    private static readonly char[] FormulaTriggerChars = ['=', '+', '-', '@'];
+
+    // Spreadsheet apps (Excel, Sheets) treat a cell starting with =/+/-/@ as a formula; a
+    // leading apostrophe forces it to be read as literal text, closing the CSV-injection vector.
+    private static string EscapeFormulaInjection(string value) =>
+        value.Length > 0 && FormulaTriggerChars.Contains(value[0])
+            ? $"'{value}"
+            : value;
+
+    private static string Quote(string value)
+    {
+        value = EscapeFormulaInjection(value);
+        return value.Contains(',') || value.Contains('"')
             ? $"\"{value.Replace("\"", "\"\"")}\""
             : value;
+    }
 }

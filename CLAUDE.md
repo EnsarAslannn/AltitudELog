@@ -199,9 +199,12 @@ anonymous — registering/logging in obviously can't require a token.
 ### API — Flights, Crew, CRMReports, Pilots endpoints
 
 - `Controllers/FlightsController.cs`: `POST /Flights` (→ `CreateFlightCommand`, returns the new `Guid`,
-  **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` (→ `GetFlightsQuery`,
-  returns `List<FlightDto>`, anonymous). Creating a flight publishes `FlightCreatedEvent`, which enqueues the
-  METAR-fetch Hangfire job — see "Background jobs & caching".
+  **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` and `GET /Flights/{id}`
+  (→ `GetFlightsQuery`/`GetFlightByIdQuery`, **`[Authorize]`** — any authenticated pilot, not anonymous),
+  `PUT /Flights/{id}` and `POST /Flights/{id}/cancel` (**`[Authorize(Roles = "Captain")]`**, throw
+  `NotFoundException` → `404` for a nonexistent `FlightId`, see "API — Global exception handling"). Creating a
+  flight publishes `FlightCreatedEvent`, which enqueues the METAR-fetch Hangfire job — see "Background jobs &
+  caching".
 - `Controllers/CrewController.cs`: class-level `[Authorize]`. `POST /Crew` (→ `CreateCrewCommand`,
   **`[Authorize(Roles = "Captain")]`** override, tightens the class-level attribute), `GET /Crew/flight/{flightId}`
   (→ `GetCrewByFlightQuery`, any authenticated pilot).
@@ -219,9 +222,12 @@ All controllers go through `IMediator.Send`, no direct Application/Infrastructur
 `Common/DomainExceptionHandler.cs` and `Common/ValidationExceptionHandler.cs`, registered via
 `AddExceptionHandler<T>()` (in that order: Validation, then Domain) + `AddProblemDetails()`, activated by
 `app.UseExceptionHandler()`. Mapping: `FluentValidation.ValidationException` → `400` with a
-`ValidationProblemDetails` per-field error shape, `UnauthorizedAccessException` → `401`, `InvalidOperationException`
-→ `409`. Anything unmapped falls through to the default ASP.NET Core `ProblemDetails` `500` response. The
-frontend's `ApiError`/`toApiError` (`frontend/src/lib/axios.ts`) is written against this exact shape.
+`ValidationProblemDetails` per-field error shape, `UnauthorizedAccessException` → `401`,
+`AltitudELog.Application.Common.Exceptions.NotFoundException` → `404`, `InvalidOperationException` → `409`
+(reserved for genuine conflicts — duplicate crew assignment, duplicate username; "does not exist" cases should
+throw `NotFoundException` instead, not `InvalidOperationException`). Anything unmapped falls through to the
+default ASP.NET Core `ProblemDetails` `500` response. The frontend's `ApiError`/`toApiError`
+(`frontend/src/lib/axios.ts`) is written against this exact shape.
 
 ### API — CORS, health checks, Hangfire dashboard
 

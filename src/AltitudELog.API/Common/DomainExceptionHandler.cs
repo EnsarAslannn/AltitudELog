@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,7 @@ public class DomainExceptionHandler : IExceptionHandler
         var (statusCode, title) = exception switch
         {
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
             InvalidOperationException => (StatusCodes.Status409Conflict, "Conflict"),
             _ => (0, string.Empty)
         };
