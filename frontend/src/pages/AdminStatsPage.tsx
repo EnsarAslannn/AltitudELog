@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  AlertCircle,
-  AlertOctagon,
-  AlertTriangle,
   BadgeCheck,
   CalendarDays,
-  Crown,
-  GraduationCap,
-  Info,
   PlaneTakeoff,
-  Shield,
   ShieldAlert,
-  ShieldCheck,
   Stethoscope,
   Users,
 } from 'lucide-react'
@@ -23,56 +15,15 @@ import { CrmTrendChart } from '../components/ui/CrmTrendChart'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
+import { certStatus, certStatusTone, rankIcon, severityIcon, severityTone } from '../lib/domainDisplay'
 import type { StatsDto } from '../types/stats'
 import type { PilotRank } from '../types/auth'
 import type { SeverityLevel } from '../types/crmReport'
 import type { ApiError } from '../types/problemDetails'
 
-const CERT_WARNING_DAYS = 30
-
-type CertStatus = 'expired' | 'expiringSoon' | 'valid' | 'unknown'
-
-function certStatus(date: string | null): CertStatus {
-  if (!date) return 'unknown'
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const diffDays = Math.floor((new Date(date).getTime() - today.getTime()) / 86_400_000)
-  if (diffDays < 0) return 'expired'
-  if (diffDays <= CERT_WARNING_DAYS) return 'expiringSoon'
-  return 'valid'
-}
-
-const certStatusTone: Record<CertStatus, 'neutral' | 'green' | 'amber' | 'red'> = {
-  unknown: 'neutral',
-  valid: 'green',
-  expiringSoon: 'amber',
-  expired: 'red',
-}
-
 const pilotRanks: PilotRank[] = ['Trainee', 'FirstOfficer', 'Captain', 'ChiefPilot']
 
-const rankIcon: Record<PilotRank, typeof Shield> = {
-  Trainee: GraduationCap,
-  FirstOfficer: Shield,
-  Captain: ShieldCheck,
-  ChiefPilot: Crown,
-}
-
 const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
-
-const severityTone: Record<SeverityLevel, 'neutral' | 'amber' | 'red' | 'green'> = {
-  Low: 'green',
-  Medium: 'amber',
-  High: 'amber',
-  Critical: 'red',
-}
-
-const severityIcon: Record<SeverityLevel, typeof Info> = {
-  Low: Info,
-  Medium: AlertCircle,
-  High: AlertTriangle,
-  Critical: AlertOctagon,
-}
 
 export function AdminStatsPage() {
   const [stats, setStats] = useState<StatsDto | null>(null)
@@ -80,16 +31,31 @@ export function AdminStatsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    setError(null)
+
     statsService
       .getStats()
-      .then(setStats)
-      .catch((err) => setError((err as ApiError).title ?? 'İstatistikler yüklenemedi.'))
-      .finally(() => setIsLoading(false))
+      .then((data) => {
+        if (!cancelled) setStats(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError((err as ApiError).title ?? 'İstatistikler yüklenemedi.')
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8" aria-busy="true">
+        <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-24 rounded-2xl" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Skeleton className="h-24 rounded-2xl" />
@@ -105,7 +71,9 @@ export function AdminStatsPage() {
   if (error || !stats) {
     return (
       <Card className="border-red-200 bg-red-50/50">
-        <p className="text-sm text-red-700">{error ?? 'İstatistikler yüklenemedi.'}</p>
+        <p role="alert" className="text-sm text-red-700">
+          {error ?? 'İstatistikler yüklenemedi.'}
+        </p>
       </Card>
     )
   }

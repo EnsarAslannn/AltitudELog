@@ -56,7 +56,7 @@ export function LoginPage() {
           <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Giriş Yap</h1>
           <p className="mb-6 text-sm text-slate-500">Hesabınıza erişmek için bilgilerinizi girin.</p>
           <Card>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
               <Input
                 label="Kullanıcı Adı"
                 name="username"
@@ -84,7 +84,11 @@ export function LoginPage() {
                   Şifremi unuttum
                 </Link>
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-600">
+                  {error}
+                </p>
+              )}
               <Button type="submit" icon={LogIn} disabled={isSubmitting}>
                 {isSubmitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
               </Button>

@@ -83,7 +83,7 @@ export function RegisterPage() {
           <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-[#0b1220]">Pilot Kaydı</h1>
           <p className="mb-6 text-sm text-slate-500">Rütbenizi seçerek hesabınızı oluşturun.</p>
           <Card>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
               <Input
                 label="Ad Soyad"
                 name="name"
@@ -170,7 +170,11 @@ export function RegisterPage() {
                   Captain seçerseniz uçuş ve mürettebat oluşturabilirsiniz.
                 </p>
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-600">
+                  {error}
+                </p>
+              )}
               <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
                 {isSubmitting ? 'Kayıt olunuyor…' : 'Kayıt Ol'}
               </Button>

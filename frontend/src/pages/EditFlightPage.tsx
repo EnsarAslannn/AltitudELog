@@ -19,14 +19,27 @@ export function EditFlightPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    setError(null)
+
     flightService
       .getById(flightId)
-      .then(setFlight)
+      .then((data) => {
+        if (!cancelled) setFlight(data)
+      })
       .catch((err) => {
+        if (cancelled) return
         const apiError = err as ApiError
         setError(apiError.status === 404 ? 'Uçuş bulunamadı.' : (apiError.title ?? 'Uçuş yüklenemedi.'))
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [flightId])
 
   async function handleSubmit(values: FlightFormValues) {
@@ -42,7 +55,8 @@ export function EditFlightPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex max-w-lg flex-col gap-6">
+      <div className="mx-auto flex max-w-lg flex-col gap-6" aria-busy="true">
+        <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-24 rounded-2xl" />
         <Skeleton className="h-96 rounded-2xl" />
       </div>
@@ -52,7 +66,9 @@ export function EditFlightPage() {
   if (error || !flight) {
     return (
       <Card className="mx-auto max-w-lg border-red-200 bg-red-50/50">
-        <p className="text-sm text-red-700">{error ?? 'Uçuş bulunamadı.'}</p>
+        <p role="alert" className="text-sm text-red-700">
+          {error ?? 'Uçuş bulunamadı.'}
+        </p>
       </Card>
     )
   }

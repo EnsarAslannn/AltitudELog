@@ -14,6 +14,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
     private readonly ILogger<LoginCommandHandler> _logger;
     private readonly PasswordHasher<Pilot> _passwordHasher = new();
 
+    // Verifying against this dummy hash when no pilot matches keeps Handle's cost roughly
+    // constant whether or not the username exists, so response timing doesn't reveal it.
+    private static readonly string DummyPasswordHash = new PasswordHasher<Pilot>()
+        .HashPassword(new Pilot(), Guid.NewGuid().ToString());
+
     public LoginCommandHandler(
         IApplicationDbContext context,
         IJwtTokenGenerator jwtTokenGenerator,
@@ -31,6 +36,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         if (pilot is null)
         {
+            // Still run a hash verification against a dummy hash so this path costs roughly
+            // the same as the "pilot exists, password wrong" path below — otherwise the early
+            // return here would make username enumeration observable via response timing.
+            _passwordHasher.VerifyHashedPassword(new Pilot(), DummyPasswordHash, request.Password);
             _logger.LogWarning("Login failed for username {Username}: no such pilot", request.Username);
             throw new UnauthorizedAccessException("Invalid username or password.");
         }

@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.Flights.Events;
 using MediatR;
@@ -23,7 +24,7 @@ public class UpdateFlightCommandHandler : IRequestHandler<UpdateFlightCommand>
     public async Task Handle(UpdateFlightCommand request, CancellationToken cancellationToken)
     {
         var flight = await _context.Flights.FirstOrDefaultAsync(f => f.Id == request.FlightId, cancellationToken)
-            ?? throw new InvalidOperationException($"Flight '{request.FlightId}' does not exist.");
+            ?? throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
 
         var originChanged = !string.Equals(flight.OriginICAO, request.OriginICAO, StringComparison.OrdinalIgnoreCase);
 

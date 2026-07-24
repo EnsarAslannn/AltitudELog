@@ -18,16 +18,31 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    setError(null)
+
     flightService
       .getAll()
-      .then(setFlights)
-      .catch((err) => setError((err as ApiError).title ?? 'Uçuşlar yüklenemedi.'))
-      .finally(() => setIsLoading(false))
+      .then((data) => {
+        if (!cancelled) setFlights(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError((err as ApiError).title ?? 'Uçuşlar yüklenemedi.')
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8" aria-busy="true">
+        <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-56 rounded-3xl" />
         <div className="grid grid-cols-3 gap-4">
           <Skeleton className="h-24 rounded-2xl" />
@@ -43,7 +58,9 @@ export function DashboardPage() {
   if (error) {
     return (
       <Card className="border-red-200 bg-red-50/50">
-        <p className="text-sm text-red-700">{error}</p>
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
       </Card>
     )
   }

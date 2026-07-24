@@ -48,7 +48,7 @@ apiClient.interceptors.response.use(
   },
 )
 
-function toApiError(error: AxiosError): ApiError {
+export function toApiError(error: AxiosError): ApiError {
   const body = error.response?.data as Partial<ValidationProblemDetails> | undefined
 
   return {

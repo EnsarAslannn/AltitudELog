@@ -1,21 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  AlertCircle,
-  AlertOctagon,
-  AlertTriangle,
   Ban,
   CalendarDays,
   Clock3,
-  Crown,
-  Eye,
-  GraduationCap,
-  Info,
   Pencil,
   Radio,
   ShieldAlert,
-  User,
-  UserCheck,
   UserPlus,
   Users,
   Wrench,
@@ -35,6 +26,7 @@ import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Select } from '../components/ui/Select'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { cn } from '../lib/cn'
+import { dutyRoleIcon, severityIcon, severityTone } from '../lib/domainDisplay'
 import type { FlightDto } from '../types/flight'
 import type { CrewDto, DutyRole } from '../types/crew'
 import type { CRMReportDto, SeverityLevel } from '../types/crmReport'
@@ -43,28 +35,6 @@ import type { ApiError } from '../types/problemDetails'
 
 const dutyRoles: DutyRole[] = ['PIC', 'SIC', 'Instructor', 'Observer', 'Trainee']
 const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
-
-const dutyRoleIcon: Record<DutyRole, typeof Crown> = {
-  PIC: Crown,
-  SIC: UserCheck,
-  Instructor: GraduationCap,
-  Observer: Eye,
-  Trainee: User,
-}
-
-const severityTone: Record<SeverityLevel, 'neutral' | 'amber' | 'red' | 'green'> = {
-  Low: 'green',
-  Medium: 'amber',
-  High: 'amber',
-  Critical: 'red',
-}
-
-const severityIcon: Record<SeverityLevel, typeof Info> = {
-  Low: Info,
-  Medium: AlertCircle,
-  High: AlertTriangle,
-  Critical: AlertOctagon,
-}
 
 const severityBorder: Record<SeverityLevel, string> = {
   Low: 'border-l-emerald-500',
@@ -92,20 +62,35 @@ export function FlightDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    setError(null)
+
     Promise.all([
-      flightService.getAll(),
+      flightService.getById(flightId),
       crewService.getByFlight(flightId),
       crmReportService.getByFlight(flightId),
       isCaptain ? pilotService.getAll() : Promise.resolve([]),
     ])
-      .then(([flights, crewList, reportList, pilotList]) => {
-        setFlight(flights.find((f) => f.id === flightId) ?? null)
+      .then(([flightData, crewList, reportList, pilotList]) => {
+        if (cancelled) return
+        setFlight(flightData)
         setCrew(crewList)
         setReports(reportList)
         setPilots(pilotList)
       })
-      .catch((err) => setError((err as ApiError).title ?? 'Uçuş bilgisi yüklenemedi.'))
-      .finally(() => setIsLoading(false))
+      .catch((err) => {
+        if (cancelled) return
+        const apiError = err as ApiError
+        setError(apiError.status === 404 ? 'Uçuş bulunamadı.' : (apiError.title ?? 'Uçuş bilgisi yüklenemedi.'))
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [flightId, isCaptain])
 
   function refreshFlight() {
@@ -122,7 +107,8 @@ export function FlightDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6" aria-busy="true">
+        <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-40 rounded-3xl" />
         <SkeletonCard />
       </div>
@@ -132,7 +118,9 @@ export function FlightDetailPage() {
   if (error || !flight) {
     return (
       <Card className="border-red-200 bg-red-50/50">
-        <p className="text-sm text-red-700">{error ?? 'Uçuş bulunamadı.'}</p>
+        <p role="alert" className="text-sm text-red-700">
+          {error ?? 'Uçuş bulunamadı.'}
+        </p>
       </Card>
     )
   }
@@ -229,40 +217,54 @@ export function FlightDetailPage() {
   )
 }
 
-function CancelFlightControl({ flightId, onCancelled }: { flightId: string; onCancelled: () => void }) {
+export function CancelFlightControl({ flightId, onCancelled }: { flightId: string; onCancelled: () => void }) {
   const [confirming, setConfirming] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleConfirm() {
+    setError(null)
     setIsCancelling(true)
     try {
       await flightService.cancel(flightId)
       onCancelled()
+      setConfirming(false)
+    } catch (err) {
+      setError((err as ApiError).detail ?? (err as ApiError).title ?? 'Uçuş iptal edilemedi.')
     } finally {
       setIsCancelling(false)
-      setConfirming(false)
     }
   }
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-white">Emin misiniz?</span>
-        <button
-          onClick={handleConfirm}
-          disabled={isCancelling}
-          className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-        >
-          <Ban className="h-3.5 w-3.5" />
-          {isCancelling ? 'İptal ediliyor…' : 'Onayla'}
-        </button>
-        <button
-          onClick={() => setConfirming(false)}
-          disabled={isCancelling}
-          className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
-        >
-          Vazgeç
-        </button>
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-white">Emin misiniz?</span>
+          <button
+            onClick={handleConfirm}
+            disabled={isCancelling}
+            className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+          >
+            <Ban className="h-3.5 w-3.5" />
+            {isCancelling ? 'İptal ediliyor…' : 'Onayla'}
+          </button>
+          <button
+            onClick={() => {
+              setConfirming(false)
+              setError(null)
+            }}
+            disabled={isCancelling}
+            className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+          >
+            Vazgeç
+          </button>
+        </div>
+        {error && (
+          <p role="alert" className="text-xs font-medium text-red-300">
+            {error}
+          </p>
+        )}
       </div>
     )
   }
@@ -376,7 +378,7 @@ function CrewTab({
             <UserPlus className="h-4 w-4 text-navy-900" />
             Mürettebat Ata
           </h2>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
             <Select label="Pilot" value={pilotId} onChange={(e) => setPilotId(e.target.value)} required>
               <option value="" disabled>
                 Pilot seçin
@@ -398,7 +400,11 @@ function CrewTab({
                 </option>
               ))}
             </Select>
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
               {isSubmitting ? 'Ekleniyor…' : 'Ata'}
             </Button>
@@ -476,7 +482,7 @@ function CrmTab({
           <ShieldAlert className="h-4 w-4 text-navy-900" />
           Yeni CRM Raporu
         </h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
           <Input label="Başlık" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <div className="flex flex-col gap-1.5">
             <label className="eyebrow text-[11px] text-slate-500">Açıklama</label>
@@ -508,7 +514,11 @@ function CrmTab({
             />
             Anonim olarak gönder
           </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
           <Button type="submit" icon={ShieldAlert} disabled={isSubmitting}>
             {isSubmitting ? 'Gönderiliyor…' : 'Raporu Gönder'}
           </Button>
