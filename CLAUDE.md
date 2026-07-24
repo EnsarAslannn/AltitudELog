@@ -100,14 +100,17 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   - `CacheInvalidationBehavior`: runs `next()` first, then if `TRequest : ICacheInvalidatorCommand`, removes each
     key in `CacheKeysToInvalidate`. Same fail-open behavior as above.
 - `Common/Caching/`: `ICacheableQuery` (`CacheKey`, `Expiry`), `ICacheInvalidatorCommand` (`CacheKeysToInvalidate`),
-  and `CacheKeys` — the single place cache key strings are constructed (`flights:all`, `pilots:all`,
-  `crew:flight:{id}`, `crmreports:flight:{id}`). Add new keys here, don't inline literals in handlers.
+  and `CacheKeys` — the single place cache key strings are constructed (`pilots:all`, `crew:flight:{id}`,
+  `crmreports:flight:{id}`). Add new keys here, don't inline literals in handlers.
 - Feature folders under vertical slices, not by technical layer:
   - `Auth/Commands/Register/`, `Auth/Commands/Login/` — no validators (see gap above), not cached.
-  - `Flights/Commands/CreateFlight/` (+ `CreateFlightCommandValidator`, invalidates `flights:all`),
-    `Flights/Queries/GetFlights/` (cached, `flights:all`, 5 min), `Flights/Events/FlightCreatedEvent` +
-    `FlightCreatedEventHandler` (MediatR notification published after a flight is saved; enqueues the METAR
-    Hangfire job), `Flights/Jobs/UpdateFlightMetarJob` (the Hangfire job itself — not a MediatR request).
+  - `Flights/Commands/CreateFlight/` (+ `CreateFlightCommandValidator`), `Flights/Queries/GetFlights/`
+    (paginated — `PageNumber`/`PageSize` query params, default 1/20, validated 1-100 via
+    `GetFlightsQueryValidator`; returns `FlightsPageResult` with `Items`/`TotalCount`/`ThisMonthCount`/
+    `DistinctAircraftTypeCount`; **not cached** — a deliberate choice, see "Background jobs & caching"),
+    `Flights/Events/FlightCreatedEvent` + `FlightCreatedEventHandler` (MediatR notification published after
+    a flight is saved; enqueues the METAR Hangfire job), `Flights/Jobs/UpdateFlightMetarJob` (the Hangfire
+    job itself — not a MediatR request).
   - `Pilots/Queries/GetPilots/` (cached, `pilots:all`, 5 min) — no create-pilot command outside `Register`.
   - `Crew/Commands/CreateCrew/` (+ validator: both `FlightId`/`PilotId` FK existence checked via `MustAsync`,
     invalidates `crew:flight:{flightId}`), `Crew/Queries/GetCrewByFlight/` (cached per flight, 5 min).
@@ -199,8 +202,9 @@ anonymous — registering/logging in obviously can't require a token.
 ### API — Flights, Crew, CRMReports, Pilots endpoints
 
 - `Controllers/FlightsController.cs`: `POST /Flights` (→ `CreateFlightCommand`, returns the new `Guid`,
-  **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` and `GET /Flights/{id}`
-  (→ `GetFlightsQuery`/`GetFlightByIdQuery`, **`[Authorize]`** — any authenticated pilot, not anonymous),
+  **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` (→ `GetFlightsQuery`,
+  **`[Authorize]`** — any authenticated pilot, not anonymous; paginated via `?pageNumber=&pageSize=`, returns
+  `FlightsPageResult`) and `GET /Flights/{id}` (→ `GetFlightByIdQuery`, **`[Authorize]`**),
   `PUT /Flights/{id}` and `POST /Flights/{id}/cancel` (**`[Authorize(Roles = "Captain")]`**, throw
   `NotFoundException` → `404` for a nonexistent `FlightId`, see "API — Global exception handling"). Creating a
   flight publishes `FlightCreatedEvent`, which enqueues the METAR-fetch Hangfire job — see "Background jobs &
@@ -248,16 +252,20 @@ default ASP.NET Core `ProblemDetails` `500` response. The frontend's `ApiError`/
 `IBackgroundJobClient.Enqueue` (fire-once, not scheduled/recurring — there is no `RecurringJob.*` usage anywhere
 in the codebase) → the Hangfire server (Postgres-backed queue) picks it up and runs
 `UpdateFlightMetarJob.ExecuteAsync`, which calls `IMetarService.GetRawMetarAsync(icaoCode)`, sets
-`flight.METARInfo` if a result came back, saves, and removes the `flights:all` Redis key directly (it isn't a
-MediatR command, so it bypasses `CacheInvalidationBehavior` and calls `IDistributedCache.RemoveAsync` itself).
-This means a newly created flight's METAR is **not** present in the `POST /Flights` response — it appears
-asynchronously once the job runs and the next `GET /Flights` misses the (now-invalidated) cache.
+`flight.METARInfo` if a result came back, and saves. This means a newly created flight's METAR is **not**
+present in the `POST /Flights` response — it appears asynchronously once the job runs, and since
+`GetFlightsQuery` isn't cached (see below), the next `GET /Flights` sees it immediately.
+
+**`GetFlightsQuery` is deliberately not cached.** It used to be (a single `flights:all` key, whole dataset),
+but once the query became paginated (`PageNumber`/`PageSize`), caching would require either a per-page cache
+key — which `IDistributedCache` can't bulk-invalidate on write (no wildcard delete) — or a version-counter
+indirection. Given page payloads are small, the simplicity/always-fresh-data tradeoff was chosen over
+re-introducing caching here; revisit with a version-counter key if profiling ever shows this query is hot.
 
 **Redis caching** (all via `ICacheableQuery`/`ICacheInvalidatorCommand`, all 5-minute absolute expiry):
 
 | Query | Cache key | Invalidated by |
 |---|---|---|
-| `GetFlightsQuery` | `flights:all` | `CreateFlightCommand`, `UpdateFlightMetarJob` (directly) |
 | `GetPilotsQuery` | `pilots:all` | *nothing currently* (see gap above) |
 | `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand` (same flight only) |
 | `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand` (same flight only) |

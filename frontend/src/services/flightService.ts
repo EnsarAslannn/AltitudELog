@@ -1,8 +1,11 @@
 import { apiClient } from '../lib/axios'
-import type { CreateFlightRequest, FlightDto, UpdateFlightRequest } from '../types/flight'
+import type { CreateFlightRequest, FlightDto, FlightsPageResult, UpdateFlightRequest } from '../types/flight'
 
 export const flightService = {
-  getAll: () => apiClient.get<FlightDto[]>('/Flights').then((res) => res.data),
+  getAll: (pageNumber = 1, pageSize = 20) =>
+    apiClient
+      .get<FlightsPageResult>('/Flights', { params: { pageNumber, pageSize } })
+      .then((res) => res.data),
 
   getById: (id: string) => apiClient.get<FlightDto>(`/Flights/${id}`).then((res) => res.data),
 
