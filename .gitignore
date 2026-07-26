@@ -72,6 +72,7 @@ Thumbs.db
 
 # Claude Code skills installed via npx (skills add / claude-code-templates)
 .agents/
+.claude/skills/frontend-design/
 .claude/skills/senior-frontend/
 .claude/skills/senior-backend/
 .claude/skills/webapp-testing/
