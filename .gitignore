@@ -69,3 +69,11 @@ Thumbs.db
 
 # dotnet-tools local restore cache
 .dotnet/
+
+# Claude Code skills installed via npx (skills add / claude-code-templates)
+.agents/
+.claude/skills/senior-frontend/
+.claude/skills/senior-backend/
+.claude/skills/webapp-testing/
+.claude/skills/senior-security/
+skills-lock.json
