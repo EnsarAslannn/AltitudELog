@@ -77,4 +77,8 @@ Thumbs.db
 .claude/skills/senior-backend/
 .claude/skills/webapp-testing/
 .claude/skills/senior-security/
+.claude/skills/ui-ux-pro-max/
 skills-lock.json
+
+# Local Claude Code settings (stale debug-session permissions, machine-specific paths)
+.claude/settings.json
