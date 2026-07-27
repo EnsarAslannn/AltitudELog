@@ -1,9 +1,11 @@
 using AltitudELog.Application.Common.Interfaces;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace AltitudELog.Application.Flights.Jobs;
 
+[AutomaticRetry(Attempts = 3)]
 public class UpdateFlightMetarJob
 {
     private readonly IApplicationDbContext _context;

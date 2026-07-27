@@ -255,6 +255,10 @@ in the codebase) → the Hangfire server (Postgres-backed queue) picks it up and
 `flight.METARInfo` if a result came back, and saves. This means a newly created flight's METAR is **not**
 present in the `POST /Flights` response — it appears asynchronously once the job runs, and since
 `GetFlightsQuery` isn't cached (see below), the next `GET /Flights` sees it immediately.
+`UpdateFlightMetarJob` carries `[AutomaticRetry(Attempts = 3)]` (Hangfire's default is 10 with exponential
+backoff) — bounded because a transient NOAA API failure shouldn't keep retrying this non-critical enrichment
+job for days; once attempts are exhausted the job shows as Failed in the `/hangfire` dashboard rather than
+being silently dropped.
 
 **`GetFlightsQuery` is deliberately not cached.** It used to be (a single `flights:all` key, whole dataset),
 but once the query became paginated (`PageNumber`/`PageSize`), caching would require either a per-page cache
