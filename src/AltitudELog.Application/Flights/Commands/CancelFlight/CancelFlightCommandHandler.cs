@@ -22,6 +22,11 @@ public class CancelFlightCommandHandler : IRequestHandler<CancelFlightCommand>
         var flight = await _context.Flights.FirstOrDefaultAsync(f => f.Id == request.FlightId, cancellationToken)
             ?? throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
 
+        if (flight.IsCancelled)
+        {
+            throw new InvalidOperationException($"Flight '{request.FlightId}' is already cancelled.");
+        }
+
         flight.IsCancelled = true;
         await _context.SaveChangesAsync(cancellationToken);
 

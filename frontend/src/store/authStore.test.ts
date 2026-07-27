@@ -4,6 +4,7 @@ import type { AuthResponseDto } from '../types/auth'
 
 const sampleAuth: AuthResponseDto = {
   token: 'test-token',
+  refreshToken: 'test-refresh-token',
   expiresAtUtc: '2026-08-01T00:00:00Z',
   pilotId: 'pilot-1',
   rank: 'Captain',
@@ -20,6 +21,7 @@ describe('authStore', () => {
 
     const state = useAuthStore.getState()
     expect(state.token).toBe('test-token')
+    expect(state.refreshToken).toBe('test-refresh-token')
     expect(state.pilotId).toBe('pilot-1')
     expect(state.username).toBe('testuser')
     expect(state.rank).toBe('Captain')
@@ -34,6 +36,7 @@ describe('authStore', () => {
 
     const state = useAuthStore.getState()
     expect(state.token).toBeNull()
+    expect(state.refreshToken).toBeNull()
     expect(state.pilotId).toBeNull()
     expect(state.username).toBeNull()
     expect(state.rank).toBeNull()

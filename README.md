@@ -44,6 +44,14 @@ Railway. Register with any rank, including **Captain**, to unlock flight-creatio
 - **Containerized deployment**: a multi-stage `Dockerfile` (SDK build stage → ASP.NET runtime stage) ships the
   API to Railway; the frontend deploys separately to Vercel.
 
+## Demo notes
+
+- **Self-selectable rank at registration is a deliberate demo choice, not an oversight.** In a real production
+  system, rank (and therefore the `Captain`-only write permissions it grants) would be assigned through an
+  admin/approval workflow, not chosen freely by the registrant. It's left open here so anyone trying the live
+  demo can register as Captain and immediately exercise the flight/crew-creation features without needing a
+  separate approval step. This is called out in the UI at registration time as well.
+
 ## Solution structure
 
 ```

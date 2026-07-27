@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { BarChart3, Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
+import { authService } from '../../services/authService'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -19,6 +20,10 @@ export function Navbar() {
   const isCommand = rank === 'Captain' || rank === 'ChiefPilot'
 
   function handleLogout() {
+    // Best-effort: revoke the refresh token server-side so it can't be used to silently
+    // renew a session after this point. Client-side logout proceeds either way — a failed
+    // revoke call (e.g. the access token already expired) shouldn't block signing out.
+    authService.logout().catch(() => {})
     logout()
     navigate('/login')
   }

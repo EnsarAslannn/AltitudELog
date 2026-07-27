@@ -58,6 +58,12 @@ public class LoginCommandHandlerTests
         result.Token.Should().Be("fake-token");
         result.PilotId.Should().Be(pilot.Id);
         result.Rank.Should().Be("Captain");
+        result.RefreshToken.Should().NotBeNullOrEmpty();
+
+        var updated = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
+        updated.RefreshTokenHash.Should().NotBeNullOrEmpty();
+        updated.RefreshTokenExpiresAtUtc.Should().NotBeNull();
+        updated.RefreshTokenExpiresAtUtc.Should().BeAfter(DateTime.UtcNow);
     }
 
     [Fact]

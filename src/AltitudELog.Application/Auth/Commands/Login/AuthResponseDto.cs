@@ -4,5 +4,6 @@ public record AuthResponseDto(
     string Token,
     DateTime ExpiresAtUtc,
     Guid PilotId,
-    string Rank
+    string Rank,
+    string RefreshToken
 );

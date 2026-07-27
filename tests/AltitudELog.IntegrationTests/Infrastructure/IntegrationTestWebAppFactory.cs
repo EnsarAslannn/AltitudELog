@@ -28,6 +28,13 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
     public IBackgroundJobClient BackgroundJobClient { get; } = Substitute.For<IBackgroundJobClient>();
 
+    // WebApplicationFactory's in-process HttpClient always originates from the same
+    // loopback IP, so the login rate limiter's per-IP bucket is shared across every test in
+    // a collection using this factory. Most integration tests just need many legitimate
+    // logins to work — only LoginRateLimitTests (via RateLimitTestWebAppFactory) needs the
+    // real, restrictive limit to actually observe a 429.
+    protected virtual int LoginRateLimitPermitLimit => 1000;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((_, config) =>
@@ -41,7 +48,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Jwt:Audience"] = "AltitudELog.Tests.Clients",
                 ["Jwt:ExpiryMinutes"] = "60",
                 ["Hangfire:DashboardUsername"] = "test-admin",
-                ["Hangfire:DashboardPassword"] = "test-password"
+                ["Hangfire:DashboardPassword"] = "test-password",
+                ["RateLimiting:Login:PermitLimit"] = LoginRateLimitPermitLimit.ToString()
             });
         });
 

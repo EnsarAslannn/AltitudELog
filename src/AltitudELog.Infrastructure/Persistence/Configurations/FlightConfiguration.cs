@@ -32,5 +32,10 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
 
         builder.Property(f => f.METARInfo)
             .HasMaxLength(2000);
+
+        // Maps Postgres's built-in "xmin" system column (not an app-managed column) as a
+        // concurrency token — detects lost updates when two requests edit the same flight
+        // concurrently (SaveChangesAsync throws DbUpdateConcurrencyException on a stale write).
+        builder.Property<uint>("xmin").IsRowVersion();
     }
 }

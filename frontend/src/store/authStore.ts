@@ -4,6 +4,7 @@ import type { AuthResponseDto, PilotRank } from '../types/auth'
 
 interface AuthState {
   token: string | null
+  refreshToken: string | null
   pilotId: string | null
   username: string | null
   rank: PilotRank | null
@@ -17,6 +18,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refreshToken: null,
       pilotId: null,
       username: null,
       rank: null,
@@ -25,6 +27,7 @@ export const useAuthStore = create<AuthState>()(
       login: (auth, username) =>
         set({
           token: auth.token,
+          refreshToken: auth.refreshToken,
           pilotId: auth.pilotId,
           username,
           rank: auth.rank,
@@ -34,6 +37,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () =>
         set({
           token: null,
+          refreshToken: null,
           pilotId: null,
           username: null,
           rank: null,

@@ -8,9 +8,12 @@ using AltitudELog.Infrastructure;
 using AltitudELog.Infrastructure.Persistence;
 using Hangfire;
 using Hangfire.Dashboard;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QuestPDF.Infrastructure;
@@ -92,6 +95,46 @@ try
 
     builder.Services.AddAuthorization();
 
+    // Brute-force/credential-stuffing throttle for /Auth/login: 5 attempts per minute per
+    // client IP by default. QueueLimit 0 means the 6th+ request in the window is rejected
+    // immediately (429) rather than queued — login is interactive, there's nothing to gain
+    // by delaying it. Configurable so integration tests (all sharing one loopback IP across
+    // many legitimately-logging-in test cases) can raise the limit without touching the
+    // production default. Read lazily inside the per-request policy lambda, not eagerly
+    // here — WebApplicationFactory's test configuration overrides aren't guaranteed to be
+    // merged into builder.Configuration yet at this point in the top-level script, only by
+    // the time the host actually starts serving requests.
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.AddPolicy("login", httpContext =>
+        {
+            var permitLimit = builder.Configuration.GetValue<int?>("RateLimiting:Login:PermitLimit") ?? 5;
+            var window = TimeSpan.FromSeconds(
+                builder.Configuration.GetValue<int?>("RateLimiting:Login:WindowSeconds") ?? 60);
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = window,
+                    QueueLimit = 0
+                });
+        });
+
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            var problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status429TooManyRequests,
+                Title = "Too Many Requests",
+                Detail = "Too many login attempts. Please wait a moment and try again."
+            };
+            await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        };
+    });
+
     var app = builder.Build();
 
     var jwtKey = app.Configuration["Jwt:Key"];
@@ -147,6 +190,7 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseRateLimiter();
 
     app.MapControllers();
 

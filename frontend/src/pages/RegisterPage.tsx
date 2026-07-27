@@ -169,6 +169,9 @@ export function RegisterPage() {
                   <ShieldCheck className="h-3.5 w-3.5 text-command-500" />
                   Captain seçerseniz uçuş ve mürettebat oluşturabilirsiniz.
                 </p>
+                <p className="text-xs text-mist-300">
+                  Bu bir demo özelliğidir — gerçek bir sistemde rütbe ataması yönetici onayına tabi olur.
+                </p>
               </div>
               {error && (
                 <p role="alert" className="text-sm text-alert-400">

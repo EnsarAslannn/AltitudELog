@@ -1,6 +1,7 @@
 using AltitudELog.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AltitudELog.API.Common;
 
@@ -15,6 +16,7 @@ public class DomainExceptionHandler : IExceptionHandler
         {
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+            DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "Conflict"),
             InvalidOperationException => (StatusCodes.Status409Conflict, "Conflict"),
             _ => (0, string.Empty)
         };
@@ -24,11 +26,18 @@ public class DomainExceptionHandler : IExceptionHandler
             return false;
         }
 
+        // EF's default DbUpdateConcurrencyException.Message is a technical, unhelpful
+        // sentence ("Database operation expected to affect 1 row(s) but affected 0...") —
+        // surface a message the caller can actually act on instead.
+        var detail = exception is DbUpdateConcurrencyException
+            ? "The record was modified by another request. Please reload and try again."
+            : exception.Message;
+
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
             Title = title,
-            Detail = exception.Message
+            Detail = detail
         };
 
         httpContext.Response.StatusCode = statusCode;

@@ -95,6 +95,26 @@ public class UpdateFlightCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_Should_Throw_When_Flight_Is_Cancelled()
+    {
+        await using var context = CreateContext();
+        var flight = NewFlight();
+        flight.IsCancelled = true;
+        context.Flights.Add(flight);
+        await context.SaveChangesAsync();
+
+        var handler = new UpdateFlightCommandHandler(
+            context, Substitute.For<IPublisher>(), Substitute.For<ILogger<UpdateFlightCommandHandler>>());
+
+        var command = new UpdateFlightCommand(
+            flight.Id, flight.OriginICAO, "LTBA", TimeSpan.FromHours(1), "A320", DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task Handle_Should_Not_Publish_FlightUpdatedEvent_When_Origin_Unchanged()
     {
         await using var context = CreateContext();

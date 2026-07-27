@@ -3,6 +3,7 @@ using AltitudELog.API.Common;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AltitudELog.IntegrationTests.Common;
 
@@ -29,6 +30,25 @@ public class DomainExceptionHandlerTests
         httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
         var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(httpContext.Response.Body);
         problem!.Detail.Should().Be("boom");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_Should_Map_DbUpdateConcurrencyException_To_Conflict_With_Friendly_Detail()
+    {
+        var exception = new DbUpdateConcurrencyException("technical EF message");
+        var httpContext = new DefaultHttpContext
+        {
+            Response = { Body = new MemoryStream() }
+        };
+
+        var handled = await _handler.TryHandleAsync(httpContext, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        httpContext.Response.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+
+        httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
+        var problem = await JsonSerializer.DeserializeAsync<ProblemDetails>(httpContext.Response.Body);
+        problem!.Detail.Should().Be("The record was modified by another request. Please reload and try again.");
     }
 
     [Fact]

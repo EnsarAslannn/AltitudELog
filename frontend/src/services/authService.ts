@@ -3,6 +3,7 @@ import type {
   AuthResponseDto,
   ForgotPasswordRequest,
   LoginRequest,
+  RefreshTokenRequest,
   RegisterRequest,
   ResetPasswordRequest,
 } from '../types/auth'
@@ -17,4 +18,9 @@ export const authService = {
   forgotPassword: (request: ForgotPasswordRequest) => apiClient.post('/Auth/forgot-password', request),
 
   resetPassword: (request: ResetPasswordRequest) => apiClient.post('/Auth/reset-password', request),
+
+  refresh: (request: RefreshTokenRequest) =>
+    apiClient.post<AuthResponseDto>('/Auth/refresh', request).then((res) => res.data),
+
+  logout: () => apiClient.post('/Auth/logout'),
 }

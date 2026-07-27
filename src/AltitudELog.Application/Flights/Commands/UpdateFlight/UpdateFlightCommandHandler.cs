@@ -26,6 +26,11 @@ public class UpdateFlightCommandHandler : IRequestHandler<UpdateFlightCommand>
         var flight = await _context.Flights.FirstOrDefaultAsync(f => f.Id == request.FlightId, cancellationToken)
             ?? throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
 
+        if (flight.IsCancelled)
+        {
+            throw new InvalidOperationException($"Flight '{request.FlightId}' is cancelled and cannot be updated.");
+        }
+
         var originChanged = !string.Equals(flight.OriginICAO, request.OriginICAO, StringComparison.OrdinalIgnoreCase);
 
         flight.OriginICAO = request.OriginICAO;

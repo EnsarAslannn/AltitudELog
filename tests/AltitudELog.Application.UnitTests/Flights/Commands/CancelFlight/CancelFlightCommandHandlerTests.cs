@@ -56,4 +56,20 @@ public class CancelFlightCommandHandlerTests
         var updated = await context.Flights.SingleAsync(f => f.Id == flight.Id);
         updated.IsCancelled.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Handle_Should_Throw_When_Flight_Already_Cancelled()
+    {
+        await using var context = CreateContext();
+        var flight = NewFlight();
+        flight.IsCancelled = true;
+        context.Flights.Add(flight);
+        await context.SaveChangesAsync();
+
+        var handler = new CancelFlightCommandHandler(context, Substitute.For<ILogger<CancelFlightCommandHandler>>());
+
+        var act = () => handler.Handle(new CancelFlightCommand(flight.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
 }

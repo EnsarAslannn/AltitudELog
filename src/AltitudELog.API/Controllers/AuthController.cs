@@ -1,9 +1,13 @@
 using AltitudELog.Application.Auth.Commands.ForgotPassword;
 using AltitudELog.Application.Auth.Commands.Login;
+using AltitudELog.Application.Auth.Commands.Logout;
+using AltitudELog.Application.Auth.Commands.RefreshToken;
 using AltitudELog.Application.Auth.Commands.Register;
 using AltitudELog.Application.Auth.Commands.ResetPassword;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AltitudELog.API.Controllers;
 
@@ -26,6 +30,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
@@ -43,6 +48,21 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResetPassword(ResetPasswordCommand command, CancellationToken cancellationToken)
     {
         await _mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("refresh")]
+    public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshTokenCommand command, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new LogoutCommand(), cancellationToken);
         return NoContent();
     }
 }

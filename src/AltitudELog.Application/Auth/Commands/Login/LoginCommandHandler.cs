@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Common.Security;
 using AltitudELog.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,10 @@ namespace AltitudELog.Application.Auth.Commands.Login;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto>
 {
+    // Matches ForgotPasswordCommandHandler's hardcoded-lifetime convention rather than
+    // reading from config. A stolen refresh token's exposure window is bounded by this.
+    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
+
     private readonly IApplicationDbContext _context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ILogger<LoginCommandHandler> _logger;
@@ -54,8 +59,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
 
+        var refreshToken = OpaqueTokenGenerator.Generate();
+        pilot.RefreshTokenHash = TokenHasher.Hash(refreshToken);
+        pilot.RefreshTokenExpiresAtUtc = DateTime.UtcNow.Add(RefreshTokenLifetime);
+        await _context.SaveChangesAsync(cancellationToken);
+
         _logger.LogInformation("Pilot {PilotId} ({Username}) logged in", pilot.Id, pilot.Username);
 
-        return new AuthResponseDto(token, expiresAtUtc, pilot.Id, pilot.Rank.ToString());
+        return new AuthResponseDto(token, expiresAtUtc, pilot.Id, pilot.Rank.ToString(), refreshToken);
     }
 }

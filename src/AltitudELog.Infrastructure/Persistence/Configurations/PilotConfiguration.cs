@@ -47,5 +47,8 @@ public class PilotConfiguration : IEntityTypeConfiguration<Pilot>
 
         builder.Property(p => p.PasswordResetTokenHash)
             .HasMaxLength(500);
+
+        builder.Property(p => p.RefreshTokenHash)
+            .HasMaxLength(500);
     }
 }
