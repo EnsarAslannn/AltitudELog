@@ -60,6 +60,7 @@ export function FlightDetailPage() {
   const [pilots, setPilots] = useState<PilotDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -93,16 +94,32 @@ export function FlightDetailPage() {
     }
   }, [flightId, isCaptain])
 
+  // These refetch after a successful create/cancel action elsewhere on the page — the
+  // mutation itself already succeeded, so a failure here shouldn't blow away the page
+  // (that's what the full-page `error` state is for on initial load); it just means the
+  // list shown might be stale, which we surface as a small non-blocking notice instead.
   function refreshFlight() {
-    flightService.getById(flightId).then(setFlight)
+    setRefreshError(null)
+    flightService
+      .getById(flightId)
+      .then(setFlight)
+      .catch(() => setRefreshError('Uçuş bilgisi güncellenemedi. Sayfayı yenileyin.'))
   }
 
   function refreshCrew() {
-    crewService.getByFlight(flightId).then(setCrew)
+    setRefreshError(null)
+    crewService
+      .getByFlight(flightId)
+      .then(setCrew)
+      .catch(() => setRefreshError('Mürettebat listesi güncellenemedi. Sayfayı yenileyin.'))
   }
 
   function refreshReports() {
-    crmReportService.getByFlight(flightId).then(setReports)
+    setRefreshError(null)
+    crmReportService
+      .getByFlight(flightId)
+      .then(setReports)
+      .catch(() => setRefreshError('CRM raporları güncellenemedi. Sayfayı yenileyin.'))
   }
 
   if (isLoading) {
@@ -192,6 +209,12 @@ export function FlightDetailPage() {
           )}
         </div>
       </section>
+
+      {refreshError && (
+        <p role="alert" className="text-sm text-alert-400">
+          {refreshError}
+        </p>
+      )}
 
       {/* Tabs */}
       <div className="inline-flex w-fit gap-1 rounded-sm border border-void-700 bg-void-900 p-1 shadow-sm">
