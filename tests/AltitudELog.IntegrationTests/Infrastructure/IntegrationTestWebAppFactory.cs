@@ -35,6 +35,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     // real, restrictive limit to actually observe a 429.
     protected virtual int LoginRateLimitPermitLimit => 1000;
 
+    // Same rationale as LoginRateLimitPermitLimit above, for the shared "auth" policy
+    // (register/forgot-password/reset-password/refresh) — only AuthRateLimitTests needs the real limit.
+    protected virtual int AuthRateLimitPermitLimit => 1000;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((_, config) =>
@@ -49,7 +53,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Jwt:ExpiryMinutes"] = "60",
                 ["Hangfire:DashboardUsername"] = "test-admin",
                 ["Hangfire:DashboardPassword"] = "test-password",
-                ["RateLimiting:Login:PermitLimit"] = LoginRateLimitPermitLimit.ToString()
+                ["RateLimiting:Login:PermitLimit"] = LoginRateLimitPermitLimit.ToString(),
+                ["RateLimiting:Auth:PermitLimit"] = AuthRateLimitPermitLimit.ToString()
             });
         });
 

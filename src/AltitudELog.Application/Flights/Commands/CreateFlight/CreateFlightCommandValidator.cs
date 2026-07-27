@@ -25,8 +25,5 @@ public class CreateFlightCommandValidator : AbstractValidator<CreateFlightComman
         RuleFor(f => f.Date)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage("Date cannot be in the future.");
-
-        RuleFor(f => f.METARInfo)
-            .MaximumLength(2000);
     }
 }

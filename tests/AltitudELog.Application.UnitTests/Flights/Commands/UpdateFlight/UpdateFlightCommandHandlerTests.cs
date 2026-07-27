@@ -1,8 +1,10 @@
+using AltitudELog.Application.Common.Caching;
 using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Flights.Commands.UpdateFlight;
 using AltitudELog.Application.Flights.Events;
 using AltitudELog.Application.UnitTests.TestUtilities;
 using AltitudELog.Domain.Entities;
+using AltitudELog.Domain.Enums;
 using AwesomeAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,38 @@ public class UpdateFlightCommandHandlerTests
         AircraftType = "A350",
         Date = DateOnly.FromDateTime(DateTime.UtcNow)
     };
+
+    private static Pilot NewPilot() => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = "Test Pilot",
+        LicenseNumber = $"LIC-{Guid.NewGuid():N}",
+        Rank = PilotRank.Captain,
+        Username = $"pilot_{Guid.NewGuid():N}",
+        PasswordHash = "hash"
+    };
+
+    [Fact]
+    public async Task Handle_Should_Invalidate_Crewed_Pilots_Profile_Cache()
+    {
+        await using var context = CreateContext();
+        var flight = NewFlight();
+        var pilot = NewPilot();
+        context.Flights.Add(flight);
+        context.Pilots.Add(pilot);
+        context.Crew.Add(new AltitudELog.Domain.Entities.Crew { Id = Guid.NewGuid(), FlightId = flight.Id, PilotId = pilot.Id, DutyRole = DutyRole.PIC });
+        await context.SaveChangesAsync();
+
+        var handler = new UpdateFlightCommandHandler(
+            context, Substitute.For<IPublisher>(), Substitute.For<ILogger<UpdateFlightCommandHandler>>());
+
+        var command = new UpdateFlightCommand(
+            flight.Id, flight.OriginICAO, "LTBA", TimeSpan.FromHours(1), "A320", DateOnly.FromDateTime(DateTime.UtcNow));
+
+        await handler.Handle(command, CancellationToken.None);
+
+        command.CacheKeysToInvalidate.Should().Contain(CacheKeys.PilotProfile(pilot.Id));
+    }
 
     [Fact]
     public async Task Handle_Should_Throw_NotFound_When_Flight_Does_Not_Exist()

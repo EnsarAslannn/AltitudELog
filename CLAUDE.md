@@ -7,24 +7,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This started as a migration from a default ASP.NET Core Web API scaffold to a **Clean Architecture + CQRS**
 solution, targeting .NET 10, for an aviation flight/CRM logging domain (pilots, flights, crew assignments, CRM
 reports). That migration is now substantially complete: full CQRS coverage for `Flight`/`Pilot`/`Crew`/`CRMReport`
-(not just `Auth`), FluentValidation on the write side (Flights/Crew/CRMReports — **not** `Auth`, see gap below),
+(including `Auth`), FluentValidation on the write side across every feature (Flights/Crew/CRMReports/Auth),
 role-based authorization (`Captain`-only writes on Flights/Crew), a global exception-handling pipeline mapped to
 `ProblemDetails`, Redis-backed query caching, Hangfire background jobs (Postgres storage) driving an
 auto-fetched METAR weather lookup on flight creation, Serilog structured logging, health checks, two test
-projects (unit + Testcontainers-backed integration), a CI workflow, and a full React/TypeScript frontend
-(`frontend/`, see its own section below). All of this exists and works end-to-end.
+projects (unit + Testcontainers-backed integration), a CI workflow (backend tests + frontend build/lint/test),
+and a full React/TypeScript frontend (`frontend/`, see its own section below). All of this exists and works
+end-to-end. Also shipped, beyond the original migration scope: JWT refresh tokens with rotation-on-use,
+forgot/reset-password, flight cancellation with an EF Core (`xmin`) optimistic-concurrency token, IP-based rate
+limiting on all `Auth` endpoints, pilot profile/logbook views (+ CSV/PDF export), a stats dashboard, and pilot
+certificate expiry tracking.
 
 **Real, current gaps — do not assume otherwise, and do not add without an explicit go-ahead:**
-- `Auth/Commands/Register` and `Auth/Commands/Login` have **no FluentValidation validators** (every other
-  write-side command does). Input shape checking there is still ad hoc in the handler.
-- No command invalidates the `pilots:all` cache key — `Register` doesn't, and there's no separate
-  create-pilot command. The pilot list can serve a stale cache entry for up to its 5-minute expiry after a
-  new pilot registers.
-- `ICurrentUserService` (`AltitudELog.API/Services/CurrentUserService.cs`) is registered in DI but not consumed
-  by any handler yet — it reads the JWT `NameIdentifier` claim and looks scaffolded ahead of a feature (e.g.
-  attributing non-anonymous CRM reports to the caller) that hasn't landed.
 - No CI/local requirement to actually run Redis or Hangfire in dev beyond what's described below — see
   "Background jobs & caching".
+- Refresh tokens (and the JWT itself) are persisted in the frontend's `localStorage` (`authStore.ts`), not an
+  httpOnly cookie — a deliberate demo/simplicity trade-off, same spirit as the self-selectable `Rank` below. In
+  a production-hardened build, the refresh token would live in an httpOnly+Secure cookie instead, so an XSS
+  can't read it. Do not silently "fix" this by refactoring token storage without an explicit go-ahead — it's a
+  real architectural change (touches `/Auth/refresh`/`/Auth/logout`, CORS credentials, the axios interceptor).
 
 ## Solution structure
 
@@ -67,7 +68,14 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     enforced at the application/presentation layer, not by omitting the data. This is intentional for
     accountability/audit purposes.
   - `Flight.METARInfo` is populated asynchronously after creation by a Hangfire job, not at creation time — see
-    "Background jobs & caching".
+    "Background jobs & caching". `CreateFlightCommand` does not accept it as input; a Captain cannot set it at
+    creation, only the Hangfire job writes it.
+  - `Flight.IsCancelled` guards a one-way transition (`POST /Flights/{id}/cancel`) — `UpdateFlightCommandHandler`
+    and `CancelFlightCommandHandler` both reject any further mutation of an already-cancelled flight.
+    `FlightConfiguration` also maps the Postgres `xmin` system column as an EF Core optimistic-concurrency token
+    (`Property<uint>("xmin").IsRowVersion()`, not `UseXminAsConcurrencyToken()` — that method doesn't exist on
+    this Npgsql provider version) — a stale concurrent update throws `DbUpdateConcurrencyException`, mapped to
+    `409` (see "API — Global exception handling").
 - `Enums/`: `PilotRank`, `DutyRole`, `SeverityLevel`.
 
 ### Application (`src/AltitudELog.Application`)
@@ -82,8 +90,8 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   system, no `IdentityDbContext`/stores). `Newtonsoft.Json` is also referenced but has no confirmed direct usage —
   don't assume it's load-bearing; verify before relying on it or removing it.
 - `Common/Interfaces/IApplicationDbContext.cs`: the persistence abstraction Application codes against, instead of
-  a concrete `DbContext`. Exposes `DbSet<Flight> Flights` and `DbSet<Pilot> Pilots` — extend it per-entity as new
-  features need them, don't add speculative `DbSet`s ahead of use.
+  a concrete `DbContext`. Exposes `DbSet<T>` for all four entities (`Flights`, `Pilots`, `Crew`, `CRMReports`) —
+  extend it per-entity as new features need them, don't add speculative `DbSet`s ahead of use.
 - `Common/Interfaces/IJwtTokenGenerator.cs`: abstraction for JWT issuance (`GenerateToken(Pilot) -> (Token,
   ExpiresAtUtc)`), implemented in Infrastructure so Application stays free of `System.IdentityModel.Tokens.Jwt`.
 - `Common/Interfaces/IMetarService.cs`: `GetRawMetarAsync(icaoCode, ct) -> string?` — abstraction over the METAR
@@ -100,23 +108,52 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   - `CacheInvalidationBehavior`: runs `next()` first, then if `TRequest : ICacheInvalidatorCommand`, removes each
     key in `CacheKeysToInvalidate`. Same fail-open behavior as above.
 - `Common/Caching/`: `ICacheableQuery` (`CacheKey`, `Expiry`), `ICacheInvalidatorCommand` (`CacheKeysToInvalidate`),
-  and `CacheKeys` — the single place cache key strings are constructed (`pilots:all`, `crew:flight:{id}`,
-  `crmreports:flight:{id}`). Add new keys here, don't inline literals in handlers.
+  and `CacheKeys` — the single place cache key strings are constructed (`pilots:all`, `stats:all`,
+  `crew:flight:{id}`, `crmreports:flight:{id}`, `pilot:profile:{id}`). Add new keys here, don't inline literals
+  in handlers. `ICacheInvalidatorCommand.CacheKeysToInvalidate` is normally a fixed expression-bodied property,
+  but where the keys to invalidate aren't knowable from the command's own fields alone (e.g. `UpdateFlightCommand`/
+  `CancelFlightCommand` need to invalidate `pilot:profile:{id}` for every pilot crewed on that flight, which
+  requires a DB query), it's declared as a mutable `{ get; set; }` instead and the handler appends to it after
+  `SaveChangesAsync` — `CacheInvalidationBehavior` reads it after `next()` returns, so this is safe.
 - Feature folders under vertical slices, not by technical layer:
-  - `Auth/Commands/Register/`, `Auth/Commands/Login/` — no validators (see gap above), not cached.
-  - `Flights/Commands/CreateFlight/` (+ `CreateFlightCommandValidator`), `Flights/Queries/GetFlights/`
+  - `Auth/Commands/Register/`, `Auth/Commands/Login/` — validated (`RegisterCommandValidator`,
+    `LoginCommandValidator`), not cached. `Register` implements `ICacheInvalidatorCommand`, invalidating
+    `pilots:all` and `stats:all` since a new pilot changes both listings.
+  - `Auth/Commands/ForgotPassword/` + `Auth/Commands/ResetPassword/`: same random-token pattern as refresh
+    tokens below (32-byte `RandomNumberGenerator`, hashed at rest via `TokenHasher`, one-time use). Deliberately
+    always returns success/`204` and does the same constant-floor-duration work (`Stopwatch` +
+    `Task.Delay` to a `MinimumDuration` floor) regardless of whether the email matches a pilot, so neither the
+    response shape nor response timing leaks which emails are registered. `ResetPassword` also nulls the
+    pilot's refresh token, invalidating any session obtained before the reset.
+  - `Auth/Commands/RefreshToken/` + `Auth/Commands/Logout/`: opaque refresh tokens (same
+    generate-random/hash-at-rest pattern), stored on `Pilot.RefreshTokenHash`/`RefreshTokenExpiresAtUtc`,
+    rotated on every successful refresh. `Logout` resolves the caller via `ICurrentUserService` and clears
+    their stored refresh token.
+  - `Flights/Commands/CreateFlight/` (+ `CreateFlightCommandValidator`; does **not** accept a client-supplied
+    `METARInfo` — that field is only ever set by `UpdateFlightMetarJob`, see "Background jobs & caching"),
+    `Flights/Commands/UpdateFlight/` and `Flights/Commands/CancelFlight/` (both guard against mutating an
+    already-`IsCancelled` flight, throwing `InvalidOperationException` → `409`; both also invalidate
+    `pilot:profile:{id}` for every pilot currently crewed on that flight, since `GetPilotProfileQuery`'s
+    hours/currency figures are derived from crewed flights), `Flights/Queries/GetFlights/`
     (paginated — `PageNumber`/`PageSize` query params, default 1/20, validated 1-100 via
     `GetFlightsQueryValidator`; returns `FlightsPageResult` with `Items`/`TotalCount`/`ThisMonthCount`/
     `DistinctAircraftTypeCount`; **not cached** — a deliberate choice, see "Background jobs & caching"),
     `Flights/Events/FlightCreatedEvent` + `FlightCreatedEventHandler` (MediatR notification published after
     a flight is saved; enqueues the METAR Hangfire job), `Flights/Jobs/UpdateFlightMetarJob` (the Hangfire
     job itself — not a MediatR request).
-  - `Pilots/Queries/GetPilots/` (cached, `pilots:all`, 5 min) — no create-pilot command outside `Register`.
+  - `Pilots/Queries/GetPilots/` (cached, `pilots:all`, 5 min), `Pilots/Queries/GetPilotProfile/` (cached,
+    `pilot:profile:{id}`, 5 min — hours/currency/recent-flights derived from the pilot's non-cancelled crewed
+    flights), `Pilots/Queries/GetPilotLogbook/` (+ CSV/PDF export), `Pilots/Commands/UpdatePilotCertificates/`
+    (scopes edits to the caller via `ICurrentUserService`, ignoring any client-supplied pilot id) — no
+    standalone create-pilot command outside `Register`.
+  - `Stats/Queries/GetStats/` (cached, `stats:all`, 5 min) — dashboard aggregate counts.
   - `Crew/Commands/CreateCrew/` (+ validator: both `FlightId`/`PilotId` FK existence checked via `MustAsync`,
-    invalidates `crew:flight:{flightId}`), `Crew/Queries/GetCrewByFlight/` (cached per flight, 5 min).
+    invalidates `crew:flight:{flightId}` and `pilot:profile:{PilotId}`), `Crew/Queries/GetCrewByFlight/`
+    (cached per flight, 5 min).
   - `CRMReports/Commands/CreateCRMReport/` (+ validator: `FlightId` FK exists, `Title` ≤200, `Description` ≤4000,
-    invalidates `crmreports:flight:{flightId}`), `CRMReports/Queries/GetCRMReportsByFlight/` (cached per flight,
-    5 min).
+    invalidates `crmreports:flight:{flightId}` and `stats:all`; resolves `ReporterId` via `ICurrentUserService`
+    regardless of `IsAnonymous`, per the accountability note in the Domain section above),
+    `CRMReports/Queries/GetCRMReportsByFlight/` (cached per flight, 5 min).
   - Each command/query, its handler, and any feature-specific DTO live together in its folder.
 - `DependencyInjection.cs`: `AddApplicationServices()` registers `FluentValidation` validators from this assembly
   and MediatR (with the three pipeline behaviors above, in order) against this assembly. Called from `Program.cs`.
@@ -135,8 +172,7 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   `LicenseNumber`; `CrewConfiguration` enforces a unique composite index on `(FlightId, PilotId)` to reject
   duplicate crew assignments at the DB level (in addition to the handler-level check).
 - `Persistence/ApplicationDbContext.cs`: implements `IApplicationDbContext`, applies all configurations via
-  `ApplyConfigurationsFromAssembly`. `Crew` and `CRMReport` have no explicit `DbSet` on the interface — still part
-  of the EF model through `Flight`'s navigation properties.
+  `ApplyConfigurationsFromAssembly`.
 - `Persistence/Migrations/`: EF Core migrations live here (in Infrastructure, next to the `DbContext`), not in
   API. Three so far, all applied: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
   `AddPilotAuthFields` (`Pilots.Username` unique, `Pilots.PasswordHash`), `FormalizeNonClusteredIndexes` — this
@@ -194,12 +230,20 @@ value is unset/empty, it challenges/401s rather than allowing access — do not 
 
 ### API — Auth endpoints
 
-`Controllers/AuthController.cs`: `POST /Auth/register` (→ `RegisterCommand`, returns the new Pilot `Guid`,
-registers with the caller-supplied `Rank`, defaulting to `Trainee` when omitted), `POST /Auth/login` (→ `LoginCommand`, returns
-`AuthResponseDto` with the JWT, or `401` on bad credentials via a caught `UnauthorizedAccessException`). Both
-anonymous — registering/logging in obviously can't require a token.
+`Controllers/AuthController.cs`, all anonymous (a valid access token can't be a precondition for getting one):
+`POST /Auth/register` (→ `RegisterCommand`, returns the new Pilot `Guid`, registers with the caller-supplied
+`Rank`, defaulting to `Trainee` when omitted), `POST /Auth/login` (→ `LoginCommand`, returns `AuthResponseDto`
+with the JWT + refresh token, or `401` on bad credentials via a caught `UnauthorizedAccessException`),
+`POST /Auth/forgot-password` / `POST /Auth/reset-password` (→ `ForgotPasswordCommand`/`ResetPasswordCommand`,
+both return `204` unconditionally, see the Application section above for the anti-enumeration design),
+`POST /Auth/refresh` (→ `RefreshTokenCommand`, rotates and returns a new access+refresh token pair). One
+non-anonymous exception: `POST /Auth/logout` (**`[Authorize]`** — needs a valid access token to know whose
+refresh token to clear). `Login` carries `[EnableRateLimiting("login")]` (5/min per IP); `Register`,
+`ForgotPassword`, `ResetPassword`, and `Refresh` all carry `[EnableRateLimiting("auth")]` (10/min per IP,
+looser since these aren't retried in a tight loop the way login is) — both policies configured in `Program.cs`,
+`RateLimiting:Login:*`/`RateLimiting:Auth:*`.
 
-### API — Flights, Crew, CRMReports, Pilots endpoints
+### API — Flights, Crew, CRMReports, Pilots, Stats endpoints
 
 - `Controllers/FlightsController.cs`: `POST /Flights` (→ `CreateFlightCommand`, returns the new `Guid`,
   **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` (→ `GetFlightsQuery`,
@@ -215,8 +259,16 @@ anonymous — registering/logging in obviously can't require a token.
 - `Controllers/CRMReportsController.cs`: class-level `[Authorize]`, no extra role restriction. `POST /CRMReports`
   (→ `CreateCRMReportCommand`), `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) — any
   authenticated pilot can create/read CRM reports.
-- `Controllers/PilotsController.cs`: `GET /Pilots` (→ `GetPilotsQuery`, `[Authorize]`, any authenticated pilot) —
-  used by the frontend's crew-assignment picker.
+- `Controllers/PilotsController.cs`, class-level **`[Authorize]`**, no ownership/role restriction beyond that
+  (any authenticated pilot, including a self-registered `Trainee`, can view another pilot's profile/logbook —
+  consistent with the app's existing "any authenticated pilot can read" pattern elsewhere, not currently
+  gated further): `GET /Pilots` (→ `GetPilotsQuery`, used by the frontend's crew-assignment picker),
+  `GET /Pilots/{id}` (→ `GetPilotProfileQuery`), `GET /Pilots/{id}/logbook?format=csv|pdf` (→
+  `GetPilotLogbookQuery`, streamed via `CsvLogbookWriter`/`PdfLogbookWriter`), `PUT /Pilots/me/certificates`
+  (→ `UpdatePilotCertificatesCommand`, scoped to the caller via `ICurrentUserService` — the command has no
+  pilot-id field a client could tamper with).
+- `Controllers/StatsController.cs`: `GET /Stats` (→ `GetStatsQuery`, `[Authorize]`) — dashboard aggregate
+  counts for the frontend's `AdminStatsPage`.
 
 All controllers go through `IMediator.Send`, no direct Application/Infrastructure calls. Sample requests in
 `AltitudELog.API.http`.
@@ -228,8 +280,10 @@ All controllers go through `IMediator.Send`, no direct Application/Infrastructur
 `app.UseExceptionHandler()`. Mapping: `FluentValidation.ValidationException` → `400` with a
 `ValidationProblemDetails` per-field error shape, `UnauthorizedAccessException` → `401`,
 `AltitudELog.Application.Common.Exceptions.NotFoundException` → `404`, `InvalidOperationException` → `409`
-(reserved for genuine conflicts — duplicate crew assignment, duplicate username; "does not exist" cases should
-throw `NotFoundException` instead, not `InvalidOperationException`). Anything unmapped falls through to the
+(reserved for genuine conflicts — duplicate crew assignment, duplicate username, mutating an already-cancelled
+flight; "does not exist" cases should throw `NotFoundException` instead, not `InvalidOperationException`),
+`DbUpdateConcurrencyException` → `409` with a friendly "modified by another request" detail (EF's own message
+is too raw to surface) — see the `Flight` `xmin` concurrency token below. Anything unmapped falls through to the
 default ASP.NET Core `ProblemDetails` `500` response. The frontend's `ApiError`/`toApiError`
 (`frontend/src/lib/axios.ts`) is written against this exact shape.
 
@@ -270,7 +324,9 @@ re-introducing caching here; revisit with a version-counter key if profiling eve
 
 | Query | Cache key | Invalidated by |
 |---|---|---|
-| `GetPilotsQuery` | `pilots:all` | *nothing currently* (see gap above) |
+| `GetPilotsQuery` | `pilots:all` | `RegisterCommand` |
+| `GetStatsQuery` | `stats:all` | `RegisterCommand`, `CreateFlightCommand`, `UpdateFlightCommand`, `CancelFlightCommand`, `CreateCRMReportCommand` |
+| `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight) |
 | `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand` (same flight only) |
 | `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand` (same flight only) |
 
@@ -289,16 +345,22 @@ it being reachable).
 React 19 + TypeScript + Vite 8 + Tailwind CSS 4 SPA, talking to the API over `axios`. Not part of the .NET
 solution/build — it's a separate `npm` project.
 
-- `src/pages/`: `LoginPage`, `RegisterPage`, `DashboardPage` (flight list), `FlightDetailPage` (crew + CRM report
-  tabs), `CreateFlightPage` (Captain-only), `UnauthorizedPage`, `NotFoundPage`.
+- `src/pages/`: `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `DashboardPage` (flight
+  list), `FlightDetailPage` (crew + CRM report tabs), `CreateFlightPage`/`EditFlightPage` (Captain-only),
+  `PilotProfilePage`, `AdminStatsPage`, `UnauthorizedPage`, `NotFoundPage`.
 - `src/routes/`: `ProtectedRoute` (redirects to `/login` if not authenticated), `CaptainRoute` (redirects to
-  `/unauthorized` if `rank !== 'Captain'`) — mirrors the API's `[Authorize(Roles = "Captain")]` gates, wraps only
-  `/flights/new` in `src/router.tsx`.
+  `/unauthorized` unless `rank === 'Captain'`), `CommandRoute` (same, but for `rank === 'Captain' ||
+  rank === 'ChiefPilot'`) — mirror the API's role-based `[Authorize(Roles = "...")]` gates on the corresponding
+  routes in `src/router.tsx`.
 - `src/store/authStore.ts`: `zustand` store (persisted to `localStorage` under the `altitudelog-auth` key) holding
-  the JWT, pilot id, username, rank.
+  the JWT, refresh token, pilot id, username, rank — see the localStorage token-storage note in "Project state"
+  above.
 - `src/lib/axios.ts`: single `apiClient` instance, attaches the bearer token from the auth store on every
-  request, auto-logs-out and redirects to `/login` on a `401` response, normalizes error responses into the
-  `ApiError` shape matching the API's `ProblemDetails`/`ValidationProblemDetails` output.
+  request. On a `401` from an authenticated request, attempts a single refresh (via a separate bare `axios`
+  call that bypasses the interceptor, to avoid an infinite loop) with an in-flight-promise lock so concurrent
+  401s share one refresh instead of racing; on success the store is updated and the original request retried
+  once, on failure it auto-logs-out and redirects to `/login`. Normalizes error responses into the `ApiError`
+  shape matching the API's `ProblemDetails`/`ValidationProblemDetails` output.
 - `src/services/`: one thin service module per backend resource (`authService`, `flightService`, `crewService`,
   `crmReportService`, `pilotService`), all going through `apiClient`.
 - `src/components/ui/`: shared primitives (`Button`, `Card`, `Input`, `Select`, `Combobox`, `Badge`, `Skeleton`,
@@ -320,7 +382,7 @@ solution/build — it's a separate `npm` project.
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.
 
 Commands (run from `frontend/`): `npm install`, `npm run dev` (Vite dev server, port 5180),
-`npm run build` (`tsc -b && vite build`), `npm run lint` (`oxlint`), `npm run preview`.
+`npm run build` (`tsc -b && vite build`), `npm run lint` (`oxlint`), `npm test` (`vitest run`), `npm run preview`.
 
 ## Commands
 
@@ -331,8 +393,9 @@ specifically.
 - Build: `dotnet build AltitudELog.slnx`
 - Run (http profile, `http://localhost:5264`): `dotnet run --project src/AltitudELog.API --launch-profile http`
 - Run (https profile, `https://localhost:7240`): `dotnet run --project src/AltitudELog.API --launch-profile https`
-- OpenAPI document is only mapped when `ASPNETCORE_ENVIRONMENT=Development` (set by both launch profiles), served via
-  `AddOpenApi()`/`MapOpenApi()` — there is no Swagger UI wired up.
+- OpenAPI document is always mapped (not Development-gated, so it's explorable on the live deployment too),
+  served via `AddOpenApi()`/`MapOpenApi()` and browsable through Scalar (`MapScalarApiReference()`) — there is
+  no Swagger UI wired up.
 - `dotnet sln AltitudELog.slnx list` shows registered projects.
 - New migration: `dotnet ef migrations add <Name> --project src/AltitudELog.Infrastructure --startup-project src/AltitudELog.API --output-dir Persistence/Migrations`
 - Apply migrations: `dotnet ef database update --project src/AltitudELog.Infrastructure --startup-project src/AltitudELog.API`
@@ -343,7 +406,8 @@ specifically.
   Testcontainers — **Docker must be running**, or those tests fail with a `DockerUnavailableException` rather
   than a real test failure). To run only the fast unit tests:
   `dotnet test tests/AltitudELog.Application.UnitTests`.
-- CI: `.github/workflows/ci.yml` runs `dotnet test` on push/PR.
+- CI: `.github/workflows/ci.yml` runs two jobs on push/PR — `backend` (`dotnet test`) and `frontend`
+  (`npm run build`, `npm run lint`, `npm test`).
 - The previously-flagged NU1903 advisory (`Microsoft.OpenApi` 2.0.0, transitive via `Microsoft.AspNetCore.OpenApi`)
   no longer applies — `AltitudELog.API` now pins `Microsoft.OpenApi` 2.11.0 directly. Re-check with
   `dotnet list package --vulnerable` if package versions move again rather than assuming this stays fixed.
@@ -357,11 +421,21 @@ specifically.
   + `AddScoped<ICurrentUserService, CurrentUserService>()` → `AddExceptionHandler<ValidationExceptionHandler>()` +
   `AddExceptionHandler<DomainExceptionHandler>()` + `AddProblemDetails()` → `AddCors("FrontendCorsPolicy")` →
   `AddAuthentication().AddJwtBearer(...)` + `AddAuthorization()` (plain, no named policies — role checks are all
-  inline `[Authorize(Roles = "...")]`) → `builder.Build()` → **fail-fast Jwt:Key length/presence check** (throws
-  before the app starts serving) → conditional `MapOpenApi()` in Development → `UseExceptionHandler()` →
-  `UseSerilogRequestLogging()` → `UseHttpsRedirection()` → `UseCors("FrontendCorsPolicy")` → `UseAuthentication()`
-  → `UseAuthorization()` → `MapControllers()` → `MapHealthChecks("/health", ...)` → `UseHangfireDashboard("/hangfire", ...)`.
-  `UseAuthentication()` must precede `UseAuthorization()`; `UseCors()` must precede both.
+  inline `[Authorize(Roles = "...")]`) → `AddRateLimiter(...)` (the `"login"` and `"auth"` fixed-window policies,
+  see "API — Auth endpoints") → `builder.Build()` → **fail-fast Jwt:Key length/presence check** (throws before
+  the app starts serving) → apply pending EF Core migrations on startup with a bounded retry loop (10 attempts,
+  3s apart — tolerates a managed Postgres, e.g. Railway, being briefly unready right after container start,
+  without crash-looping) → `MapOpenApi()` + `MapScalarApiReference()` (both unconditional, not dev-gated, so
+  the live deployment is explorable too — there is no Swagger UI, Scalar is the API explorer) →
+  `UseForwardedHeaders()` (needed for the rate limiter's per-IP partitioning to see the real client IP behind a
+  platform proxy) → `UseExceptionHandler()` → `UseSerilogRequestLogging()` → `UseHttpsRedirection()`
+  (Development-only — TLS is terminated by the platform proxy in production) → `UseCors("FrontendCorsPolicy")`
+  → `UseAuthentication()` → `UseAuthorization()` → `UseRateLimiter()` → `MapControllers()` →
+  `MapHealthChecks("/health", ...)` → `UseHangfireDashboard("/hangfire", ...)`. `UseAuthentication()` must
+  precede `UseAuthorization()`; `UseCors()` must precede both.
+- `QuestPDF.Settings.License = LicenseType.Community` is set once at startup, before the host is built — the
+  PDF logbook export (`PdfLogbookWriter`) uses QuestPDF, Community-licensed the same revenue-gated way as
+  MediatR above.
 - Controllers live under `AltitudELog.API/Controllers/` and use attribute routing (`[Route("[controller]")]`).
 - `Nullable` and `ImplicitUsings` are enabled across all projects (including both test projects) — new code
   should follow nullable-reference-type conventions rather than disabling them.

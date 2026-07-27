@@ -28,8 +28,7 @@ public class CreateFlightCommandHandler : IRequestHandler<CreateFlightCommand, G
             DestinationICAO = request.DestinationICAO,
             FlightTime = request.FlightTime,
             AircraftType = request.AircraftType,
-            Date = request.Date,
-            METARInfo = request.METARInfo
+            Date = request.Date
         };
 
         _context.Flights.Add(flight);

@@ -35,8 +35,7 @@ Content-Type: application/json
   "destinationICAO": "EGLL",
   "flightTime": "03:45:00",
   "aircraftType": "A320",
-  "date": "2026-07-16",
-  "metarInfo": null
+  "date": "2026-07-16"
 }
 
 ###

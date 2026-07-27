@@ -5,5 +5,5 @@ namespace AltitudELog.Application.Flights.Commands.CancelFlight;
 
 public record CancelFlightCommand(Guid FlightId) : IRequest, ICacheInvalidatorCommand
 {
-    public string[] CacheKeysToInvalidate => [CacheKeys.Stats];
+    public string[] CacheKeysToInvalidate { get; set; } = [CacheKeys.Stats];
 }

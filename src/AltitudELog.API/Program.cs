@@ -122,6 +122,26 @@ try
                 });
         });
 
+        // Shared throttle for the other Auth endpoints (register/forgot-password/reset-password/
+        // refresh): looser than login's 5/min since these are one-shot flows rather than something
+        // legitimately retried in a tight loop, but still capped so a single client can't email-bomb
+        // a victim via forgot-password or mass-create accounts via register.
+        options.AddPolicy("auth", httpContext =>
+        {
+            var permitLimit = builder.Configuration.GetValue<int?>("RateLimiting:Auth:PermitLimit") ?? 10;
+            var window = TimeSpan.FromSeconds(
+                builder.Configuration.GetValue<int?>("RateLimiting:Auth:WindowSeconds") ?? 60);
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = window,
+                    QueueLimit = 0
+                });
+        });
+
         options.OnRejected = async (context, cancellationToken) =>
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -129,7 +149,7 @@ try
             {
                 Status = StatusCodes.Status429TooManyRequests,
                 Title = "Too Many Requests",
-                Detail = "Too many login attempts. Please wait a moment and try again."
+                Detail = "Too many attempts. Please wait a moment and try again."
             };
             await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
         };

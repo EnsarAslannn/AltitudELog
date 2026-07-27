@@ -24,7 +24,6 @@ export interface CreateFlightRequest {
   flightTime: string
   aircraftType: string
   date: string
-  metarInfo: string | null
 }
 
 export interface UpdateFlightRequest {

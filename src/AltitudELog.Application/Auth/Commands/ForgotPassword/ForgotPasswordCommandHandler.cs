@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.Common.Security;
@@ -10,6 +11,12 @@ namespace AltitudELog.Application.Auth.Commands.ForgotPassword;
 public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand>
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
+
+    // Floor on total handler duration, regardless of which branch below runs. Without this, the
+    // matching-email branch's extra SaveChangesAsync + SMTP send makes it measurably slower than the
+    // immediate return for a non-matching email, letting an attacker infer registered emails from
+    // response timing alone — defeating the point of generating the token unconditionally below.
+    private static readonly TimeSpan MinimumDuration = TimeSpan.FromMilliseconds(300);
 
     private readonly IApplicationDbContext _context;
     private readonly IEmailService _emailService;
@@ -25,6 +32,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
     public async Task Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         var pilot = await _context.Pilots
             .FirstOrDefaultAsync(p => p.Email == request.Email, cancellationToken);
 
@@ -38,20 +47,29 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         if (pilot is null)
         {
             _logger.LogInformation("Password reset requested for unregistered email {Email}", request.Email);
-            return;
+        }
+        else
+        {
+            pilot.PasswordResetTokenHash = tokenHash;
+            pilot.PasswordResetTokenExpiresAtUtc = DateTime.UtcNow.Add(TokenLifetime);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(pilot.Email!, token, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send password reset email to {Email}; token was still generated.", pilot.Email);
+            }
         }
 
-        pilot.PasswordResetTokenHash = tokenHash;
-        pilot.PasswordResetTokenExpiresAtUtc = DateTime.UtcNow.Add(TokenLifetime);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        try
+        // Equalize total response time across both branches (see MinimumDuration comment above) —
+        // a no-op on the slower, matching-email path.
+        var remaining = MinimumDuration - stopwatch.Elapsed;
+        if (remaining > TimeSpan.Zero)
         {
-            await _emailService.SendPasswordResetEmailAsync(pilot.Email!, token, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to send password reset email to {Email}; token was still generated.", pilot.Email);
+            await Task.Delay(remaining, cancellationToken);
         }
     }
 }

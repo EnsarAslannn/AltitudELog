@@ -8,8 +8,7 @@ public record CreateFlightCommand(
     string DestinationICAO,
     TimeSpan FlightTime,
     string AircraftType,
-    DateOnly Date,
-    string? METARInfo
+    DateOnly Date
 ) : IRequest<Guid>, ICacheInvalidatorCommand
 {
     public string[] CacheKeysToInvalidate => [CacheKeys.Stats];

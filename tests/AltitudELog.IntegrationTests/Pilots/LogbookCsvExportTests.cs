@@ -64,8 +64,7 @@ public class LogbookCsvExportTests : IAsyncLifetime
             DestinationICAO: "EGLL",
             FlightTime: TimeSpan.FromHours(4),
             AircraftType: maliciousAircraftType,
-            Date: DateOnly.FromDateTime(DateTime.UtcNow),
-            METARInfo: null));
+            Date: DateOnly.FromDateTime(DateTime.UtcNow)));
         createFlightResponse.EnsureSuccessStatusCode();
         var flightId = await createFlightResponse.Content.ReadFromJsonAsync<Guid>();
 

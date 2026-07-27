@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Caching;
 using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.Flights.Events;
@@ -45,6 +46,14 @@ public class UpdateFlightCommandHandler : IRequestHandler<UpdateFlightCommand>
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        var crewPilotIds = await _context.Crew
+            .Where(c => c.FlightId == request.FlightId)
+            .Select(c => c.PilotId)
+            .ToListAsync(cancellationToken);
+
+        request.CacheKeysToInvalidate =
+            [.. request.CacheKeysToInvalidate, .. crewPilotIds.Select(CacheKeys.PilotProfile)];
 
         _logger.LogInformation("Flight {FlightId} updated", flight.Id);
 

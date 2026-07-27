@@ -14,7 +14,6 @@ export function CreateFlightPage() {
       flightTime: values.flightTime,
       aircraftType: values.aircraftType,
       date: values.date,
-      metarInfo: null,
     })
     navigate('/')
   }

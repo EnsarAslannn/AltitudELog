@@ -12,8 +12,7 @@ public class CreateFlightCommandValidatorTests
         DestinationICAO: "EGLL",
         FlightTime: TimeSpan.FromHours(4),
         AircraftType: "A350",
-        Date: DateOnly.FromDateTime(DateTime.UtcNow),
-        METARInfo: null);
+        Date: DateOnly.FromDateTime(DateTime.UtcNow));
 
     [Fact]
     public void Should_Pass_For_Valid_Command()
@@ -77,26 +76,6 @@ public class CreateFlightCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldNotHaveValidationErrorFor(c => c.AircraftType);
-    }
-
-    [Fact]
-    public void Should_HaveError_When_METARInfo_Exceeds_MaxLength()
-    {
-        var command = ValidCommand() with { METARInfo = new string('M', 2001) };
-
-        var result = _validator.TestValidate(command);
-
-        result.ShouldHaveValidationErrorFor(c => c.METARInfo);
-    }
-
-    [Fact]
-    public void Should_Pass_When_METARInfo_Is_At_MaxLength()
-    {
-        var command = ValidCommand() with { METARInfo = new string('M', 2000) };
-
-        var result = _validator.TestValidate(command);
-
-        result.ShouldNotHaveValidationErrorFor(c => c.METARInfo);
     }
 
     [Fact]

@@ -72,8 +72,7 @@ public class CreateFlightHappyPathTests : IAsyncLifetime
         DestinationICAO: "EGLL",
         FlightTime: TimeSpan.FromHours(4),
         AircraftType: "A350",
-        Date: DateOnly.FromDateTime(DateTime.UtcNow),
-        METARInfo: null);
+        Date: DateOnly.FromDateTime(DateTime.UtcNow));
 
     [Fact]
     public async Task Post_Flights_As_Captain_Creates_Flight_And_Enqueues_Metar_Job()

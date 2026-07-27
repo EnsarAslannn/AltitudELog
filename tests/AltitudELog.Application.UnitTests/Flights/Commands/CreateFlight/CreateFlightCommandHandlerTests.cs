@@ -25,8 +25,7 @@ public class CreateFlightCommandHandlerTests
         DestinationICAO: "EGLL",
         FlightTime: TimeSpan.FromHours(4),
         AircraftType: "A350",
-        Date: DateOnly.FromDateTime(DateTime.UtcNow),
-        METARInfo: null);
+        Date: DateOnly.FromDateTime(DateTime.UtcNow));
 
     [Fact]
     public async Task Handle_Should_Persist_Flight_And_Return_Its_Id()

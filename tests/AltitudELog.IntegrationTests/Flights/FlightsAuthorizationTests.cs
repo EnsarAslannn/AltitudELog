@@ -60,8 +60,7 @@ public class FlightsAuthorizationTests : IAsyncLifetime
         DestinationICAO: "EGLL",
         FlightTime: TimeSpan.FromHours(4),
         AircraftType: "A350",
-        Date: DateOnly.FromDateTime(DateTime.UtcNow),
-        METARInfo: null);
+        Date: DateOnly.FromDateTime(DateTime.UtcNow));
 
     [Fact]
     public async Task Get_Flights_Without_Token_Returns_Unauthorized()

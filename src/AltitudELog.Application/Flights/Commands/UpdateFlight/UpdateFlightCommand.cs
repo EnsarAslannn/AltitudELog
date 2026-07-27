@@ -12,5 +12,5 @@ public record UpdateFlightCommand(
     DateOnly Date
 ) : IRequest, ICacheInvalidatorCommand
 {
-    public string[] CacheKeysToInvalidate => [CacheKeys.Stats];
+    public string[] CacheKeysToInvalidate { get; set; } = [CacheKeys.Stats];
 }

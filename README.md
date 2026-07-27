@@ -51,6 +51,10 @@ Railway. Register with any rank, including **Captain**, to unlock flight-creatio
   admin/approval workflow, not chosen freely by the registrant. It's left open here so anyone trying the live
   demo can register as Captain and immediately exercise the flight/crew-creation features without needing a
   separate approval step. This is called out in the UI at registration time as well.
+- **The JWT and refresh token are stored in the browser's `localStorage`, not an httpOnly cookie.** This is a
+  simplicity trade-off for a demo deployment, not an oversight: it keeps the frontend a plain SPA talking to a
+  stateless API with no cookie/CORS-credentials plumbing. A production-hardened build would keep the refresh
+  token in an httpOnly+Secure cookie instead, so it can't be read by an XSS payload.
 
 ## Solution structure
 
