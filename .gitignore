@@ -78,6 +78,8 @@ Thumbs.db
 .claude/skills/webapp-testing/
 .claude/skills/senior-security/
 .claude/skills/ui-ux-pro-max/
+.claude/skills/design-taste-frontend/
+.claude/skills/impeccable/
 skills-lock.json
 
 # Local Claude Code settings (stale debug-session permissions, machine-specific paths)
