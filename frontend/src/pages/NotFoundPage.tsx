@@ -7,7 +7,7 @@ export function NotFoundPage() {
       <img
         src="/images/tail.jpg"
         alt=""
-        className="photo-mono absolute inset-0 h-full w-full object-cover"
+        className="photo-rich absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 hero-scrim-center" />
       <div className="relative flex flex-col items-center gap-5 rise">
