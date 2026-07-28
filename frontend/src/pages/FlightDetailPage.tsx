@@ -38,7 +38,7 @@ const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 
 const severityBorder: Record<SeverityLevel, string> = {
   Low: 'border-l-success',
-  Medium: 'border-l-command',
+  Medium: 'border-l-warning',
   High: 'border-l-high',
   Critical: 'border-l-error',
 }
@@ -149,13 +149,13 @@ export function FlightDetailPage() {
         <img
           src="/images/clouds.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="photo-mono absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
         <div className="relative flex h-full flex-col justify-center gap-6 p-8 sm:p-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Eyebrow tone="light" rule={false}>
+            <Eyebrow tone="soft" rule={false}>
               Flight Record
             </Eyebrow>
             {flight.isCancelled ? (
@@ -167,7 +167,7 @@ export function FlightDetailPage() {
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/flights/${flightId}/edit`}
-                    className="flex items-center gap-1.5 rounded border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:bg-primary/20"
+                    className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Düzenle
@@ -181,10 +181,10 @@ export function FlightDetailPage() {
             origin={flight.originICAO}
             destination={flight.destinationICAO}
             size="lg"
-            tone="dark"
+            emphasis="strong"
             animated
           />
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-on-primary/75">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-on-surface-variant">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="h-4 w-4" />
               <span className="data">{flight.date}</span>
@@ -263,7 +263,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
     return (
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-on-primary">Emin misiniz?</span>
+          <span className="text-xs font-medium text-on-surface">Emin misiniz?</span>
           <button
             onClick={handleConfirm}
             disabled={isCancelling}
@@ -278,7 +278,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
               setError(null)
             }}
             disabled={isCancelling}
-            className="flex items-center gap-1.5 rounded border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:bg-primary/20"
+            className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
           >
             Vazgeç
           </button>
@@ -295,7 +295,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex items-center gap-1.5 rounded border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:bg-primary/20"
+      className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
     >
       <XCircle className="h-3.5 w-3.5" />
       İptal Et
@@ -380,7 +380,7 @@ function CrewTab({
                     className={cn(
                       'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
                       member.dutyRole === 'PIC'
-                        ? 'bg-command-container text-on-command-container'
+                        ? 'bg-primary text-on-primary'
                         : 'bg-primary/10 text-primary',
                     )}
                   >
@@ -388,7 +388,7 @@ function CrewTab({
                   </span>
                   <span className="font-medium text-on-surface">{member.pilotName}</span>
                 </div>
-                <Badge tone={member.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
+                <Badge tone={member.dutyRole === 'PIC' ? 'solid' : 'neutral'} icon={RoleIcon}>
                   {member.dutyRole}
                 </Badge>
               </Card>

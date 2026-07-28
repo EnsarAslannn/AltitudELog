@@ -28,7 +28,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen">
       <AuthHero
-        image="/images/hero-approach.jpg"
+        image="/images/hangar.jpg"
         eyebrow="Account Recovery"
         title={
           <>
@@ -42,12 +42,12 @@ export function ForgotPasswordPage() {
       />
       <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 text-3xl font-bold tracking-tight text-on-surface">Şifremi Unuttum</h1>
+          <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Şifremi Unuttum</h1>
           <p className="mb-6 text-sm text-on-surface-variant">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</p>
           <Card>
             {submitted ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container/40 text-primary">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface">
                   <KeyRound className="h-6 w-6" />
                 </span>
                 <p className="text-sm text-on-surface-variant">
@@ -73,7 +73,7 @@ export function ForgotPasswordPage() {
             )}
           </Card>
           <p className="mt-4 text-sm text-on-surface-variant">
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to="/login" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
               Girişe dön
             </Link>
           </p>

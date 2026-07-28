@@ -2,73 +2,76 @@
 
 @theme {
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
 
-  /* Skyline UI palette — Material-3-style semantic tokens, from DESIGN.md */
-  --color-primary: #006382;
-  --color-on-primary: #e5f5ff;
-  --color-primary-container: #7bd1fa;
-  --color-on-primary-container: #00465d;
-  --color-on-primary-fixed-variant: #004f69;
+  /* Palette — warm monochrome, values taken verbatim from DESIGN.md */
+  --color-primary: #121212;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #333333;
+  --color-on-primary-container: #ffffff;
 
-  --color-secondary: #346176;
-  --color-on-secondary: #e6f5ff;
-  --color-secondary-container: #b1ddf7;
-  --color-on-secondary-container: #215065;
+  --color-secondary: #5d5e5f;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e5e2e1;
+  --color-on-secondary-container: #1a1c1d;
 
-  --color-tertiary: #5a5c5c;
-  --color-on-tertiary: #f2f3f3;
-  --color-tertiary-container: #ffffff;
-  --color-on-tertiary-container: #616263;
-
-  --color-error: #b31b25;
-  --color-on-error: #ffefee;
-  --color-error-container: #fb5151;
-  --color-on-error-container: #570008;
-  --color-error-hover: #8f161e;
-
-  --color-surface: #f5f6ff;
-  --color-surface-dim: #c4d4fb;
-  --color-surface-bright: #f5f6ff;
+  --color-surface: #fdf8f8;
+  --color-surface-dim: #ddd9d8;
+  --color-surface-bright: #fdf8f8;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #edf0ff;
-  --color-surface-container: #e0e8ff;
-  --color-surface-container-high: #d8e2ff;
-  --color-surface-container-highest: #cfddff;
-  --color-on-surface: #252f43;
-  --color-on-surface-variant: #525b72;
-  --color-outline: #6d778e;
-  --color-outline-variant: #a3adc7;
-  --color-background: #f5f6ff;
-  --color-on-background: #252f43;
+  --color-surface-container-low: #f7f3f2;
+  --color-surface-container: #f1edec;
+  --color-surface-container-high: #ebe7e6;
+  --color-surface-container-highest: #e5e2e1;
+  --color-on-surface: #1c1b1b;
+  --color-on-surface-variant: #444748;
+  --color-outline: #747878;
+  --color-outline-variant: #c4c7c8;
+  --color-background: #fdf8f8;
+  --color-on-background: #1c1b1b;
 
-  /* "Command" accent — dedicated Captain/PIC-significance hue, outside the core Skyline set */
-  --color-command: #b45309;
-  --color-command-hover: #92400e;
-  --color-on-command: #fffbeb;
-  --color-command-container: #fef3c7;
-  --color-on-command-container: #78350f;
+  /*
+   * Status ramp — the only chromatic colors in the system. DESIGN.md defines no status
+   * palette, but CRM severity, certificate expiry and validation errors encode safety data
+   * that must stay distinguishable, so these are kept and desaturated to sit quietly
+   * against the warm neutrals. Brand/Captain significance carries NO hue — see Badge's
+   * `solid` tone.
+   */
+  --color-error: #8c1d18;
+  --color-on-error: #ffffff;
+  --color-error-container: #f9dedc;
+  --color-on-error-container: #410e0b;
+  --color-error-hover: #6d1611;
 
-  /* Status/severity ramp — "safe" and a 4th CRM severity step, beyond the core M3 roles */
-  --color-success: #15803d;
-  --color-on-success: #f0fdf4;
-  --color-success-container: #dcfce7;
-  --color-on-success-container: #14532d;
+  --color-success: #2f6b4f;
+  --color-on-success: #ffffff;
+  --color-success-container: #dcece3;
+  --color-on-success-container: #10321f;
 
-  --color-high: #c2410c;
-  --color-on-high: #fff7ed;
-  --color-high-container: #ffedd5;
-  --color-on-high-container: #7c2d12;
+  --color-warning: #8a6b2f;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #f3ead6;
+  --color-on-warning-container: #4a3611;
 
+  --color-high: #8f4426;
+  --color-on-high: #ffffff;
+  --color-high-container: #f6e2d8;
+  --color-on-high-container: #4d1f0c;
+
+  /*
+   * DESIGN.md pins `roundness: 8`. md/lg deliberately collapse onto 8px so the existing
+   * `rounded-lg` call sites render at the spec value — this is intentional, not a typo.
+   * Only full-bleed hero imagery gets the larger 12px.
+   */
   --radius-sm: 0.25rem;
   --radius: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 
-  /* Panel elevation — soft ambient navy-tinted shadow instead of a hairline glow */
-  --shadow-panel: 0 1px 2px 0 rgba(37, 47, 67, 0.06), 0 8px 24px -8px rgba(37, 47, 67, 0.12);
-  --shadow-panel-hover: 0 2px 4px 0 rgba(37, 47, 67, 0.08), 0 16px 32px -8px rgba(37, 47, 67, 0.18);
-  --shadow-command-glow: 0 0 0 1px rgba(180, 83, 9, 0.35), 0 0 16px -2px rgba(180, 83, 9, 0.35);
+  /* Soft warm ambient elevation — DESIGN.md's "hafif gölgeler" */
+  --shadow-panel: 0 1px 2px 0 rgba(28, 27, 27, 0.05), 0 8px 24px -10px rgba(28, 27, 27, 0.10);
+  --shadow-panel-hover: 0 2px 6px 0 rgba(28, 27, 27, 0.07), 0 18px 36px -12px rgba(28, 27, 27, 0.16);
 }
 
 body {
@@ -79,6 +82,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Editorial display type — Libre Caslon Text. Deliberately scoped to hero headings and
+ * page <h1>s only; section headings, card titles and all data stay Inter so the dense
+ * flight/CRM lists remain scannable.
+ */
+.display {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 /* Aviation data — ICAO codes, METAR, timings, stat values */
 .data {
   font-feature-settings: "tnum" 1, "zero" 1;
@@ -86,25 +100,78 @@ body {
 
 /* Uppercase eyebrow tracking */
 .eyebrow {
-  letter-spacing: 0.05em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
-/* Frosted glass panel for content floating over hero photography */
+/*
+ * Unifies the photography into one set: every hero <img> is graded to the palette's warm
+ * near-monochrome range, so the original stock photos and the newer generated ones read
+ * as a single library rather than a mix of colour grades.
+ */
+.photo-mono {
+  filter: grayscale(100%) sepia(10%) contrast(1.14) brightness(0.92);
+}
+
+/*
+ * Legibility halo for type that lands on open photography rather than on the scrimmed
+ * side of a hero band — e.g. the destination code of a full-width route ribbon, which
+ * by construction sits at the far edge where the scrim has faded out.
+ */
+.on-photo {
+  text-shadow:
+    0 1px 2px rgba(253, 248, 248, 0.9),
+    0 0 20px rgba(253, 248, 248, 0.92);
+}
+
+/* Frosted panel for content floating over hero photography */
 .glass-panel {
-  background-color: rgba(255, 255, 255, 0.65);
+  background-color: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(123, 209, 250, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: var(--shadow-panel);
 }
 
-/* Light scrim recipe fading full-bleed hero photography into the page surface color */
+/*
+ * Hero scrim. Horizontal-dominant so the left column — where every hero's eyebrow,
+ * heading and body copy sit — resolves to near-solid surface colour and carries dark
+ * text at full contrast, while the right side stays open for the photograph. The second
+ * layer lifts the lower edge so the band fuses into the page background.
+ */
 .hero-scrim {
+  background:
+    linear-gradient(
+      to right,
+      var(--color-surface) 0%,
+      rgba(253, 248, 248, 0.92) 30%,
+      rgba(253, 248, 248, 0.45) 58%,
+      rgba(253, 248, 248, 0.04) 88%
+    ),
+    linear-gradient(to top, rgba(253, 248, 248, 0.5) 0%, rgba(253, 248, 248, 0) 60%);
+}
+
+/* Panel variant for the tall auth hero, whose copy sits along the bottom edge rather
+   than in a left column — weighting the scrim vertically keeps the upper two-thirds of
+   the photograph fully readable. */
+.hero-scrim-panel {
   background: linear-gradient(
     to top,
     var(--color-surface) 0%,
-    rgba(245, 246, 255, 0.85) 35%,
-    rgba(245, 246, 255, 0.15) 100%
+    rgba(253, 248, 248, 0.92) 32%,
+    rgba(253, 248, 248, 0.35) 62%,
+    rgba(253, 248, 248, 0.06) 100%
+  );
+}
+
+/* Centred variant, for full-screen layouts whose content sits in the middle rather than
+   in a left column — the left-weighted gradient above would read lopsided there. */
+.hero-scrim-center {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    var(--color-surface) 0%,
+    rgba(253, 248, 248, 0.92) 45%,
+    rgba(253, 248, 248, 0.35) 100%
   );
 }
 
@@ -118,7 +185,7 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .arc-live {
     animation: arc-drift 1.6s linear infinite;
-    filter: drop-shadow(0 0 3px rgba(0, 99, 130, 0.45));
+    filter: drop-shadow(0 0 3px rgba(28, 27, 27, 0.3));
   }
 }
 
@@ -138,5 +205,22 @@ body {
   .rise {
     animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--rise-delay, 0ms);
+  }
+}
+
+/* Slow drift for a single floating accent element on the auth hero */
+@keyframes float-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .float-slow {
+    animation: float-drift 6s ease-in-out infinite;
   }
 }

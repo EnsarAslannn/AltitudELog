@@ -31,8 +31,8 @@ export function Navbar() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       'relative flex items-center gap-1.5 px-1 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface',
-      'after:absolute after:-bottom-[17px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:shadow-[0_0_6px_rgba(0,99,130,0.5)] after:transition-transform',
-      isActive && 'text-primary after:scale-x-100',
+      'after:absolute after:-bottom-[17px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform',
+      isActive && 'text-on-surface after:scale-x-100',
     )
 
   return (
@@ -40,11 +40,11 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-container/40 ring-1 ring-primary/20">
-              <PlaneTakeoff className="h-4 w-4 text-primary" strokeWidth={2.5} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
+              <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            <span className="text-lg font-bold tracking-tight text-on-surface">
-              Altitud<span className="text-command">E</span>Log
+            <span className="display text-xl text-on-surface">
+              Altitud<span className="text-on-surface">E</span>Log
             </span>
           </div>
           <nav className="hidden items-center gap-7 sm:flex">
@@ -74,11 +74,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <span className="hidden text-sm text-on-surface-variant sm:inline">{username}</span>
           {rank && (
-            <Badge
-              tone={isCommand ? 'amber' : 'neutral'}
-              icon={rankIcon[rank]}
-              className={cn(isCommand ? '' : 'border-outline-variant bg-surface-container-low text-on-surface')}
-            >
+            <Badge tone={isCommand ? 'solid' : 'neutral'} icon={rankIcon[rank]}>
               {rank}
             </Badge>
           )}

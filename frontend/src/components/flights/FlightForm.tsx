@@ -85,12 +85,12 @@ export function FlightForm({
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <Card className="bg-primary-container/25 py-6">
+      <Card className="bg-surface-container-low py-6">
         <RouteRibbon
           origin={originICAO.toUpperCase()}
           destination={destinationICAO.toUpperCase()}
           size="md"
-          tone="dark"
+          emphasis="strong"
           animated={!!(originICAO && destinationICAO)}
         />
       </Card>
@@ -151,11 +151,11 @@ export function FlightForm({
             required
           />
           <div className="flex items-start gap-2 rounded border border-outline-variant/40 bg-surface-container-low p-3 text-xs text-on-surface-variant">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant" />
             <p>METAR bilgisi, uçuş kaydedildikten sonra sistem tarafından otomatik olarak alınır.</p>
           </div>
           {error && <p className="text-sm text-error">{error}</p>}
-          <Button type="submit" variant="command" icon={SubmitIcon} disabled={isSubmitting}>
+          <Button type="submit" variant="primary" icon={SubmitIcon} disabled={isSubmitting}>
             {isSubmitting ? submittingLabel : submitLabel}
           </Button>
         </form>

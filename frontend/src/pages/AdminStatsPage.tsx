@@ -82,17 +82,17 @@ export function AdminStatsPage() {
     <div className="flex flex-col gap-8">
       <section className="relative min-h-[180px] overflow-hidden rounded-lg bg-surface rise">
         <img
-          src="/images/flightdeck.jpg"
+          src="/images/instruments.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="photo-mono absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
         <div className="relative flex h-full flex-col justify-center gap-2 p-8 sm:p-10">
-          <Eyebrow tone="light" rule={false}>
+          <Eyebrow tone="soft" rule={false}>
             Yönetim Paneli
           </Eyebrow>
-          <h1 className="text-3xl font-bold tracking-tight text-on-primary">
+          <h1 className="display text-3xl leading-[1.15] text-on-surface sm:text-4xl">
             Operasyon İstatistikleri
           </h1>
         </div>
@@ -115,7 +115,7 @@ export function AdminStatsPage() {
             return (
               <Card key={rank} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
                     <RankIcon className="h-4 w-4" />
                   </span>
                   <span className="font-medium text-on-surface">{rank}</span>

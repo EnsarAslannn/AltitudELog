@@ -12,7 +12,7 @@ export function UnauthorizedPage() {
       <Eyebrow rule={false} className="justify-center">
         Access Restricted · 403
       </Eyebrow>
-      <h1 className="text-3xl font-bold tracking-tight text-on-surface">Yetkiniz Yok</h1>
+      <h1 className="display text-3xl text-on-surface sm:text-4xl">Yetkiniz Yok</h1>
       <p className="max-w-sm text-on-surface-variant">
         Bu sayfayı görüntülemek için Captain rütbesine sahip olmanız gerekiyor.
       </p>

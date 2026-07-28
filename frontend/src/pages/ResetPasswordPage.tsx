@@ -60,7 +60,7 @@ export function ResetPasswordPage() {
       />
       <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 text-3xl font-bold tracking-tight text-on-surface">Şifre Sıfırla</h1>
+          <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Şifre Sıfırla</h1>
           <p className="mb-6 text-sm text-on-surface-variant">Yeni şifrenizi girin.</p>
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -93,7 +93,7 @@ export function ResetPasswordPage() {
             </form>
           </Card>
           <p className="mt-4 text-sm text-on-surface-variant">
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to="/login" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
               Girişe dön
             </Link>
           </p>

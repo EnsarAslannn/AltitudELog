@@ -147,45 +147,57 @@ export function PilotProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Profile header */}
-      <Card className="flex flex-col gap-5 p-6 rise sm:flex-row sm:items-center sm:justify-between sm:p-8">
-        <div className="flex items-center gap-4">
-          <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary-container/40 text-xl font-bold text-primary">
-            {initials(profile.name)}
-          </span>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-on-surface">{profile.name}</h1>
-            <p className="mt-1 text-sm text-on-surface-variant">@{profile.username}</p>
+      {/* Profile header — photo-backed band, same hero recipe as the dashboard */}
+      <section className="relative min-h-[220px] overflow-hidden rounded-lg bg-surface rise">
+        <img
+          src="/images/terminal.jpg"
+          alt=""
+          className="photo-mono absolute inset-0 h-full w-full object-cover object-[center_72%]"
+          loading="eager"
+        />
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="flex items-center gap-4">
+            <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-xl font-bold text-on-surface">
+              {initials(profile.name)}
+            </span>
+            <div>
+              <h1 className="display text-3xl text-on-surface sm:text-4xl">{profile.name}</h1>
+              <p className="mt-1 text-sm text-on-surface-variant">@{profile.username}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge
+              tone={profile.rank === 'Captain' || profile.rank === 'ChiefPilot' ? 'solid' : 'neutral'}
+              icon={RankIcon}
+            >
+              {profile.rank}
+            </Badge>
+            <Badge tone="sky" icon={BadgeCheck}>
+              {profile.licenseNumber}
+            </Badge>
+            <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
+              {profile.isCurrent ? 'Current' : 'Not Current'}
+            </Badge>
+            <Button
+              variant="secondary"
+              icon={FileText}
+              disabled={exportingFormat !== null}
+              onClick={() => handleExport('csv')}
+            >
+              {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
+            </Button>
+            <Button
+              variant="secondary"
+              icon={FileDown}
+              disabled={exportingFormat !== null}
+              onClick={() => handleExport('pdf')}
+            >
+              {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
+            </Button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge tone={profile.rank === 'Captain' || profile.rank === 'ChiefPilot' ? 'amber' : 'neutral'} icon={RankIcon}>
-            {profile.rank}
-          </Badge>
-          <Badge tone="sky" icon={BadgeCheck}>
-            {profile.licenseNumber}
-          </Badge>
-          <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
-            {profile.isCurrent ? 'Current' : 'Not Current'}
-          </Badge>
-          <Button
-            variant="secondary"
-            icon={FileText}
-            disabled={exportingFormat !== null}
-            onClick={() => handleExport('csv')}
-          >
-            {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
-          </Button>
-          <Button
-            variant="secondary"
-            icon={FileDown}
-            disabled={exportingFormat !== null}
-            onClick={() => handleExport('pdf')}
-          >
-            {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
-          </Button>
-        </div>
-      </Card>
+      </section>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -205,7 +217,7 @@ export function PilotProfilePage() {
             {profile.hoursByAircraftType.map((entry) => (
               <Card key={entry.aircraftType} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
                     <Wrench className="h-4 w-4" />
                   </span>
                   <div>
@@ -235,7 +247,7 @@ export function PilotProfilePage() {
             return (
               <Card key={cert.key} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
                     <cert.icon className="h-4 w-4" />
                   </span>
                   <div>
@@ -291,7 +303,7 @@ export function PilotProfilePage() {
         <Eyebrow>Son Uçuşlar</Eyebrow>
         {profile.recentFlights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container/40 text-primary">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
             <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
@@ -313,7 +325,7 @@ export function PilotProfilePage() {
                         <Clock3 className="h-3.5 w-3.5" />
                         <span className="data">{flight.flightTime}</span>
                       </span>
-                      <Badge tone={flight.dutyRole === 'PIC' ? 'amber' : 'neutral'} icon={RoleIcon}>
+                      <Badge tone={flight.dutyRole === 'PIC' ? 'solid' : 'neutral'} icon={RoleIcon}>
                         {flight.dutyRole}
                       </Badge>
                     </div>

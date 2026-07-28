@@ -21,35 +21,35 @@ export function AuthHero({
       <img
         src={image}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover"
+        className="photo-mono absolute inset-0 h-full w-full object-cover"
         loading="eager"
       />
-      {/* light scrim fading the photo into the surface color for legibility */}
-      <div className="absolute inset-0 hero-scrim" />
+      {/* bottom-weighted scrim: copy sits on solid surface, photo stays open up top */}
+      <div className="absolute inset-0 hero-scrim-panel" />
 
       <div className="relative flex flex-1 flex-col justify-between p-12">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-container/40 ring-1 ring-primary/20 backdrop-blur">
-            <PlaneTakeoff className="h-5 w-5 text-primary" strokeWidth={2.5} />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
+            <PlaneTakeoff className="h-5 w-5" strokeWidth={2.5} />
           </span>
-          <span className="text-xl font-bold tracking-tight text-on-primary">
-            Altitud<span className="text-command">E</span>Log
+          <span className="display text-xl text-on-surface">
+            Altitud<span className="text-on-surface">E</span>Log
           </span>
         </div>
 
         <div className="max-w-md">
-          <Eyebrow tone="light" rule={false} className="mb-5">
+          <Eyebrow tone="soft" rule={false} className="mb-5">
             {eyebrow}
           </Eyebrow>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-on-primary">
-            {title}
-          </h1>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-on-primary/80">{subtitle}</p>
+          <h1 className="display text-4xl leading-[1.1] text-on-surface sm:text-5xl">{title}</h1>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-on-surface-variant">{subtitle}</p>
 
           {stat && (
-            <div className="mt-10 flex items-center gap-4 border-t border-on-primary/20 pt-6">
-              <span className="data text-4xl font-semibold tabular-nums text-on-primary">{stat.value}</span>
-              <span className="eyebrow max-w-[10rem] text-[10px] leading-tight text-on-primary/70">
+            <div className="mt-10 flex items-center gap-4 border-t border-outline-variant pt-6 float-slow">
+              <span className="data text-4xl font-semibold tabular-nums text-on-surface">
+                {stat.value}
+              </span>
+              <span className="eyebrow max-w-[10rem] text-[10px] leading-tight text-on-surface-variant">
                 {stat.label}
               </span>
             </div>

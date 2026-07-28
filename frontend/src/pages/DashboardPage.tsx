@@ -89,18 +89,18 @@ export function DashboardPage() {
         <img
           src="/images/runway.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="photo-mono absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
         <div className="relative flex h-full flex-col justify-center gap-4 p-8 sm:p-10">
-          <Eyebrow tone="light" rule={false}>
+          <Eyebrow tone="soft" rule={false}>
             Flight Log · Operasyon Özeti
           </Eyebrow>
-          <h1 className="max-w-xl text-4xl sm:text-5xl font-bold tracking-tight text-on-primary">
+          <h1 className="max-w-xl display text-4xl leading-[1.1] text-on-surface sm:text-5xl">
             Kayıtlı tüm uçuşlar, tek bakışta.
           </h1>
-          <p className="max-w-md text-sm leading-relaxed text-on-primary/75">
+          <p className="max-w-md text-sm leading-relaxed text-on-surface-variant">
             Rota, mürettebat ve CRM raporlarını inceleyin. Her uçuşun METAR bilgisi arka planda otomatik çekilir.
           </p>
         </div>
@@ -119,7 +119,7 @@ export function DashboardPage() {
 
         {flights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
+            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
             <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>

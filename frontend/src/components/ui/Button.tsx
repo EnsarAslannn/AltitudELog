@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'command' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost'
   icon?: LucideIcon
 }
 
@@ -15,11 +15,9 @@ export function Button({ variant = 'primary', icon: Icon, className, children, .
         'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' &&
-          'bg-primary text-on-primary shadow-[var(--shadow-panel)] hover:bg-[#004f69] hover:shadow-[var(--shadow-panel-hover)] active:translate-y-px',
+          'bg-primary text-on-primary shadow-[var(--shadow-panel)] hover:bg-primary-container hover:shadow-[var(--shadow-panel-hover)] active:translate-y-px',
         variant === 'secondary' &&
           'border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/50 hover:bg-surface-container-low active:translate-y-px',
-        variant === 'command' &&
-          'bg-command text-on-command shadow-[var(--shadow-command-glow)] hover:bg-command-hover active:translate-y-px focus-visible:ring-command/30',
         variant === 'ghost' && 'text-on-surface-variant hover:text-primary',
         className,
       )}

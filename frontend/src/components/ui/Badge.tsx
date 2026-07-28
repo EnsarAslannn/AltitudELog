@@ -3,17 +3,24 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  tone?: 'neutral' | 'blue' | 'amber' | 'red' | 'green' | 'sky' | 'orange'
+  tone?: 'neutral' | 'solid' | 'warning' | 'red' | 'green' | 'sky' | 'orange'
   icon?: LucideIcon
 }
 
+/*
+ * `solid` is the one tone that carries brand significance rather than status: it marks
+ * Captain / ChiefPilot rank and the PIC duty role. The design system is monochrome, so
+ * that weight is expressed as a filled ink chip against outlined neutrals — never a hue.
+ * Every other tone encodes status (certificate expiry, CRM severity) and keeps its
+ * desaturated colour so safety data stays distinguishable.
+ */
 const toneClasses: Record<NonNullable<BadgeProps['tone']>, string> = {
   neutral: 'border-outline-variant bg-surface-container-low text-on-surface-variant',
-  blue: 'border-primary/30 bg-primary/8 text-primary',
-  amber: 'border-command/30 bg-command-container text-on-command-container',
-  red: 'border-error/30 bg-error/8 text-error',
+  solid: 'border-primary bg-primary text-on-primary',
+  warning: 'border-warning/30 bg-warning-container text-on-warning-container',
+  red: 'border-error/30 bg-error-container text-on-error-container',
   green: 'border-success/30 bg-success-container text-on-success-container',
-  sky: 'border-secondary/30 bg-secondary-container text-on-secondary-container',
+  sky: 'border-outline-variant bg-secondary-container text-on-secondary-container',
   orange: 'border-high/30 bg-high-container text-on-high-container',
 }
 

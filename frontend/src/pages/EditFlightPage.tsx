@@ -75,13 +75,26 @@ export function EditFlightPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="mx-auto w-full max-w-lg">
-        <Eyebrow className="mb-3">Captain · Flight Plan</Eyebrow>
-        <h1 className="text-3xl font-bold tracking-tight text-on-surface">Uçuşu Düzenle</h1>
-        <p className="mt-1 text-sm text-on-surface-variant">
-          Rota bilgisini güncelleyin. Kalkış havaalanı değişirse METAR yeniden çekilir.
-        </p>
-      </div>
+      <section className="relative min-h-[160px] overflow-hidden rounded-lg bg-surface rise">
+        <img
+          src="/images/wing-clouds.jpg"
+          alt=""
+          className="photo-mono absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+        />
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative flex h-full flex-col justify-center gap-2 p-8 sm:p-10">
+          <Eyebrow tone="soft" rule={false}>
+            Captain · Flight Plan
+          </Eyebrow>
+          <h1 className="display text-3xl leading-[1.15] text-on-surface sm:text-4xl">
+            Uçuşu Düzenle
+          </h1>
+          <p className="max-w-md text-sm text-on-surface-variant">
+            Rota bilgisini güncelleyin. Kalkış havaalanı değişirse METAR yeniden çekilir.
+          </p>
+        </div>
+      </section>
 
       <FlightForm
         initialValues={{

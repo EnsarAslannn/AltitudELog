@@ -7,18 +7,18 @@ export function NotFoundPage() {
       <img
         src="/images/tail.jpg"
         alt=""
-        className="absolute inset-0 h-full w-full object-cover"
+        className="photo-mono absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 hero-scrim" />
+      <div className="absolute inset-0 hero-scrim-center" />
       <div className="relative flex flex-col items-center gap-5 rise">
-        <p className="data text-6xl font-semibold tabular-nums text-on-primary">404</p>
-        <p className="eyebrow text-[11px] text-on-primary/75">Off Course · Rota Dışı</p>
-        <h1 className="text-3xl font-bold tracking-tight text-on-primary">Sayfa Bulunamadı</h1>
-        <p className="max-w-sm text-sm text-on-primary/75">
+        <p className="data text-7xl font-semibold tabular-nums text-on-surface">404</p>
+        <p className="eyebrow text-[11px] text-on-surface-variant">Off Course · Rota Dışı</p>
+        <h1 className="display text-3xl leading-[1.15] text-on-surface sm:text-4xl">Sayfa Bulunamadı</h1>
+        <p className="max-w-sm text-sm text-on-surface-variant">
           Aradığınız rota kayıtlarda yok. Ana panele geri dönün.
         </p>
         <Link to="/">
-          <Button variant="command">Ana sayfaya dön</Button>
+          <Button variant="primary">Ana sayfaya dön</Button>
         </Link>
       </div>
     </div>

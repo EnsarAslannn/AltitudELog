@@ -32,10 +32,10 @@ export function certStatus(date: string | null): CertStatus {
   return 'valid'
 }
 
-export const certStatusTone: Record<CertStatus, 'neutral' | 'green' | 'amber' | 'red'> = {
+export const certStatusTone: Record<CertStatus, 'neutral' | 'green' | 'warning' | 'red'> = {
   unknown: 'neutral',
   valid: 'green',
-  expiringSoon: 'amber',
+  expiringSoon: 'warning',
   expired: 'red',
 }
 
@@ -68,9 +68,9 @@ export const dutyRoleIcon: Record<DutyRole, typeof Crown> = {
   Trainee: User,
 }
 
-export const severityTone: Record<SeverityLevel, 'neutral' | 'amber' | 'red' | 'green' | 'orange'> = {
+export const severityTone: Record<SeverityLevel, 'neutral' | 'warning' | 'red' | 'green' | 'orange'> = {
   Low: 'green',
-  Medium: 'amber',
+  Medium: 'warning',
   High: 'orange',
   Critical: 'red',
 }

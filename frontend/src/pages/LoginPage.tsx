@@ -39,7 +39,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen">
       <AuthHero
-        image="/images/hero-approach.jpg"
+        image="/images/taxi-dusk.jpg"
         eyebrow="Flight Operations Console"
         title={
           <>
@@ -53,7 +53,7 @@ export function LoginPage() {
       />
       <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 text-3xl font-bold tracking-tight text-on-surface">Giriş Yap</h1>
+          <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Giriş Yap</h1>
           <p className="mb-6 text-sm text-on-surface-variant">Hesabınıza erişmek için bilgilerinizi girin.</p>
           <Card>
             <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
@@ -79,7 +79,7 @@ export function LoginPage() {
                 />
                 <Link
                   to="/forgot-password"
-                  className="self-end text-xs font-medium text-primary hover:underline"
+                  className="self-end text-xs font-medium text-on-surface-variant underline decoration-outline-variant underline-offset-4 transition-colors hover:text-on-surface hover:decoration-on-surface"
                 >
                   Şifremi unuttum
                 </Link>
@@ -96,7 +96,7 @@ export function LoginPage() {
           </Card>
           <p className="mt-4 text-sm text-on-surface-variant">
             Hesabın yok mu?{' '}
-            <Link to="/register" className="font-medium text-primary hover:underline">
+            <Link to="/register" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
               Kayıt ol
             </Link>
           </p>
