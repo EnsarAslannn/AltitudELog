@@ -166,35 +166,41 @@ export function PilotProfilePage() {
               <p className="mt-1 text-sm text-on-surface-variant">@{profile.username}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge
-              tone={profile.rank === 'Captain' || profile.rank === 'ChiefPilot' ? 'solid' : 'neutral'}
-              icon={RankIcon}
-            >
-              {profile.rank}
-            </Badge>
-            <Badge tone="sky" icon={BadgeCheck}>
-              {profile.licenseNumber}
-            </Badge>
-            <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
-              {profile.isCurrent ? 'Current' : 'Not Current'}
-            </Badge>
-            <Button
-              variant="secondary"
-              icon={FileText}
-              disabled={exportingFormat !== null}
-              onClick={() => handleExport('csv')}
-            >
-              {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
-            </Button>
-            <Button
-              variant="secondary"
-              icon={FileDown}
-              disabled={exportingFormat !== null}
-              onClick={() => handleExport('pdf')}
-            >
-              {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
-            </Button>
+          {/* Status and actions are grouped separately so they stack as two clean rows on
+              a phone instead of wrapping into each other mid-flow. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                tone={profile.rank === 'Captain' || profile.rank === 'ChiefPilot' ? 'solid' : 'neutral'}
+                icon={RankIcon}
+              >
+                {profile.rank}
+              </Badge>
+              <Badge tone="sky" icon={BadgeCheck}>
+                {profile.licenseNumber}
+              </Badge>
+              <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
+                {profile.isCurrent ? 'Current' : 'Not Current'}
+              </Badge>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="secondary"
+                icon={FileText}
+                disabled={exportingFormat !== null}
+                onClick={() => handleExport('csv')}
+              >
+                {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
+              </Button>
+              <Button
+                variant="secondary"
+                icon={FileDown}
+                disabled={exportingFormat !== null}
+                onClick={() => handleExport('pdf')}
+              >
+                {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
+              </Button>
+            </div>
           </div>
         </div>
       </section>

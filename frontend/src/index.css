@@ -156,6 +156,23 @@ body {
     linear-gradient(to top, rgba(247, 249, 253, 0.42) 0%, rgba(247, 249, 253, 0) 58%);
 }
 
+/*
+ * On phones a hero band is narrower than its own text column, so the horizontal
+ * weighting above puts the copy straight onto open photography. Below `sm` the scrim
+ * becomes a near-even vertical wash instead: the photograph still reads through it,
+ * but every heading and paragraph sits on surface colour rather than on sky.
+ */
+@media (max-width: 639px) {
+  .hero-scrim {
+    background: linear-gradient(
+      to top,
+      rgba(247, 249, 253, 0.95) 0%,
+      rgba(247, 249, 253, 0.84) 55%,
+      rgba(247, 249, 253, 0.66) 100%
+    );
+  }
+}
+
 /* Panel variant for the tall auth hero, whose copy sits along the bottom edge rather
    than in a left column — weighting the scrim vertically keeps the upper two-thirds of
    the photograph fully readable. */

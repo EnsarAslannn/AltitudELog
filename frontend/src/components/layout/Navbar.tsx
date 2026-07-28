@@ -35,9 +35,32 @@ export function Navbar() {
       isActive && 'text-on-surface after:scale-x-100',
     )
 
+  // Pill styling for the same destinations on narrow screens, where the underline
+  // treatment above has no room to breathe.
+  const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+      isActive
+        ? 'border-primary bg-primary text-on-primary'
+        : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant',
+    )
+
+  /*
+   * One source of truth for the destinations, rendered twice: as an inline underline
+   * nav from `sm` up, and as a scrollable pill row below the brand bar underneath it.
+   * Before this the nav was `hidden sm:flex` with no mobile counterpart at all, which
+   * left phone users with no way to reach Yeni Uçuş, Profil or İstatistikler.
+   */
+  const destinations = [
+    { to: '/', label: 'Uçuşlar', icon: null, end: true, show: true },
+    { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: rank === 'Captain' },
+    { to: `/pilots/${pilotId}`, label: 'Profil', icon: User, end: false, show: !!pilotId },
+    { to: '/admin/stats', label: 'İstatistikler', icon: BarChart3, end: false, show: isCommand },
+  ].filter((d) => d.show)
+
   return (
     <header className="sticky top-0 z-20 border-b border-outline-variant/30 bg-surface-container-lowest/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-5">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
@@ -47,28 +70,13 @@ export function Navbar() {
               Altitud<span className="text-on-surface">E</span>Log
             </span>
           </div>
-          <nav className="hidden items-center gap-7 sm:flex">
-            <NavLink to="/" end className={linkClass}>
-              Uçuşlar
-            </NavLink>
-            {rank === 'Captain' && (
-              <NavLink to="/flights/new" className={linkClass}>
-                <PlaneTakeoff className="h-3.5 w-3.5" />
-                Yeni Uçuş
+          <nav className="hidden items-center gap-7 sm:flex" aria-label="Ana menü">
+            {destinations.map(({ to, label, icon: Icon, end }) => (
+              <NavLink key={to} to={to} end={end} className={linkClass}>
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                {label}
               </NavLink>
-            )}
-            {pilotId && (
-              <NavLink to={`/pilots/${pilotId}`} className={linkClass}>
-                <User className="h-3.5 w-3.5" />
-                Profil
-              </NavLink>
-            )}
-            {isCommand && (
-              <NavLink to="/admin/stats" className={linkClass}>
-                <BarChart3 className="h-3.5 w-3.5" />
-                İstatistikler
-              </NavLink>
-            )}
+            ))}
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -88,6 +96,19 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile destinations — scrolls sideways rather than wrapping or overflowing */}
+      <nav
+        className="flex gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 pb-3 pt-2 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Ana menü"
+      >
+        {destinations.map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end} className={mobileLinkClass}>
+            {Icon && <Icon className="h-3.5 w-3.5" />}
+            {label}
+          </NavLink>
+        ))}
+      </nav>
     </header>
   )
 }
