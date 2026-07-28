@@ -23,7 +23,8 @@ public class UpdateFlightCommandValidator : AbstractValidator<UpdateFlightComman
             .Length(4);
 
         RuleFor(f => f.AircraftType)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(100);
 
         RuleFor(f => f.FlightTime)
             .Must(t => t > TimeSpan.Zero)

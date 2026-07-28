@@ -19,6 +19,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish ./
 
+# Run as a non-root user rather than the image's default root.
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 # Railway routes to this port; the app also honours ASPNETCORE_URLS if set.
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080

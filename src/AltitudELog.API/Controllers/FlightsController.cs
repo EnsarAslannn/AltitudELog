@@ -25,7 +25,7 @@ public class FlightsController : ControllerBase
     public async Task<ActionResult<Guid>> Create(CreateFlightCommand command, CancellationToken cancellationToken)
     {
         var id = await _mediator.Send(command, cancellationToken);
-        return CreatedAtAction(nameof(GetAll), new { id }, id);
+        return CreatedAtAction(nameof(GetById), new { id }, id);
     }
 
     [HttpGet]

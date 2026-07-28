@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   BadgeCheck,
@@ -41,13 +41,20 @@ export function PilotProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [exportingFormat, setExportingFormat] = useState<'csv' | 'pdf' | null>(null)
 
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   async function handleExport(format: 'csv' | 'pdf') {
     setExportingFormat(format)
     try {
       const blob = await pilotService.exportLogbook(pilotId, format)
       downloadBlob(blob, `logbook-${pilotId}.${format}`)
     } finally {
-      setExportingFormat(null)
+      if (isMountedRef.current) setExportingFormat(null)
     }
   }
 

@@ -65,9 +65,8 @@ try
     });
 
     const string FrontendCorsPolicy = "FrontendCorsPolicy";
-    var allowedOrigins = builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>() ?? ["http://localhost:5180"];
+    var corsOriginsSection = builder.Configuration.GetSection("Cors:AllowedOrigins");
+    var allowedOrigins = corsOriginsSection.Get<string[]>() ?? ["http://localhost:5180"];
     builder.Services.AddCors(options =>
     {
         options.AddPolicy(FrontendCorsPolicy, policy => policy
@@ -162,6 +161,15 @@ try
     {
         throw new InvalidOperationException(
             "Jwt:Key must be configured and at least 32 bytes long (HS256 requires a 256-bit signing key).");
+    }
+
+    // Falling back to the localhost dev origin is correct for local/CI, but in Production it
+    // would silently CORS-block the live frontend with no startup signal — fail fast instead.
+    if (app.Environment.IsProduction() && !corsOriginsSection.Exists())
+    {
+        throw new InvalidOperationException(
+            "Cors:AllowedOrigins must be configured in Production (see the Cors__AllowedOrigins__0 " +
+            "Railway environment variable).");
     }
 
     // Apply pending EF Core migrations on startup so a fresh managed database

@@ -174,11 +174,14 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
 - `Persistence/ApplicationDbContext.cs`: implements `IApplicationDbContext`, applies all configurations via
   `ApplyConfigurationsFromAssembly`.
 - `Persistence/Migrations/`: EF Core migrations live here (in Infrastructure, next to the `DbContext`), not in
-  API. Three so far, all applied: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
+  API. Eight so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
   `AddPilotAuthFields` (`Pilots.Username` unique, `Pilots.PasswordHash`), `FormalizeNonClusteredIndexes` — this
   one has an **empty `Up()`/`Down()`**, it's a no-op that just records index state already reflected in the
-  model snapshot; don't expect a schema diff from it. Hangfire manages its own Postgres schema independently —
-  no EF migration needed or expected for it.
+  model snapshot; don't expect a schema diff from it — `AddPilotCertificateExpiry`, `AddFlightCancellation`,
+  `AddPilotPasswordReset`, `AddFlightConcurrencyToken`, `AddPilotRefreshToken` (self-describing; back the
+  features documented elsewhere in this file). Don't hardcode this count/list in future edits to this doc —
+  check `Persistence/Migrations/` directly, since new migrations land here regularly as features ship. Hangfire
+  manages its own Postgres schema independently — no EF migration needed or expected for it.
 - `Identity/JwtTokenGenerator.cs`: implements `IJwtTokenGenerator` — HMAC-SHA256 signed token, claims are
   `NameIdentifier` (Pilot Id), `Name` (Username), `Role` (`Pilot.Rank.ToString()`, e.g. `"Captain"`). Reads
   `Jwt:Key`/`Jwt:Issuer`/`Jwt:Audience`/`Jwt:ExpiryMinutes` from `IConfiguration` directly (same pattern as the
@@ -267,8 +270,8 @@ looser since these aren't retried in a tight loop the way login is) — both pol
   `GetPilotLogbookQuery`, streamed via `CsvLogbookWriter`/`PdfLogbookWriter`), `PUT /Pilots/me/certificates`
   (→ `UpdatePilotCertificatesCommand`, scoped to the caller via `ICurrentUserService` — the command has no
   pilot-id field a client could tamper with).
-- `Controllers/StatsController.cs`: `GET /Stats` (→ `GetStatsQuery`, `[Authorize]`) — dashboard aggregate
-  counts for the frontend's `AdminStatsPage`.
+- `Controllers/StatsController.cs`: `GET /Stats` (→ `GetStatsQuery`, **`[Authorize(Roles = "Captain,ChiefPilot")]`**)
+  — dashboard aggregate counts for the frontend's `AdminStatsPage`, matching its `CommandRoute` gating.
 
 All controllers go through `IMediator.Send`, no direct Application/Infrastructure calls. Sample requests in
 `AltitudELog.API.http`.
@@ -289,10 +292,20 @@ default ASP.NET Core `ProblemDetails` `500` response. The frontend's `ApiError`/
 
 ### API — CORS, health checks, Hangfire dashboard
 
-- CORS: a single named policy `FrontendCorsPolicy` (`Program.cs`), origin `http://localhost:5180` only (matches
+- CORS: a single named policy `FrontendCorsPolicy` (`Program.cs`), origins read from config key
+  `Cors:AllowedOrigins` (an array), falling back to `["http://localhost:5180"]` if unset (matches
   `frontend/vite.config.ts`'s `server.port = 5180` with `strictPort: true`), `AllowAnyHeader()` +
   `AllowAnyMethod()`, no `AllowCredentials()`. `UseCors()` runs before `UseAuthentication()`/`UseAuthorization()`
-  in the pipeline. If the frontend dev port ever changes, this origin must be updated to match.
+  in the pipeline. If the frontend dev port ever changes, the fallback origin must be updated to match.
+  In production this is set via the Railway env var `Cors__AllowedOrigins__0` =
+  `https://altitudelog.vercel.app` (double-underscore is ASP.NET Core's env-var array-binding
+  convention). `Program.cs` **fails fast at startup** (throws before `app.Run()`, same pattern as
+  the `Jwt:Key` check) if running in the `Production` environment with `Cors:AllowedOrigins` unset —
+  this exists so an accidentally-deleted/renamed Railway var breaks the deploy loudly instead of
+  silently CORS-blocking the live Vercel frontend. The integration test factory
+  (`tests/AltitudELog.IntegrationTests/Infrastructure/IntegrationTestWebAppFactory.cs`) configures
+  `Cors:AllowedOrigins:0` explicitly for this reason — `WebApplicationFactory` hosts default to the
+  `Production` environment name since no `ASPNETCORE_ENVIRONMENT` is set for the test process.
 - Health checks: `GET /health`, unauthenticated by design, checks Postgres (`AddNpgSql`) and Redis (`AddRedis`),
   custom JSON response writer (`Common/HealthCheckResponseWriter.cs`) reporting overall status, total duration,
   and per-check name/status/description/duration.

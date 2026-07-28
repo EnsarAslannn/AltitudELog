@@ -54,7 +54,11 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Hangfire:DashboardUsername"] = "test-admin",
                 ["Hangfire:DashboardPassword"] = "test-password",
                 ["RateLimiting:Login:PermitLimit"] = LoginRateLimitPermitLimit.ToString(),
-                ["RateLimiting:Auth:PermitLimit"] = AuthRateLimitPermitLimit.ToString()
+                ["RateLimiting:Auth:PermitLimit"] = AuthRateLimitPermitLimit.ToString(),
+                // WebApplicationFactory hosts run with EnvironmentName defaulting to
+                // "Production" (no ASPNETCORE_ENVIRONMENT is set for the test process), which
+                // trips Program.cs's Cors:AllowedOrigins fail-fast unless configured explicitly here.
+                ["Cors:AllowedOrigins:0"] = "http://localhost:5180"
             });
         });
 
