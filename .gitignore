@@ -84,3 +84,8 @@ skills-lock.json
 
 # Local Claude Code settings (stale debug-session permissions, machine-specific paths)
 .claude/settings.json
+
+# Local Vercel CLI project link (machine-specific, not meant to be committed — the frontend is
+# deployed by running `vercel deploy --prod` from the repo root now that the Vercel project's
+# Root Directory setting is pinned to `frontend/`)
+.vercel
