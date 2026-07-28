@@ -9,7 +9,6 @@ import {
   ShieldAlert,
   UserPlus,
   Users,
-  Wrench,
   XCircle,
 } from 'lucide-react'
 import { flightService } from '../services/flightService'
@@ -17,6 +16,7 @@ import { crewService } from '../services/crewService'
 import { crmReportService } from '../services/crmReportService'
 import { pilotService } from '../services/pilotService'
 import { useAuthStore } from '../store/authStore'
+import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -25,6 +25,7 @@ import { Input } from '../components/ui/Input'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Select } from '../components/ui/Select'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
+import { aircraftLabel } from '../data/aircraftTypes'
 import { cn } from '../lib/cn'
 import { dutyRoleIcon, severityIcon, severityTone } from '../lib/domainDisplay'
 import type { FlightDto } from '../types/flight'
@@ -194,8 +195,11 @@ export function FlightDetailPage() {
               <span className="data">{flight.flightTime}</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <Wrench className="h-4 w-4" />
+              <AircraftSilhouette code={flight.aircraftType} className="h-4 w-4" />
               <span className="data">{flight.aircraftType}</span>
+              {aircraftLabel(flight.aircraftType) && (
+                <span>· {aircraftLabel(flight.aircraftType)}</span>
+              )}
             </span>
           </div>
           {flight.metarInfo && (

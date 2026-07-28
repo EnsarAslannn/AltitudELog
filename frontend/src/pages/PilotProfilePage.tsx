@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { pilotService } from '../services/pilotService'
 import { useAuthStore } from '../store/authStore'
+import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -22,6 +23,7 @@ import { Input } from '../components/ui/Input'
 import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
+import { aircraftLabel } from '../data/aircraftTypes'
 import { downloadBlob } from '../lib/download'
 import { certStatus, certStatusIcon, certStatusLabel, certStatusTone, dutyRoleIcon, rankIcon } from '../lib/domainDisplay'
 import type { PilotProfileDto } from '../types/pilot'
@@ -224,11 +226,15 @@ export function PilotProfilePage() {
               <Card key={entry.aircraftType} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
-                    <Wrench className="h-4 w-4" />
+                    <AircraftSilhouette code={entry.aircraftType} className="h-5 w-5" />
                   </span>
                   <div>
                     <p className="font-medium text-on-surface">{entry.aircraftType}</p>
-                    <p className="text-xs text-on-surface-variant">{entry.flightCount} uçuş</p>
+                    <p className="text-xs text-on-surface-variant">
+                      {[aircraftLabel(entry.aircraftType), `${entry.flightCount} uçuş`]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
                   </div>
                 </div>
                 <span className="data text-sm font-semibold text-on-surface">{entry.totalHours}</span>

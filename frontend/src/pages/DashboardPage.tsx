@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Ban, CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
 import { flightService } from '../services/flightService'
+import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
@@ -141,8 +142,14 @@ export function DashboardPage() {
                     {/* boarding-pass stub */}
                     <div className="flex items-center gap-3 border-b border-dashed border-outline-variant/50 bg-surface-container-low px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
                       <span className="eyebrow text-[10px] text-outline">Aircraft</span>
-                      <span className="data text-sm font-semibold text-on-surface">
-                        {flight.aircraftType}
+                      <span className="flex items-center gap-2">
+                        <AircraftSilhouette
+                          code={flight.aircraftType}
+                          className="h-4 w-4 text-outline"
+                        />
+                        <span className="data text-sm font-semibold text-on-surface">
+                          {flight.aircraftType}
+                        </span>
                       </span>
                     </div>
                     {/* route + meta */}
