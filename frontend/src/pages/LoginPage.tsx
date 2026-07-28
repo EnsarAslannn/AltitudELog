@@ -51,10 +51,10 @@ export function LoginPage() {
         subtitle="Mürettebat atamaları, CRM raporları ve METAR akışı — uçuş ekipleri için tasarlanmış tek panel."
         stat={{ value: 'METAR', label: 'Her uçuşta otomatik hava durumu' }}
       />
-      <div className="flex flex-1 items-center justify-center bg-void-950 px-4 py-10">
+      <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-mist-100">Giriş Yap</h1>
-          <p className="mb-6 text-sm text-mist-300">Hesabınıza erişmek için bilgilerinizi girin.</p>
+          <h1 className="mb-1 text-3xl font-bold tracking-tight text-on-surface">Giriş Yap</h1>
+          <p className="mb-6 text-sm text-on-surface-variant">Hesabınıza erişmek için bilgilerinizi girin.</p>
           <Card>
             <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
               <Input
@@ -79,13 +79,13 @@ export function LoginPage() {
                 />
                 <Link
                   to="/forgot-password"
-                  className="self-end text-xs font-medium text-phosphor-500 hover:underline"
+                  className="self-end text-xs font-medium text-primary hover:underline"
                 >
                   Şifremi unuttum
                 </Link>
               </div>
               {error && (
-                <p role="alert" className="text-sm text-alert-400">
+                <p role="alert" className="text-sm text-error">
                   {error}
                 </p>
               )}
@@ -94,9 +94,9 @@ export function LoginPage() {
               </Button>
             </form>
           </Card>
-          <p className="mt-4 text-sm text-mist-300">
+          <p className="mt-4 text-sm text-on-surface-variant">
             Hesabın yok mu?{' '}
-            <Link to="/register" className="font-medium text-phosphor-500 hover:underline">
+            <Link to="/register" className="font-medium text-primary hover:underline">
               Kayıt ol
             </Link>
           </p>

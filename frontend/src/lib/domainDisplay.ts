@@ -68,10 +68,10 @@ export const dutyRoleIcon: Record<DutyRole, typeof Crown> = {
   Trainee: User,
 }
 
-export const severityTone: Record<SeverityLevel, 'neutral' | 'amber' | 'red' | 'green'> = {
+export const severityTone: Record<SeverityLevel, 'neutral' | 'amber' | 'red' | 'green' | 'orange'> = {
   Low: 'green',
   Medium: 'amber',
-  High: 'amber',
+  High: 'orange',
   Critical: 'red',
 }
 

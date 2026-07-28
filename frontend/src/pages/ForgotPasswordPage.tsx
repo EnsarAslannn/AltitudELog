@@ -40,17 +40,17 @@ export function ForgotPasswordPage() {
         subtitle="Kayıtlı e-posta adresinize bir sıfırlama bağlantısı gönderelim."
         stat={{ value: '1h', label: 'Bağlantı 1 saat geçerlidir' }}
       />
-      <div className="flex flex-1 items-center justify-center bg-void-950 px-4 py-10">
+      <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-sm rise">
-          <h1 className="mb-1 font-display text-display-lg font-bold tracking-tight text-mist-100">Şifremi Unuttum</h1>
-          <p className="mb-6 text-sm text-mist-300">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</p>
+          <h1 className="mb-1 text-3xl font-bold tracking-tight text-on-surface">Şifremi Unuttum</h1>
+          <p className="mb-6 text-sm text-on-surface-variant">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</p>
           <Card>
             {submitted ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-phosphor-500/10 text-phosphor-400">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container/40 text-primary">
                   <KeyRound className="h-6 w-6" />
                 </span>
-                <p className="text-sm text-mist-300">
+                <p className="text-sm text-on-surface-variant">
                   E-posta adresiniz kayıtlıysa bir sıfırlama bağlantısı gönderildi.
                 </p>
               </div>
@@ -72,8 +72,8 @@ export function ForgotPasswordPage() {
               </form>
             )}
           </Card>
-          <p className="mt-4 text-sm text-mist-300">
-            <Link to="/login" className="font-medium text-phosphor-500 hover:underline">
+          <p className="mt-4 text-sm text-on-surface-variant">
+            <Link to="/login" className="font-medium text-primary hover:underline">
               Girişe dön
             </Link>
           </p>

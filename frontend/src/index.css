@@ -1,139 +1,114 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Oxanium", "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
 
-  /* Night Ops palette — ATC radar scope / black-box flight recorder */
-  --color-void-950: #070908;
-  --color-void-900: #0c1210;
-  --color-void-850: #101815;
-  --color-void-800: #17221d;
-  --color-void-700: #223029;
-  --color-void-600: #34473c;
+  /* Skyline UI palette — Material-3-style semantic tokens, from DESIGN.md */
+  --color-primary: #006382;
+  --color-on-primary: #e5f5ff;
+  --color-primary-container: #7bd1fa;
+  --color-on-primary-container: #00465d;
+  --color-on-primary-fixed-variant: #004f69;
 
-  --color-phosphor-300: #8affc4;
-  --color-phosphor-400: #55f0a3;
-  --color-phosphor-500: #34e08a;
-  --color-phosphor-600: #1fb96e;
+  --color-secondary: #346176;
+  --color-on-secondary: #e6f5ff;
+  --color-secondary-container: #b1ddf7;
+  --color-on-secondary-container: #215065;
 
-  --color-command-400: #ffc247;
-  --color-command-500: #ffb020;
-  --color-command-600: #e89a0a;
+  --color-tertiary: #5a5c5c;
+  --color-on-tertiary: #f2f3f3;
+  --color-tertiary-container: #ffffff;
+  --color-on-tertiary-container: #616263;
 
-  --color-alert-400: #ff6b78;
-  --color-alert-500: #ff4d5e;
-  --color-alert-600: #e23a4a;
+  --color-error: #b31b25;
+  --color-on-error: #ffefee;
+  --color-error-container: #fb5151;
+  --color-on-error-container: #570008;
+  --color-error-hover: #8f161e;
 
-  --color-mist-100: #e7f3ec;
-  --color-mist-300: #93a89d;
-  --color-mist-500: #5b6d63;
+  --color-surface: #f5f6ff;
+  --color-surface-dim: #c4d4fb;
+  --color-surface-bright: #f5f6ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #edf0ff;
+  --color-surface-container: #e0e8ff;
+  --color-surface-container-high: #d8e2ff;
+  --color-surface-container-highest: #cfddff;
+  --color-on-surface: #252f43;
+  --color-on-surface-variant: #525b72;
+  --color-outline: #6d778e;
+  --color-outline-variant: #a3adc7;
+  --color-background: #f5f6ff;
+  --color-on-background: #252f43;
 
-  /* Cinematic hero display type */
-  --text-display-xl: 3.75rem;
-  --text-display-xl--line-height: 1.05;
-  --text-display-xl--letter-spacing: -0.01em;
-  --text-display-lg: 2.75rem;
-  --text-display-lg--line-height: 1.1;
-  --text-display-lg--letter-spacing: -0.01em;
+  /* "Command" accent — dedicated Captain/PIC-significance hue, outside the core Skyline set */
+  --color-command: #b45309;
+  --color-command-hover: #92400e;
+  --color-on-command: #fffbeb;
+  --color-command-container: #fef3c7;
+  --color-on-command-container: #78350f;
 
-  /* Panel elevation — hairline glow instead of soft ambient shadow */
-  --shadow-panel: 0 0 0 1px rgba(52, 224, 138, 0.06), 0 12px 32px -16px rgba(0, 0, 0, 0.7);
-  --shadow-panel-hover: 0 0 0 1px rgba(52, 224, 138, 0.24), 0 0 28px -4px rgba(52, 224, 138, 0.3),
-    0 20px 48px -16px rgba(0, 0, 0, 0.8);
+  /* Status/severity ramp — "safe" and a 4th CRM severity step, beyond the core M3 roles */
+  --color-success: #15803d;
+  --color-on-success: #f0fdf4;
+  --color-success-container: #dcfce7;
+  --color-on-success-container: #14532d;
+
+  --color-high: #c2410c;
+  --color-on-high: #fff7ed;
+  --color-high-container: #ffedd5;
+  --color-on-high-container: #7c2d12;
+
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Panel elevation — soft ambient navy-tinted shadow instead of a hairline glow */
+  --shadow-panel: 0 1px 2px 0 rgba(37, 47, 67, 0.06), 0 8px 24px -8px rgba(37, 47, 67, 0.12);
+  --shadow-panel-hover: 0 2px 4px 0 rgba(37, 47, 67, 0.08), 0 16px 32px -8px rgba(37, 47, 67, 0.18);
+  --shadow-command-glow: 0 0 0 1px rgba(180, 83, 9, 0.35), 0 0 16px -2px rgba(180, 83, 9, 0.35);
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-void-950);
-  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(52, 224, 138, 0.06), transparent 60%),
-    repeating-linear-gradient(rgba(255, 255, 255, 0.022) 0px, rgba(255, 255, 255, 0.022) 1px, transparent 1px, transparent 3px);
-  background-attachment: fixed;
-  color: var(--color-mist-100);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
   font-feature-settings: "tnum" 1;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Aviation data — ICAO codes, METAR, timings */
+/* Aviation data — ICAO codes, METAR, timings, stat values */
 .data {
-  font-family: var(--font-mono);
   font-feature-settings: "tnum" 1, "zero" 1;
-  letter-spacing: 0.02em;
 }
 
 /* Uppercase eyebrow tracking */
 .eyebrow {
-  font-family: var(--font-mono);
-  letter-spacing: 0.22em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-/* Glass overlay for text sitting on photography */
-.glass {
-  background-color: rgba(7, 9, 8, 0.55);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(52, 224, 138, 0.16);
+/* Frosted glass panel for content floating over hero photography */
+.glass-panel {
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(123, 209, 250, 0.35);
+  box-shadow: var(--shadow-panel);
 }
 
-/* Cinematic overlay recipe for full-bleed hero photography */
+/* Light scrim recipe fading full-bleed hero photography into the page surface color */
 .hero-scrim {
   background: linear-gradient(
     to top,
-    var(--color-void-950) 0%,
-    rgba(7, 9, 8, 0.88) 45%,
-    rgba(7, 9, 8, 0.18) 100%
+    var(--color-surface) 0%,
+    rgba(245, 246, 255, 0.85) 35%,
+    rgba(245, 246, 255, 0.15) 100%
   );
 }
 
-/* Grayscale + green duotone treatment so stock photography reads as night-vision/IR footage */
-.hero-photo {
-  filter: grayscale(1) sepia(1) hue-rotate(90deg) saturate(1.7) brightness(0.55) contrast(1.25);
-}
-
-/* Localized CRT scanline texture — layer on top of hero panels for more presence than the page-wide wash */
-.scanlines {
-  position: relative;
-}
-.scanlines::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: repeating-linear-gradient(
-    rgba(255, 255, 255, 0.05) 0px,
-    rgba(255, 255, 255, 0.05) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mix-blend-mode: overlay;
-}
-
-/* HUD corner-bracket framing for hero panels — drawn from gradients, no extra markup */
-.hud-corners {
-  position: relative;
-}
-.hud-corners::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.75;
-  background-repeat: no-repeat;
-  background-image: linear-gradient(to right, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to bottom, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to left, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to bottom, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to right, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to top, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to left, var(--color-phosphor-500) 2px, transparent 2px),
-    linear-gradient(to top, var(--color-phosphor-500) 2px, transparent 2px);
-  background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px;
-  background-position: top left, top left, top right, top right, bottom right, bottom right, bottom left,
-    bottom left;
-}
-
-/* Great-circle arc dash drift on the signature route ribbon, now a glowing radar trace */
+/* Great-circle arc dash drift on the signature route ribbon */
 @keyframes arc-drift {
   to {
     stroke-dashoffset: -24;
@@ -143,34 +118,25 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .arc-live {
     animation: arc-drift 1.6s linear infinite;
-    filter: drop-shadow(0 0 3px rgba(52, 224, 138, 0.55));
+    filter: drop-shadow(0 0 3px rgba(0, 99, 130, 0.45));
   }
 }
 
-/* CRT power-on flicker-in, replacing the old fade-and-rise */
+/* Gentle fade-and-rise entrance */
 @keyframes rise {
   0% {
     opacity: 0;
-    transform: translateY(6px);
-    filter: brightness(1.9);
-  }
-  55% {
-    opacity: 1;
-    transform: translateY(0);
-    filter: brightness(1.15);
-  }
-  72% {
-    opacity: 0.82;
+    transform: translateY(8px);
   }
   100% {
     opacity: 1;
-    filter: brightness(1);
+    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--rise-delay, 0ms);
   }
 }

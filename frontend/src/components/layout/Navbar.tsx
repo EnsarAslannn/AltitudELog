@@ -30,21 +30,21 @@ export function Navbar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'relative flex items-center gap-1.5 px-1 py-1.5 text-sm font-medium text-mist-300 transition-colors hover:text-mist-100',
-      'after:absolute after:-bottom-[17px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-phosphor-500 after:shadow-[0_0_6px_rgba(52,224,138,0.7)] after:transition-transform',
-      isActive && 'text-phosphor-300 after:scale-x-100',
+      'relative flex items-center gap-1.5 px-1 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface',
+      'after:absolute after:-bottom-[17px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:shadow-[0_0_6px_rgba(0,99,130,0.5)] after:transition-transform',
+      isActive && 'text-primary after:scale-x-100',
     )
 
   return (
-    <header className="sticky top-0 z-20 border-b border-phosphor-500/15 bg-void-950">
+    <header className="sticky top-0 z-20 border-b border-outline-variant/30 bg-surface-container-lowest/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-5">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-sm bg-phosphor-500/10 ring-1 ring-phosphor-500/25">
-              <PlaneTakeoff className="h-4 w-4 text-phosphor-400" strokeWidth={2.5} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-container/40 ring-1 ring-primary/20">
+              <PlaneTakeoff className="h-4 w-4 text-primary" strokeWidth={2.5} />
             </span>
-            <span className="font-display text-lg font-bold tracking-tight text-mist-100">
-              Altitud<span className="text-command-500">E</span>Log
+            <span className="text-lg font-bold tracking-tight text-on-surface">
+              Altitud<span className="text-command">E</span>Log
             </span>
           </div>
           <nav className="hidden items-center gap-7 sm:flex">
@@ -72,12 +72,12 @@ export function Navbar() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-sm text-mist-300 sm:inline">{username}</span>
+          <span className="hidden text-sm text-on-surface-variant sm:inline">{username}</span>
           {rank && (
             <Badge
               tone={isCommand ? 'amber' : 'neutral'}
               icon={rankIcon[rank]}
-              className={cn(isCommand ? '' : 'border-void-600 bg-void-800 text-mist-100')}
+              className={cn(isCommand ? '' : 'border-outline-variant bg-surface-container-low text-on-surface')}
             >
               {rank}
             </Badge>
@@ -86,7 +86,7 @@ export function Navbar() {
             variant="ghost"
             icon={LogOut}
             onClick={handleLogout}
-            className="text-mist-300 hover:bg-void-800 hover:text-mist-100"
+            className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
           >
             <span className="hidden sm:inline">Çıkış</span>
           </Button>

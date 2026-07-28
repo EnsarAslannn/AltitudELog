@@ -57,11 +57,11 @@ export function DashboardPage() {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
-        <Skeleton className="h-56 rounded-sm" />
+        <Skeleton className="h-56 rounded-lg" />
         <div className="grid grid-cols-3 gap-4">
-          <Skeleton className="h-24 rounded-sm" />
-          <Skeleton className="h-24 rounded-sm" />
-          <Skeleton className="h-24 rounded-sm" />
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-24 rounded-lg" />
+          <Skeleton className="h-24 rounded-lg" />
         </div>
         <SkeletonCard />
         <SkeletonCard />
@@ -71,8 +71,8 @@ export function DashboardPage() {
 
   if (error || !pageResult) {
     return (
-      <Card className="border-alert-500/30 bg-alert-500/5">
-        <p role="alert" className="text-sm text-alert-400">
+      <Card className="border-error/30 bg-error/5">
+        <p role="alert" className="text-sm text-error">
           {error ?? 'Uçuşlar yüklenemedi.'}
         </p>
       </Card>
@@ -85,11 +85,11 @@ export function DashboardPage() {
   return (
     <div className="flex flex-col gap-10">
       {/* Hero band */}
-      <section className="relative min-h-[280px] overflow-hidden rounded-sm bg-void-950 hud-corners scanlines rise sm:min-h-[340px]">
+      <section className="relative min-h-[280px] overflow-hidden rounded-lg bg-surface rise sm:min-h-[340px]">
         <img
           src="/images/runway.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover hero-photo"
+          className="absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
@@ -97,10 +97,10 @@ export function DashboardPage() {
           <Eyebrow tone="light" rule={false}>
             Flight Log · Operasyon Özeti
           </Eyebrow>
-          <h1 className="max-w-xl font-display text-display-xl font-bold tracking-tight text-mist-100">
+          <h1 className="max-w-xl text-4xl sm:text-5xl font-bold tracking-tight text-on-primary">
             Kayıtlı tüm uçuşlar, tek bakışta.
           </h1>
-          <p className="max-w-md text-sm leading-relaxed text-mist-300">
+          <p className="max-w-md text-sm leading-relaxed text-on-primary/75">
             Rota, mürettebat ve CRM raporlarını inceleyin. Her uçuşun METAR bilgisi arka planda otomatik çekilir.
           </p>
         </div>
@@ -119,11 +119,11 @@ export function DashboardPage() {
 
         {flights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-sm bg-phosphor-500/10 text-phosphor-400">
+            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            <p className="font-medium text-mist-100">Henüz kayıtlı uçuş yok.</p>
-            <p className="max-w-xs text-sm text-mist-300">
+            <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
+            <p className="max-w-xs text-sm text-on-surface-variant">
               İlk uçuşu ekleyince rota ve mürettebat kaydı burada listelenir.
             </p>
           </Card>
@@ -139,9 +139,9 @@ export function DashboardPage() {
                 <Card interactive className={cn('overflow-hidden p-0', flight.isCancelled && 'opacity-60')}>
                   <div className="flex flex-col sm:flex-row">
                     {/* boarding-pass stub */}
-                    <div className="flex items-center gap-3 border-b border-dashed border-void-700 bg-void-850 px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
-                      <span className="eyebrow text-[10px] text-mist-500">Aircraft</span>
-                      <span className="data text-sm font-semibold text-mist-100">
+                    <div className="flex items-center gap-3 border-b border-dashed border-outline-variant/50 bg-surface-container-low px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
+                      <span className="eyebrow text-[10px] text-outline">Aircraft</span>
+                      <span className="data text-sm font-semibold text-on-surface">
                         {flight.aircraftType}
                       </span>
                     </div>
@@ -155,7 +155,7 @@ export function DashboardPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-mist-300">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-on-surface-variant">
                         <span className="flex items-center gap-1.5">
                           <CalendarDays className="h-3.5 w-3.5" />
                           <span className="data">{flight.date}</span>
@@ -165,7 +165,7 @@ export function DashboardPage() {
                           <span className="data">{flight.flightTime}</span>
                         </span>
                         {flight.metarInfo && (
-                          <span className="flex items-center gap-1.5 text-phosphor-400">
+                          <span className="flex items-center gap-1.5 text-primary">
                             <Radio className="h-3.5 w-3.5" />
                             <span className="eyebrow text-[10px]">METAR</span>
                           </span>

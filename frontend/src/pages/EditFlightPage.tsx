@@ -57,16 +57,16 @@ export function EditFlightPage() {
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-6" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
-        <Skeleton className="h-24 rounded-sm" />
-        <Skeleton className="h-96 rounded-sm" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-96 rounded-lg" />
       </div>
     )
   }
 
   if (error || !flight) {
     return (
-      <Card className="mx-auto max-w-lg border-alert-500/30 bg-alert-500/5">
-        <p role="alert" className="text-sm text-alert-400">
+      <Card className="mx-auto max-w-lg border-error/30 bg-error/5">
+        <p role="alert" className="text-sm text-error">
           {error ?? 'Uçuş bulunamadı.'}
         </p>
       </Card>
@@ -77,8 +77,8 @@ export function EditFlightPage() {
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-lg">
         <Eyebrow className="mb-3">Captain · Flight Plan</Eyebrow>
-        <h1 className="font-display text-display-lg font-bold tracking-tight text-mist-100">Uçuşu Düzenle</h1>
-        <p className="mt-1 text-sm text-mist-300">
+        <h1 className="text-3xl font-bold tracking-tight text-on-surface">Uçuşu Düzenle</h1>
+        <p className="mt-1 text-sm text-on-surface-variant">
           Rota bilgisini güncelleyin. Kalkış havaalanı değişirse METAR yeniden çekilir.
         </p>
       </div>

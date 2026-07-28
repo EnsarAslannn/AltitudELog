@@ -12,12 +12,12 @@ export function StatTile({
 }) {
   return (
     <Card className="flex items-center gap-4 p-5">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-phosphor-500/10 text-phosphor-400">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-container/40 text-primary">
         <Icon className="h-5 w-5" />
       </span>
       <div>
-        <p className="data text-4xl font-semibold leading-none tabular-nums text-mist-100">{value}</p>
-        <p className="eyebrow mt-1.5 text-[10px] text-mist-300">{label}</p>
+        <p className="data text-4xl font-semibold leading-none tabular-nums text-on-surface">{value}</p>
+        <p className="eyebrow mt-1.5 text-[10px] text-on-surface-variant">{label}</p>
       </div>
     </Card>
   )

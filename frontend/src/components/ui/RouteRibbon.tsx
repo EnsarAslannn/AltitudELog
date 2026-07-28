@@ -34,8 +34,8 @@ export function RouteRibbon({
   animated = false,
   className,
 }: RouteRibbonProps) {
-  const code = tone === 'dark' ? 'text-phosphor-300' : 'text-phosphor-500'
-  const stroke = tone === 'dark' ? 'rgba(138,255,196,0.6)' : 'rgba(52,224,138,0.45)'
+  const code = tone === 'dark' ? 'text-on-primary-container' : 'text-primary'
+  const stroke = tone === 'dark' ? 'rgba(0,70,93,0.55)' : 'rgba(0,99,130,0.4)'
 
   return (
     <div className={cn('flex items-center gap-3 sm:gap-5', className)}>
@@ -61,21 +61,21 @@ export function RouteRibbon({
           />
         </svg>
         {/* origin node */}
-        <span className="absolute bottom-0 left-0 h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full bg-phosphor-500 ring-2 ring-void-950" />
+        <span className="absolute bottom-0 left-0 h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full bg-primary ring-2 ring-surface" />
         {/* aircraft in transit at the apex */}
         <svg
           viewBox="0 0 24 24"
           className={cn(
-            'absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(52,224,138,0.6)]',
-            tone === 'dark' ? 'text-phosphor-300' : 'text-phosphor-500',
+            'absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(0,99,130,0.45)]',
+            tone === 'dark' ? 'text-on-primary-container' : 'text-primary',
           )}
           fill="currentColor"
           aria-hidden
         >
           <path d="M12 2 L14 12 L22 16 L22 18 L13 16 L13 21 L16 23 L16 24 L12 22.5 L8 24 L8 23 L11 21 L11 16 L2 18 L2 16 L10 12 Z" />
         </svg>
-        {/* destination node — amber, the arrival accent */}
-        <span className="absolute bottom-0 right-0 h-2 w-2 translate-x-1/2 translate-y-1/2 rounded-full bg-command-500 ring-2 ring-void-950" />
+        {/* destination node — amber, the arrival/command accent */}
+        <span className="absolute bottom-0 right-0 h-2 w-2 translate-x-1/2 translate-y-1/2 rounded-full bg-command ring-2 ring-surface" />
       </div>
 
       <span className={cn('data font-semibold tabular-nums', codeSize[size], code)}>

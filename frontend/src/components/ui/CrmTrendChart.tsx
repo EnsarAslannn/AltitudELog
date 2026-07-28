@@ -13,10 +13,10 @@ const severityOrder: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 // Low/Medium/Critical mirror the Badge green/amber/red tones; High gets its own
 // hue so all four bars stay distinguishable at a glance.
 const severityColor: Record<SeverityLevel, string> = {
-  Low: '#34e08a',
-  Medium: '#ffb020',
-  High: '#ff8a3d',
-  Critical: '#ff4d5e',
+  Low: '#15803d',
+  Medium: '#b45309',
+  High: '#c2410c',
+  Critical: '#b31b25',
 }
 
 const monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
@@ -53,7 +53,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
           y1={CHART_HEIGHT - PADDING_BOTTOM}
           x2={CHART_WIDTH - PADDING_X}
           y2={CHART_HEIGHT - PADDING_BOTTOM}
-          stroke="#223029"
+          stroke="#a3adc7"
           strokeWidth={1}
         />
 
@@ -87,7 +87,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                         y={barY - 4}
                         textAnchor="middle"
                         fontSize={9}
-                        fill="#e7f3ec"
+                        fill="#252f43"
                         className="pointer-events-none select-none"
                       >
                         {count}
@@ -101,7 +101,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                 y={CHART_HEIGHT - PADDING_BOTTOM + 16}
                 textAnchor="middle"
                 fontSize={10}
-                fill="#93a89d"
+                fill="#525b72"
               >
                 {monthLabels[month.month - 1]}
               </text>
@@ -112,22 +112,22 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
 
       {hovered && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-sm border border-void-700 bg-void-900 px-2.5 py-1.5 text-xs shadow-[var(--shadow-panel-hover)]"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-2.5 py-1.5 text-xs shadow-[var(--shadow-panel-hover)]"
           style={{
             left: `${(hovered.x / CHART_WIDTH) * 100}%`,
             top: `${(hovered.y / CHART_HEIGHT) * 100}%`,
           }}
         >
-          <span className="font-medium text-mist-100">{hovered.severity}</span>
-          <span className="ml-1.5 text-mist-300">
+          <span className="font-medium text-on-surface">{hovered.severity}</span>
+          <span className="ml-1.5 text-on-surface-variant">
             {data[hovered.monthIndex].countsBySeverity[hovered.severity] ?? 0} rapor
           </span>
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-void-700 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-outline-variant/40 pt-3">
         {severityOrder.map((severity) => (
-          <span key={severity} className="flex items-center gap-1.5 text-xs text-mist-300">
+          <span key={severity} className="flex items-center gap-1.5 text-xs text-on-surface-variant">
             <span
               className="h-2.5 w-2.5 rounded-sm"
               style={{ backgroundColor: severityColor[severity] }}

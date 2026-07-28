@@ -3,17 +3,18 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  tone?: 'neutral' | 'blue' | 'amber' | 'red' | 'green' | 'sky'
+  tone?: 'neutral' | 'blue' | 'amber' | 'red' | 'green' | 'sky' | 'orange'
   icon?: LucideIcon
 }
 
 const toneClasses: Record<NonNullable<BadgeProps['tone']>, string> = {
-  neutral: 'border-void-600 bg-void-800 text-mist-300',
-  blue: 'border-phosphor-500/40 bg-phosphor-500/10 text-phosphor-400',
-  amber: 'border-command-500/40 bg-command-500/10 text-command-400',
-  red: 'border-alert-500/40 bg-alert-500/10 text-alert-400',
-  green: 'border-phosphor-500/40 bg-phosphor-500/10 text-phosphor-400',
-  sky: 'border-phosphor-300/40 bg-phosphor-300/10 text-phosphor-300',
+  neutral: 'border-outline-variant bg-surface-container-low text-on-surface-variant',
+  blue: 'border-primary/30 bg-primary/8 text-primary',
+  amber: 'border-command/30 bg-command-container text-on-command-container',
+  red: 'border-error/30 bg-error/8 text-error',
+  green: 'border-success/30 bg-success-container text-on-success-container',
+  sky: 'border-secondary/30 bg-secondary-container text-on-secondary-container',
+  orange: 'border-high/30 bg-high-container text-on-high-container',
 }
 
 export function Badge({ tone = 'neutral', icon: Icon, className, children, ...props }: BadgeProps) {
