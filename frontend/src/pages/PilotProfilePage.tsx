@@ -152,7 +152,7 @@ export function PilotProfilePage() {
         <img
           src="/images/terminal.jpg"
           alt=""
-          className="photo-mono absolute inset-0 h-full w-full object-cover object-[center_72%]"
+          className="photo-rich absolute inset-0 h-full w-full object-cover object-[center_72%]"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />

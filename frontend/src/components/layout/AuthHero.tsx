@@ -21,7 +21,7 @@ export function AuthHero({
       <img
         src={image}
         alt=""
-        className="photo-mono absolute inset-0 h-full w-full object-cover"
+        className="photo-rich absolute inset-0 h-full w-full object-cover"
         loading="eager"
       />
       {/* bottom-weighted scrim: copy sits on solid surface, photo stays open up top */}

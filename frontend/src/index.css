@@ -4,59 +4,63 @@
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
 
-  /* Palette — warm monochrome, values taken verbatim from DESIGN.md */
-  --color-primary: #121212;
+  /*
+   * Palette — navy ink on cool light surfaces. This keeps DESIGN.md's structure (the
+   * same M3 roles, the same light/airy feel) but swaps its neutral axis: every place
+   * the system previously reached for black now uses navy, and the warm greys are
+   * retuned cool so the page reads as a considered blue-grey rather than washed out.
+   */
+  --color-primary: #1b2b55;
   --color-on-primary: #ffffff;
-  --color-primary-container: #333333;
+  --color-primary-container: #2b4076;
   --color-on-primary-container: #ffffff;
 
-  --color-secondary: #5d5e5f;
+  --color-secondary: #43537a;
   --color-on-secondary: #ffffff;
-  --color-secondary-container: #e5e2e1;
-  --color-on-secondary-container: #1a1c1d;
+  --color-secondary-container: #dde4f2;
+  --color-on-secondary-container: #1a2440;
 
-  --color-surface: #fdf8f8;
-  --color-surface-dim: #ddd9d8;
-  --color-surface-bright: #fdf8f8;
+  --color-surface: #f7f9fd;
+  --color-surface-dim: #d3dcec;
+  --color-surface-bright: #f7f9fd;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f7f3f2;
-  --color-surface-container: #f1edec;
-  --color-surface-container-high: #ebe7e6;
-  --color-surface-container-highest: #e5e2e1;
-  --color-on-surface: #1c1b1b;
-  --color-on-surface-variant: #444748;
-  --color-outline: #747878;
-  --color-outline-variant: #c4c7c8;
-  --color-background: #fdf8f8;
-  --color-on-background: #1c1b1b;
+  --color-surface-container-low: #f0f4fb;
+  --color-surface-container: #e7edf8;
+  --color-surface-container-high: #dee6f4;
+  --color-surface-container-highest: #d5dff0;
+  --color-on-surface: #1a2440;
+  --color-on-surface-variant: #4a5573;
+  --color-outline: #6f7b98;
+  --color-outline-variant: #bfc8dc;
+  --color-background: #f7f9fd;
+  --color-on-background: #1a2440;
 
   /*
-   * Status ramp — the only chromatic colors in the system. DESIGN.md defines no status
-   * palette, but CRM severity, certificate expiry and validation errors encode safety data
-   * that must stay distinguishable, so these are kept and desaturated to sit quietly
-   * against the warm neutrals. Brand/Captain significance carries NO hue — see Badge's
-   * `solid` tone.
+   * Status ramp — CRM severity, certificate expiry and validation errors. Carried at
+   * full strength rather than the muted values used previously: against a navy-and-
+   * cool-grey page these need to read as genuine colour, not as tinted grey. Brand and
+   * Captain significance still carry no hue of their own — see Badge's `solid` tone.
    */
-  --color-error: #8c1d18;
+  --color-error: #b3261e;
   --color-on-error: #ffffff;
-  --color-error-container: #f9dedc;
+  --color-error-container: #fbdedb;
   --color-on-error-container: #410e0b;
-  --color-error-hover: #6d1611;
+  --color-error-hover: #8c1d18;
 
-  --color-success: #2f6b4f;
+  --color-success: #1e7a4d;
   --color-on-success: #ffffff;
-  --color-success-container: #dcece3;
-  --color-on-success-container: #10321f;
+  --color-success-container: #d4f0e1;
+  --color-on-success-container: #0b3d24;
 
-  --color-warning: #8a6b2f;
+  --color-warning: #a8751a;
   --color-on-warning: #ffffff;
-  --color-warning-container: #f3ead6;
-  --color-on-warning-container: #4a3611;
+  --color-warning-container: #fbeecd;
+  --color-on-warning-container: #4d3308;
 
-  --color-high: #8f4426;
+  --color-high: #b4541f;
   --color-on-high: #ffffff;
-  --color-high-container: #f6e2d8;
-  --color-on-high-container: #4d1f0c;
+  --color-high-container: #fbe3d5;
+  --color-on-high-container: #54210a;
 
   /*
    * DESIGN.md pins `roundness: 8`. md/lg deliberately collapse onto 8px so the existing
@@ -69,9 +73,9 @@
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
 
-  /* Soft warm ambient elevation — DESIGN.md's "hafif gölgeler" */
-  --shadow-panel: 0 1px 2px 0 rgba(28, 27, 27, 0.05), 0 8px 24px -10px rgba(28, 27, 27, 0.10);
-  --shadow-panel-hover: 0 2px 6px 0 rgba(28, 27, 27, 0.07), 0 18px 36px -12px rgba(28, 27, 27, 0.16);
+  /* Soft navy-tinted ambient elevation — DESIGN.md's "hafif gölgeler" */
+  --shadow-panel: 0 1px 2px 0 rgba(26, 36, 64, 0.06), 0 8px 24px -10px rgba(26, 36, 64, 0.14);
+  --shadow-panel-hover: 0 2px 6px 0 rgba(26, 36, 64, 0.09), 0 18px 36px -12px rgba(26, 36, 64, 0.20);
 }
 
 body {
@@ -105,23 +109,24 @@ body {
 }
 
 /*
- * Unifies the photography into one set: every hero <img> is graded to the palette's warm
- * near-monochrome range, so the original stock photos and the newer generated ones read
- * as a single library rather than a mix of colour grades.
+ * Hero photography runs in full colour — the imagery is where the page gets its warmth,
+ * so it is left to speak. The grade is a light lift only: a touch of saturation and
+ * contrast to stop the stock and generated shots reading flat behind the scrim.
  */
-.photo-mono {
-  filter: grayscale(100%) sepia(10%) contrast(1.14) brightness(0.92);
+.photo-rich {
+  filter: saturate(1.12) contrast(1.06);
 }
 
 /*
  * Legibility halo for type that lands on open photography rather than on the scrimmed
  * side of a hero band — e.g. the destination code of a full-width route ribbon, which
- * by construction sits at the far edge where the scrim has faded out.
+ * by construction sits at the far edge where the scrim has faded out. Now that the
+ * photographs carry colour and detail, this does more work than it used to.
  */
 .on-photo {
   text-shadow:
-    0 1px 2px rgba(253, 248, 248, 0.9),
-    0 0 20px rgba(253, 248, 248, 0.92);
+    0 1px 2px rgba(247, 249, 253, 0.95),
+    0 0 18px rgba(247, 249, 253, 0.95);
 }
 
 /* Frosted panel for content floating over hero photography */
@@ -144,11 +149,11 @@ body {
     linear-gradient(
       to right,
       var(--color-surface) 0%,
-      rgba(253, 248, 248, 0.92) 30%,
-      rgba(253, 248, 248, 0.45) 58%,
-      rgba(253, 248, 248, 0.04) 88%
+      rgba(247, 249, 253, 0.93) 28%,
+      rgba(247, 249, 253, 0.4) 55%,
+      rgba(247, 249, 253, 0) 82%
     ),
-    linear-gradient(to top, rgba(253, 248, 248, 0.5) 0%, rgba(253, 248, 248, 0) 60%);
+    linear-gradient(to top, rgba(247, 249, 253, 0.42) 0%, rgba(247, 249, 253, 0) 58%);
 }
 
 /* Panel variant for the tall auth hero, whose copy sits along the bottom edge rather
@@ -158,9 +163,9 @@ body {
   background: linear-gradient(
     to top,
     var(--color-surface) 0%,
-    rgba(253, 248, 248, 0.92) 32%,
-    rgba(253, 248, 248, 0.35) 62%,
-    rgba(253, 248, 248, 0.06) 100%
+    rgba(247, 249, 253, 0.92) 32%,
+    rgba(247, 249, 253, 0.35) 62%,
+    rgba(247, 249, 253, 0.06) 100%
   );
 }
 
@@ -170,8 +175,8 @@ body {
   background: radial-gradient(
     ellipse 70% 60% at 50% 50%,
     var(--color-surface) 0%,
-    rgba(253, 248, 248, 0.92) 45%,
-    rgba(253, 248, 248, 0.35) 100%
+    rgba(247, 249, 253, 0.92) 45%,
+    rgba(247, 249, 253, 0.35) 100%
   );
 }
 
@@ -185,7 +190,7 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .arc-live {
     animation: arc-drift 1.6s linear infinite;
-    filter: drop-shadow(0 0 3px rgba(28, 27, 27, 0.3));
+    filter: drop-shadow(0 0 3px rgba(27, 43, 85, 0.35));
   }
 }
 

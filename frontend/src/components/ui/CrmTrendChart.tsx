@@ -11,13 +11,13 @@ const severityOrder: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 // Fixed status ramp (good/warning/serious/critical) — reserved colors, never
 // reused for arbitrary series, matched 1:1 to the severity levels they name.
 // These mirror the Badge green/warning/orange/red tones exactly, so a report's
-// chip and its bar always agree. Desaturated to sit against the warm neutral
-// surfaces without becoming the loudest thing on the page.
+// chip and its bar always agree. Carried at full strength so they read as real
+// colour against the cool navy surfaces rather than as tinted grey.
 const severityColor: Record<SeverityLevel, string> = {
-  Low: '#2f6b4f',
-  Medium: '#8a6b2f',
-  High: '#8f4426',
-  Critical: '#8c1d18',
+  Low: '#1e7a4d',
+  Medium: '#a8751a',
+  High: '#b4541f',
+  Critical: '#b3261e',
 }
 
 const monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
@@ -54,7 +54,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
           y1={CHART_HEIGHT - PADDING_BOTTOM}
           x2={CHART_WIDTH - PADDING_X}
           y2={CHART_HEIGHT - PADDING_BOTTOM}
-          stroke="#c4c7c8"
+          stroke="#bfc8dc"
           strokeWidth={1}
         />
 
@@ -88,7 +88,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                         y={barY - 4}
                         textAnchor="middle"
                         fontSize={9}
-                        fill="#1c1b1b"
+                        fill="#1a2440"
                         className="pointer-events-none select-none"
                       >
                         {count}
@@ -102,7 +102,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                 y={CHART_HEIGHT - PADDING_BOTTOM + 16}
                 textAnchor="middle"
                 fontSize={10}
-                fill="#444748"
+                fill="#4a5573"
               >
                 {monthLabels[month.month - 1]}
               </text>

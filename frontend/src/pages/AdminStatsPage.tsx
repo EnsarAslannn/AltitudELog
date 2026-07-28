@@ -84,7 +84,7 @@ export function AdminStatsPage() {
         <img
           src="/images/instruments.jpg"
           alt=""
-          className="photo-mono absolute inset-0 h-full w-full object-cover"
+          className="photo-rich absolute inset-0 h-full w-full object-cover"
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />

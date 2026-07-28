@@ -41,7 +41,7 @@ export function RouteRibbon({
   // `strong` ribbons span a full hero band, so their outer codes land past the edge of the
   // scrim and onto open photography — the halo keeps them readable there.
   const code = emphasis === 'strong' ? 'text-on-surface on-photo' : 'text-on-surface-variant'
-  const stroke = emphasis === 'strong' ? 'rgba(28,27,27,0.45)' : 'rgba(28,27,27,0.3)'
+  const stroke = emphasis === 'strong' ? 'rgba(27,43,85,0.5)' : 'rgba(27,43,85,0.35)'
 
   return (
     <div className={cn('flex items-center gap-3 sm:gap-5', className)}>
@@ -72,7 +72,7 @@ export function RouteRibbon({
         <svg
           viewBox="0 0 24 24"
           className={cn(
-            'absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(28,27,27,0.25)]',
+            'absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(27,43,85,0.25)]',
             code,
           )}
           fill="currentColor"
