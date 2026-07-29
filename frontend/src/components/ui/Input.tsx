@@ -11,6 +11,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export function Input({ label, errors, icon: Icon, id, className, ...props }: InputProps) {
   const inputId = id ?? props.name
   const hasError = !!errors?.length
+  const errorId = `${inputId}-error`
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -23,6 +24,10 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
         )}
         <input
           id={inputId}
+          // Without these the error text below is visually adjacent but programmatically
+          // unrelated — a screen reader announces the field as valid and never reads the reason.
+          aria-invalid={hasError || undefined}
+          aria-describedby={hasError ? errorId : undefined}
           className={cn(
             'w-full rounded border bg-surface-container-lowest px-3 py-2.5 text-sm text-on-surface outline-none placeholder:text-outline transition-colors',
             'focus:border-primary focus:ring-4 focus:ring-primary/15',
@@ -33,7 +38,11 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
           {...props}
         />
       </div>
-      {hasError && <p className="text-xs text-error">{errors!.join(', ')}</p>}
+      {hasError && (
+        <p id={errorId} className="text-xs text-error">
+          {errors!.join(', ')}
+        </p>
+      )}
     </div>
   )
 }

@@ -60,7 +60,9 @@ describe('DashboardPage', () => {
     )
 
     expect(await screen.findByText('A350')).toBeInTheDocument()
-    expect(flightService.getAll).toHaveBeenCalledWith(1, 20)
+    expect(flightService.getAll).toHaveBeenCalledWith(
+      expect.objectContaining({ pageNumber: 1, pageSize: 20 }),
+    )
     expect(screen.getByText('Sayfa 1 / 2')).toBeInTheDocument()
   })
 
@@ -79,7 +81,9 @@ describe('DashboardPage', () => {
     await user.click(screen.getByRole('button', { name: /Sonraki/ }))
 
     expect(await screen.findByText('B777')).toBeInTheDocument()
-    await waitFor(() => expect(flightService.getAll).toHaveBeenCalledWith(2, 20))
+    await waitFor(() =>
+      expect(flightService.getAll).toHaveBeenCalledWith(expect.objectContaining({ pageNumber: 2 })),
+    )
     expect(screen.getByText('Sayfa 2 / 2')).toBeInTheDocument()
   })
 
@@ -104,8 +108,56 @@ describe('DashboardPage', () => {
     await screen.findByText('A350')
     await user.click(screen.getByRole('button', { name: /Sonraki/ }))
 
-    await waitFor(() => expect(flightService.getAll).toHaveBeenLastCalledWith(1, 20))
+    await waitFor(() =>
+      expect(flightService.getAll).toHaveBeenLastCalledWith(expect.objectContaining({ pageNumber: 1 })),
+    )
     expect(await screen.findByText('A350')).toBeInTheDocument()
+  })
+
+  it('reads filters from the URL and passes them to the API', async () => {
+    // Filters live in the URL so a filtered view is shareable and survives Back.
+    vi.mocked(flightService.getAll).mockResolvedValue(page1)
+
+    render(
+      <MemoryRouter initialEntries={['/?search=ltf&origin=LTFM&isCancelled=false&sortBy=FlightTime&sortDir=asc']}>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    await screen.findByText('A350')
+
+    expect(flightService.getAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'ltf',
+        originICAO: 'LTFM',
+        isCancelled: false,
+        sortBy: 'FlightTime',
+        sortDescending: false,
+      }),
+    )
+  })
+
+  it('offers to clear filters instead of "add your first flight" on an empty filtered list', async () => {
+    // Telling someone with 200 flights to add their first one is actively misleading.
+    const user = userEvent.setup()
+    vi.mocked(flightService.getAll).mockResolvedValue({ ...page1, items: [], totalCount: 0 })
+
+    render(
+      <MemoryRouter initialEntries={['/?search=zzzz']}>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Bu filtrelere uyan uçuş yok.')).toBeInTheDocument()
+    expect(screen.queryByText('Henüz kayıtlı uçuş yok.')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Filtreleri Temizle/ }))
+
+    await waitFor(() =>
+      expect(flightService.getAll).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ search: 'zzzz' }),
+      ),
+    )
   })
 
   it('shows an error message when the fetch fails', async () => {

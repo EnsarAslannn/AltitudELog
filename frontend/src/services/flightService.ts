@@ -1,11 +1,24 @@
 import { apiClient } from '../lib/axios'
-import type { CreateFlightRequest, FlightDto, FlightsPageResult, UpdateFlightRequest } from '../types/flight'
+import type {
+  CreateFlightRequest,
+  FlightDto,
+  FlightQuery,
+  FlightsPageResult,
+  UpdateFlightRequest,
+} from '../types/flight'
 
 export const flightService = {
-  getAll: (pageNumber = 1, pageSize = 20) =>
-    apiClient
-      .get<FlightsPageResult>('/Flights', { params: { pageNumber, pageSize } })
-      .then((res) => res.data),
+  // Empty strings are dropped rather than sent: the API validates OriginICAO as exactly 4
+  // characters *when present*, so posting `originICAO=` for a cleared filter would 400.
+  getAll: (query: FlightQuery = {}) => {
+    const params = Object.fromEntries(
+      Object.entries({ pageNumber: 1, pageSize: 20, ...query }).filter(
+        ([, value]) => value !== undefined && value !== null && value !== '',
+      ),
+    )
+
+    return apiClient.get<FlightsPageResult>('/Flights', { params }).then((res) => res.data)
+  },
 
   getById: (id: string) => apiClient.get<FlightDto>(`/Flights/${id}`).then((res) => res.data),
 

@@ -5,6 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>de907edc-96ca-434f-89ac-15ad57ff1363</UserSecretsId>
+    <!-- Feeds the <summary> comments on controller actions into the OpenAPI document, which is
+         served publicly through Scalar. 1591 is suppressed because only the endpoints are
+         documented; requiring a comment on every public member would be noise. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

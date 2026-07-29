@@ -35,4 +35,72 @@ public class GetFlightsQueryValidatorTests
 
         result.IsValid.Should().BeFalse();
     }
+
+    [Fact]
+    public void Validate_Should_Pass_When_No_Filters_Are_Supplied()
+    {
+        var result = _validator.Validate(new GetFlightsQuery());
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_Should_Fail_When_Search_Exceeds_MaxLength()
+    {
+        // The term goes into a leading-wildcard LIKE, which no index can serve.
+        var result = _validator.Validate(new GetFlightsQuery { Search = new string('a', 101) });
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("LTF")]
+    [InlineData("LTFMM")]
+    public void Validate_Should_Fail_When_An_Icao_Filter_Is_Not_Four_Characters(string icao)
+    {
+        _validator.Validate(new GetFlightsQuery { OriginICAO = icao }).IsValid.Should().BeFalse();
+        _validator.Validate(new GetFlightsQuery { DestinationICAO = icao }).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_Should_Ignore_An_Empty_Icao_Filter()
+    {
+        // Empty means "no filter", which the handler skips — it must not trip the length rule.
+        var result = _validator.Validate(new GetFlightsQuery { OriginICAO = "" });
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_Should_Fail_When_DateTo_Precedes_DateFrom()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var result = _validator.Validate(new GetFlightsQuery
+        {
+            DateFrom = today,
+            DateTo = today.AddDays(-1)
+        });
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_Should_Pass_When_Only_One_End_Of_The_Date_Range_Is_Given()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        _validator.Validate(new GetFlightsQuery { DateFrom = today }).IsValid.Should().BeTrue();
+        _validator.Validate(new GetFlightsQuery { DateTo = today }).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_Should_Fail_For_A_SortBy_Outside_The_Enum()
+    {
+        // Otherwise it falls through the handler's switch to a Date sort, silently ignoring the
+        // caller's request rather than telling them it was invalid.
+        var result = _validator.Validate(new GetFlightsQuery { SortBy = (FlightSortField)999 });
+
+        result.IsValid.Should().BeFalse();
+    }
 }

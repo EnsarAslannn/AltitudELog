@@ -135,12 +135,29 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   - `Auth/Commands/Register/`, `Auth/Commands/Login/` — validated (`RegisterCommandValidator`,
     `LoginCommandValidator`), not cached. `Register` implements `ICacheInvalidatorCommand`, invalidating
     `pilots:all` and `stats:all` since a new pilot changes both listings.
+  - **Refresh-token sessions** are governed by `Common/Security/RefreshTokenPolicy.cs`, which owns
+    the sliding `Lifetime` (7d), the `AbsoluteLifetime` ceiling (30d) and the `StartSession` /
+    `Rotate` / `RevokeSession` transitions — Login, RefreshToken, Logout and ResetPassword all go
+    through it so they can't drift on what makes up a session. `Pilot.PreviousRefreshTokenHash`
+    exists purely for **reuse detection**: rotation means an already-exchanged token matches no
+    pilot at all, so without it a replay is indistinguishable from a random string and there is no
+    way to know whose session to revoke. Presenting the previous token revokes the whole session
+    (both tokens), and `RefreshTokenSessionStartedAtUtc` is set only at login and never bumped by
+    a rotation — otherwise refreshing weekly keeps a session, and a stolen token, alive forever.
+  - `Auth/Jobs/SendPasswordResetEmailJob`: issues the reset token *and* sends the mail, off the
+    request path. It takes only a pilot id — the token is generated inside the job because
+    Hangfire persists job arguments and renders them in the `/hangfire` dashboard, which is no
+    place for a live reset token.
   - `Auth/Commands/ForgotPassword/` + `Auth/Commands/ResetPassword/`: same random-token pattern as refresh
     tokens below (32-byte `RandomNumberGenerator`, hashed at rest via `TokenHasher`, one-time use). Deliberately
-    always returns success/`204` and does the same constant-floor-duration work (`Stopwatch` +
-    `Task.Delay` to a `MinimumDuration` floor) regardless of whether the email matches a pilot, so neither the
-    response shape nor response timing leaks which emails are registered. `ResetPassword` also nulls the
-    pilot's refresh token, invalidating any session obtained before the reset.
+    always returns success/`204` regardless of whether the email matches a pilot. Timing is kept
+    even by keeping both branches' work comparable — a lookup, plus at most one enqueue — and then
+    applying a `MinimumDuration` floor (`Stopwatch` + `Task.Delay`). **The floor alone was not
+    enough**: it bounds the fast path from below but leaves the slow path unbounded above, and the
+    matching branch used to `await` an SMTP round trip inline, so it stayed reliably slower and
+    still leaked which addresses are registered. Token issuing and delivery therefore live in
+    `SendPasswordResetEmailJob`, off the request path — don't move them back inline.
+    `ResetPassword` also revokes the pilot's session, invalidating anything obtained before the reset.
   - `Auth/Commands/RefreshToken/` + `Auth/Commands/Logout/`: opaque refresh tokens (same
     generate-random/hash-at-rest pattern), stored on `Pilot.RefreshTokenHash`/`RefreshTokenExpiresAtUtc`,
     rotated on every successful refresh. `Logout` resolves the caller via `ICurrentUserService` and clears
@@ -152,7 +169,15 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     `pilot:profile:{id}` for every pilot currently crewed on that flight, since `GetPilotProfileQuery`'s
     hours/currency figures are derived from crewed flights), `Flights/Queries/GetFlights/`
     (paginated — `PageNumber`/`PageSize` query params, default 1/20, validated 1-100 via
-    `GetFlightsQueryValidator`; returns `FlightsPageResult` with `Items`/`TotalCount`/`ActiveCount`/
+    `GetFlightsQueryValidator`; also supports free-text `Search` (matched case-insensitively
+    across origin/destination/aircraft type), `DateFrom`/`DateTo`, exact `OriginICAO`/
+    `DestinationICAO`/`AircraftType`, an optional `IsCancelled` tri-state, and `SortBy`
+    (`FlightSortField` enum) + `SortDescending`. Filters are ANDed, and **every count in the
+    result reflects the filtered set** — global tiles beside a filtered list would mislead, and
+    `TotalCount` must match the filtered rows or paging breaks. Sorting always appends `Id` as a
+    tiebreaker so pages can't overlap. Search uses `ToLower().Contains` rather than
+    `EF.Functions.ILike` because `ILike` lives in the Npgsql package and Application takes no
+    provider dependency; returns `FlightsPageResult` with `Items`/`TotalCount`/`ActiveCount`/
     `ThisMonthCount`/`DistinctAircraftTypeCount`; **not cached** — a deliberate choice, see "Background jobs &
     caching". `TotalCount` counts every row `Items` pages through, cancelled flights included, because it is the
     pagination denominator; `ActiveCount`/`ThisMonthCount`/`DistinctAircraftTypeCount` exclude cancelled flights
@@ -213,6 +238,10 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   weather API. Base URL (`https://aviationweather.gov/`) and a 10s timeout are set where the typed `HttpClient`
   is registered in `DependencyInjection.cs` — **hardcoded, not in `appsettings`**. Calls
   `GET api/data/metar?ids={icao}&format=json`, returns the first observation's raw METAR text or `null` if none.
+  **"No observation" is not a failure**: a `404`/`204`, an empty array, and an unparseable `200`
+  (HTML error page, unexpected shape) all return `null`, because `UpdateFlightMetarJob` already
+  handles null and throwing instead burned all three retries and left a permanently Failed job in
+  the dashboard for a nice-to-have enrichment. `5xx`/`429` still throw — those are worth retrying.
 - Delete behaviors were chosen deliberately to protect CRM safety data from accidental loss:
   `Crew→Flight` cascades, `Crew→Pilot` and `CRMReport→Flight` restrict, `CRMReport→Reporter` sets null.
 - `DependencyInjection.cs`: `AddInfrastructureServices(IConfiguration)` registers `ApplicationDbContext` via
@@ -303,6 +332,13 @@ exact-match list, not a rank hierarchy, so a Captain-only gate locks out `ChiefP
 
 All controllers go through `IMediator.Send`, no direct Application/Infrastructure calls. Sample requests in
 `AltitudELog.API.http`.
+
+Every action carries `[ProducesResponseType]` for the statuses it can actually return, with the
+shared ones (`400` `ValidationProblemDetails`, `401`, `429` on `Auth`) declared once at class
+level, plus a `<summary>` XML comment. `GenerateDocumentationFile` is on in
+`AltitudELog.API.csproj` (with `1591` suppressed) so those summaries reach the OpenAPI document.
+This matters more than usual here because the document is served publicly through Scalar on the
+live deployment — it is the API's contract to anyone reading it, so keep new endpoints annotated.
 
 ### API — Global exception handling
 

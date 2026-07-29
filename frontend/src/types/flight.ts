@@ -21,6 +21,31 @@ export interface FlightsPageResult {
   distinctAircraftTypeCount: number
 }
 
+export const FLIGHT_SORT_FIELDS = [
+  'Date',
+  'FlightTime',
+  'OriginICAO',
+  'DestinationICAO',
+  'AircraftType',
+] as const
+
+export type FlightSortField = (typeof FLIGHT_SORT_FIELDS)[number]
+
+/** Mirrors GetFlightsQuery. Every field is optional; omitting one means "don't filter on it". */
+export interface FlightQuery {
+  pageNumber?: number
+  pageSize?: number
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+  originICAO?: string
+  destinationICAO?: string
+  aircraftType?: string
+  isCancelled?: boolean
+  sortBy?: FlightSortField
+  sortDescending?: boolean
+}
+
 export interface CreateFlightRequest {
   originICAO: string
   destinationICAO: string
