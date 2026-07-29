@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,12 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
 
     public async Task<FlightsPageResult> Handle(GetFlightsQuery request, CancellationToken cancellationToken)
     {
-        var flights = _context.Flights.AsNoTracking();
+        // Every figure below is derived from the *filtered* set, not the whole table. With a
+        // filter bar on screen, global tiles next to a filtered list would just be confusing —
+        // and TotalCount has to match the filtered rows or pagination breaks. With no filters
+        // applied this is identical to the pre-filter behaviour.
+        var flights = ApplyFilters(_context.Flights.AsNoTracking(), request);
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var firstOfMonth = new DateOnly(today.Year, today.Month, 1);
         var firstOfNextMonth = firstOfMonth.AddMonths(1);
@@ -43,9 +49,7 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
             .Distinct()
             .CountAsync(cancellationToken);
 
-        var items = await flights
-            .OrderByDescending(f => f.Date)
-            .ThenByDescending(f => f.Id)
+        var items = await ApplySort(flights, request)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(f => new FlightDto
@@ -69,5 +73,83 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
             activeCount,
             thisMonthCount,
             distinctAircraftTypeCount);
+    }
+
+    private static IQueryable<Flight> ApplyFilters(IQueryable<Flight> flights, GetFlightsQuery request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            // ToLower().Contains rather than EF.Functions.ILike: ILike lives in the Npgsql
+            // package, and Application deliberately takes no provider dependency. This
+            // translates to lower(col) LIKE '%term%' on Postgres and works under the InMemory
+            // provider the unit tests use.
+            var term = request.Search.Trim().ToLowerInvariant();
+
+            flights = flights.Where(f =>
+                f.OriginICAO.ToLower().Contains(term)
+                || f.DestinationICAO.ToLower().Contains(term)
+                || f.AircraftType.ToLower().Contains(term));
+        }
+
+        if (request.DateFrom is { } dateFrom)
+        {
+            flights = flights.Where(f => f.Date >= dateFrom);
+        }
+
+        if (request.DateTo is { } dateTo)
+        {
+            flights = flights.Where(f => f.Date <= dateTo);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.OriginICAO))
+        {
+            var origin = request.OriginICAO.Trim().ToUpperInvariant();
+            flights = flights.Where(f => f.OriginICAO == origin);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.DestinationICAO))
+        {
+            var destination = request.DestinationICAO.Trim().ToUpperInvariant();
+            flights = flights.Where(f => f.DestinationICAO == destination);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.AircraftType))
+        {
+            var aircraftType = request.AircraftType.Trim();
+            flights = flights.Where(f => f.AircraftType == aircraftType);
+        }
+
+        if (request.IsCancelled is { } isCancelled)
+        {
+            flights = flights.Where(f => f.IsCancelled == isCancelled);
+        }
+
+        return flights;
+    }
+
+    // Id is always the final tiebreaker: without it, rows sharing a sort value can be returned in
+    // a different order per page, so the same flight shows up twice or not at all while paging.
+    private static IOrderedQueryable<Flight> ApplySort(IQueryable<Flight> flights, GetFlightsQuery request)
+    {
+        var descending = request.SortDescending;
+
+        return request.SortBy switch
+        {
+            FlightSortField.FlightTime => descending
+                ? flights.OrderByDescending(f => f.FlightTime).ThenByDescending(f => f.Id)
+                : flights.OrderBy(f => f.FlightTime).ThenBy(f => f.Id),
+            FlightSortField.OriginICAO => descending
+                ? flights.OrderByDescending(f => f.OriginICAO).ThenByDescending(f => f.Id)
+                : flights.OrderBy(f => f.OriginICAO).ThenBy(f => f.Id),
+            FlightSortField.DestinationICAO => descending
+                ? flights.OrderByDescending(f => f.DestinationICAO).ThenByDescending(f => f.Id)
+                : flights.OrderBy(f => f.DestinationICAO).ThenBy(f => f.Id),
+            FlightSortField.AircraftType => descending
+                ? flights.OrderByDescending(f => f.AircraftType).ThenByDescending(f => f.Id)
+                : flights.OrderBy(f => f.AircraftType).ThenBy(f => f.Id),
+            _ => descending
+                ? flights.OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                : flights.OrderBy(f => f.Date).ThenBy(f => f.Id)
+        };
     }
 }

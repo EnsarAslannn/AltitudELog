@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Ban, CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench } from 'lucide-react'
+import { Ban, CalendarDays, Clock3, Plane, PlaneTakeoff, Radio, Wrench, X } from 'lucide-react'
 import { flightService } from '../services/flightService'
+import { FlightFilterBar } from '../components/flights/FlightFilterBar'
+import { useFlightQuery } from '../hooks/useFlightQuery'
 import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
 import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Pagination } from '../components/ui/Pagination'
@@ -14,10 +17,12 @@ import { cn } from '../lib/cn'
 import type { FlightsPageResult } from '../types/flight'
 import type { ApiError } from '../types/problemDetails'
 
-const PAGE_SIZE = 20
-
 export function DashboardPage() {
-  const [page, setPage] = useState(1)
+  // Filters and page number live in the URL (see useFlightQuery) so a filtered view is
+  // shareable and Back returns to it instead of resetting to an unfiltered page 1.
+  const { query, updateQuery, clearFilters, activeFilterCount } = useFlightQuery()
+  const page = query.pageNumber ?? 1
+
   const [pageResult, setPageResult] = useState<FlightsPageResult | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isPageLoading, setIsPageLoading] = useState(false)
@@ -34,16 +39,16 @@ export function DashboardPage() {
     setError(null)
 
     flightService
-      .getAll(page, PAGE_SIZE)
+      .getAll(query)
       .then((data) => {
         if (cancelled) return
 
-        // Cancelling or deleting flights can shrink the list out from under the current page.
-        // Pagination renders nothing below two pages, so without this the user is stranded on an
-        // empty "Henüz kayıtlı uçuş yok." card with no control to get back.
+        // Cancelling a flight, or narrowing a filter, can shrink the list out from under the
+        // current page. Pagination renders nothing below two pages, so without this the user is
+        // stranded on an empty card with no control to get back.
         const lastPage = Math.max(1, Math.ceil(data.totalCount / data.pageSize))
         if (page > lastPage) {
-          setPage(lastPage)
+          updateQuery({ pageNumber: lastPage })
           return
         }
 
@@ -63,14 +68,14 @@ export function DashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [page])
+  }, [query, page, updateQuery])
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-56 rounded-lg" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
@@ -136,15 +141,41 @@ export function DashboardPage() {
       <section className="flex flex-col gap-5" aria-busy={isPageLoading}>
         <Eyebrow>Uçuş Kayıtları</Eyebrow>
 
+        <FlightFilterBar
+          query={query}
+          onChange={updateQuery}
+          onClear={clearFilters}
+          activeFilterCount={activeFilterCount}
+          resultCount={totalCount}
+          isLoading={isPageLoading}
+        />
+
         {flights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
-            <p className="max-w-xs text-sm text-on-surface-variant">
-              İlk uçuşu ekleyince rota ve mürettebat kaydı burada listelenir.
-            </p>
+            {/* An empty list means two very different things depending on whether a filter is on,
+                and telling the user "add your first flight" when they have 200 of them behind a
+                filter is actively misleading. */}
+            {activeFilterCount > 0 ? (
+              <>
+                <p className="font-medium text-on-surface">Bu filtrelere uyan uçuş yok.</p>
+                <p className="max-w-xs text-sm text-on-surface-variant">
+                  Filtreleri gevşetin veya temizleyin.
+                </p>
+                <Button variant="secondary" icon={X} onClick={clearFilters}>
+                  Filtreleri Temizle
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
+                <p className="max-w-xs text-sm text-on-surface-variant">
+                  İlk uçuşu ekleyince rota ve mürettebat kaydı burada listelenir.
+                </p>
+              </>
+            )}
           </Card>
         ) : (
           <div className="flex flex-col gap-4">
@@ -207,7 +238,7 @@ export function DashboardPage() {
         <Pagination
           pageNumber={page}
           totalPages={totalPages}
-          onPageChange={setPage}
+          onPageChange={(pageNumber) => updateQuery({ pageNumber })}
           disabled={isPageLoading}
         />
       </section>
