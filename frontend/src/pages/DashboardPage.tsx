@@ -36,7 +36,18 @@ export function DashboardPage() {
     flightService
       .getAll(page, PAGE_SIZE)
       .then((data) => {
-        if (!cancelled) setPageResult(data)
+        if (cancelled) return
+
+        // Cancelling or deleting flights can shrink the list out from under the current page.
+        // Pagination renders nothing below two pages, so without this the user is stranded on an
+        // empty "Henüz kayıtlı uçuş yok." card with no control to get back.
+        const lastPage = Math.max(1, Math.ceil(data.totalCount / data.pageSize))
+        if (page > lastPage) {
+          setPage(lastPage)
+          return
+        }
+
+        setPageResult(data)
       })
       .catch((err) => {
         if (!cancelled) setError((err as ApiError).title ?? 'Uçuşlar yüklenemedi.')
@@ -80,7 +91,14 @@ export function DashboardPage() {
     )
   }
 
-  const { items: flights, totalCount, thisMonthCount, distinctAircraftTypeCount, pageSize } = pageResult
+  const {
+    items: flights,
+    totalCount,
+    activeCount,
+    thisMonthCount,
+    distinctAircraftTypeCount,
+    pageSize,
+  } = pageResult
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
 
   return (
@@ -109,7 +127,7 @@ export function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 rise sm:grid-cols-3" style={{ '--rise-delay': '80ms' } as React.CSSProperties}>
-        <StatTile icon={Plane} label="Toplam Uçuş" value={totalCount} />
+        <StatTile icon={Plane} label="Toplam Uçuş" value={activeCount} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={thisMonthCount} />
         <StatTile icon={Wrench} label="Uçak Tipi" value={distinctAircraftTypeCount} />
       </div>

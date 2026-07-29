@@ -17,11 +17,28 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
     {
         var flights = _context.Flights.AsNoTracking();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var firstOfMonth = new DateOnly(today.Year, today.Month, 1);
+        var firstOfNextMonth = firstOfMonth.AddMonths(1);
 
+        // Counts every row Items pages through — cancelled flights stay in the list (shown with a
+        // badge via FlightDto.IsCancelled), so excluding them here would make the page count
+        // disagree with the rows actually returned.
         var totalCount = await flights.CountAsync(cancellationToken);
+
+        // The dashboard tiles exclude cancelled flights, matching GetStatsQuery,
+        // GetPilotProfileQuery and GetPilotLogbookQuery — otherwise they disagree with the stats
+        // page as soon as anything is cancelled.
+        var activeCount = await flights.CountAsync(f => !f.IsCancelled, cancellationToken);
+
+        // Half-open range rather than Year/Month equality: the latter translates to date_part()
+        // on the column, which no index can serve.
         var thisMonthCount = await flights
-            .CountAsync(f => f.Date.Year == today.Year && f.Date.Month == today.Month, cancellationToken);
+            .CountAsync(
+                f => !f.IsCancelled && f.Date >= firstOfMonth && f.Date < firstOfNextMonth,
+                cancellationToken);
+
         var distinctAircraftTypeCount = await flights
+            .Where(f => !f.IsCancelled)
             .Select(f => f.AircraftType)
             .Distinct()
             .CountAsync(cancellationToken);
@@ -45,6 +62,12 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
             .ToListAsync(cancellationToken);
 
         return new FlightsPageResult(
-            items, totalCount, request.PageNumber, request.PageSize, thisMonthCount, distinctAircraftTypeCount);
+            items,
+            totalCount,
+            request.PageNumber,
+            request.PageSize,
+            activeCount,
+            thisMonthCount,
+            distinctAircraftTypeCount);
     }
 }

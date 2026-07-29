@@ -5,6 +5,7 @@ import { authService } from '../../services/authService'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
+import { hasCommandRank } from '../../routes/ranks'
 import type { PilotRank } from '../../types/auth'
 
 const rankIcon: Record<PilotRank, typeof Shield> = {
@@ -17,7 +18,7 @@ const rankIcon: Record<PilotRank, typeof Shield> = {
 export function Navbar() {
   const { username, rank, pilotId, logout } = useAuthStore()
   const navigate = useNavigate()
-  const isCommand = rank === 'Captain' || rank === 'ChiefPilot'
+  const isCommand = hasCommandRank(rank)
 
   function handleLogout() {
     // Best-effort: revoke the refresh token server-side so it can't be used to silently
@@ -53,7 +54,7 @@ export function Navbar() {
    */
   const destinations = [
     { to: '/', label: 'Uçuşlar', icon: null, end: true, show: true },
-    { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: rank === 'Captain' },
+    { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: isCommand },
     { to: `/pilots/${pilotId}`, label: 'Profil', icon: User, end: false, show: !!pilotId },
     { to: '/admin/stats', label: 'İstatistikler', icon: BarChart3, end: false, show: isCommand },
   ].filter((d) => d.show)

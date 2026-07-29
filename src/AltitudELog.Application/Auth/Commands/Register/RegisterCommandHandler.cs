@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Common.Security;
 using AltitudELog.Domain.Entities;
 using AltitudELog.Domain.Enums;
 using MediatR;
@@ -22,8 +23,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
 
     public async Task<Guid> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
+        var username = CredentialNormalizer.NormalizeUsername(request.Username);
+        var email = CredentialNormalizer.NormalizeEmail(request.Email);
+
         var usernameTaken = await _context.Pilots
-            .AnyAsync(p => p.Username == request.Username, cancellationToken);
+            .AnyAsync(p => p.Username == username, cancellationToken);
 
         if (usernameTaken)
         {
@@ -38,6 +42,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             throw new InvalidOperationException($"License number '{request.LicenseNumber}' is already registered.");
         }
 
+        // Email carries a unique index too (PilotConfiguration), so without this check a duplicate
+        // address fell through to SaveChangesAsync and got reported as a username/licence clash.
+        if (email is not null)
+        {
+            var emailTaken = await _context.Pilots.AnyAsync(p => p.Email == email, cancellationToken);
+
+            if (emailTaken)
+            {
+                throw new InvalidOperationException($"Email '{request.Email}' is already registered.");
+            }
+        }
+
         var pilot = new Pilot
         {
             Id = Guid.NewGuid(),
@@ -45,8 +61,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             LicenseNumber = request.LicenseNumber,
             // Honour the requested rank, guarding against out-of-range enum values.
             Rank = Enum.IsDefined(request.Rank) ? request.Rank : PilotRank.Trainee,
-            Username = request.Username,
-            Email = request.Email,
+            Username = username,
+            Email = email,
             LicenseExpiryDate = request.LicenseExpiryDate,
             MedicalExpiryDate = request.MedicalExpiryDate
         };
@@ -61,7 +77,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         }
         catch (DbUpdateException ex)
         {
-            throw new InvalidOperationException("Username or license number is already registered.", ex);
+            // Backstop for a unique-index violation that raced past the checks above.
+            throw new InvalidOperationException(
+                "Username, license number or email is already registered.", ex);
         }
 
         _logger.LogInformation(

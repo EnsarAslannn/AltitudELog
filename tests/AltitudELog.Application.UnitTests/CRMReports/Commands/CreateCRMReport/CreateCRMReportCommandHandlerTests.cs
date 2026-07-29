@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.CRMReports.Commands.CreateCRMReport;
 using AltitudELog.Application.UnitTests.TestUtilities;
@@ -101,5 +102,24 @@ public class CreateCRMReportCommandHandlerTests
         var act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Throw_NotFound_When_Flight_Does_Not_Exist()
+    {
+        await using var context = CreateContext();
+
+        var currentUserService = Substitute.For<ICurrentUserService>();
+        currentUserService.PilotId.Returns(Guid.NewGuid());
+
+        var handler = new CreateCRMReportCommandHandler(
+            context, currentUserService, Substitute.For<ILogger<CreateCRMReportCommandHandler>>());
+
+        var command = new CreateCRMReportCommand(
+            Guid.NewGuid(), "Unstable approach", "Description of the event.", IsAnonymous: false, SeverityLevel.Low);
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 }

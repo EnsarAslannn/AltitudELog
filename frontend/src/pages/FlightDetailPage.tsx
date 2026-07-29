@@ -26,8 +26,10 @@ import { RouteRibbon } from '../components/ui/RouteRibbon'
 import { Select } from '../components/ui/Select'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { aircraftLabel } from '../data/aircraftTypes'
+import { apiErrorMessage } from '../lib/apiMessages'
 import { cn } from '../lib/cn'
 import { dutyRoleIcon, severityIcon, severityTone } from '../lib/domainDisplay'
+import { hasCommandRank } from '../routes/ranks'
 import type { FlightDto } from '../types/flight'
 import type { CrewDto, DutyRole } from '../types/crew'
 import type { CRMReportDto, SeverityLevel } from '../types/crmReport'
@@ -52,7 +54,7 @@ function initials(name: string) {
 export function FlightDetailPage() {
   const { id } = useParams<{ id: string }>()
   const flightId = id!
-  const isCaptain = useAuthStore((state) => state.rank === 'Captain')
+  const canCommand = useAuthStore((state) => hasCommandRank(state.rank))
 
   const [tab, setTab] = useState<'crew' | 'crm'>('crew')
   const [flight, setFlight] = useState<FlightDto | null>(null)
@@ -72,7 +74,7 @@ export function FlightDetailPage() {
       flightService.getById(flightId),
       crewService.getByFlight(flightId),
       crmReportService.getByFlight(flightId),
-      isCaptain ? pilotService.getAll() : Promise.resolve([]),
+      canCommand ? pilotService.getAll() : Promise.resolve([]),
     ])
       .then(([flightData, crewList, reportList, pilotList]) => {
         if (cancelled) return
@@ -93,7 +95,7 @@ export function FlightDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [flightId, isCaptain])
+  }, [flightId, canCommand])
 
   // These refetch after a successful create/cancel action elsewhere on the page — the
   // mutation itself already succeeded, so a failure here shouldn't blow away the page
@@ -164,7 +166,7 @@ export function FlightDetailPage() {
                 İptal Edildi
               </Badge>
             ) : (
-              isCaptain && (
+              canCommand && (
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/flights/${flightId}/edit`}
@@ -235,7 +237,7 @@ export function FlightDetailPage() {
           flightId={flightId}
           crew={crew}
           pilots={pilots}
-          isCaptain={isCaptain}
+          canCommand={canCommand}
           onCreated={refreshCrew}
         />
       )}
@@ -257,7 +259,14 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
       onCancelled()
       setConfirming(false)
     } catch (err) {
-      setError((err as ApiError).detail ?? (err as ApiError).title ?? 'Uçuş iptal edilemedi.')
+      const apiError = err as ApiError
+      setError(apiErrorMessage(apiError, 'Uçuş iptal edilemedi.'))
+
+      // A 409 means the flight already moved on (cancelled by someone else, or edited
+      // concurrently) — refetch so the page stops offering an action that can't succeed.
+      if (apiError.status === 409) {
+        onCancelled()
+      }
     } finally {
       setIsCancelling(false)
     }
@@ -338,13 +347,13 @@ function CrewTab({
   flightId,
   crew,
   pilots,
-  isCaptain,
+  canCommand,
   onCreated,
 }: {
   flightId: string
   crew: CrewDto[]
   pilots: PilotDto[]
-  isCaptain: boolean
+  canCommand: boolean
   onCreated: () => void
 }) {
   const [pilotId, setPilotId] = useState('')
@@ -401,7 +410,7 @@ function CrewTab({
         })}
       </div>
 
-      {isCaptain && (
+      {canCommand && (
         <Card className="h-fit lg:sticky lg:top-24">
           <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-on-surface">
             <UserPlus className="h-4 w-4 text-primary" />

@@ -11,9 +11,12 @@ export interface FlightDto {
 
 export interface FlightsPageResult {
   items: FlightDto[]
+  /** Every row `items` pages through, cancelled flights included — the pagination denominator. */
   totalCount: number
   pageNumber: number
   pageSize: number
+  /** Non-cancelled flights only; this is the figure the dashboard tile shows. */
+  activeCount: number
   thisMonthCount: number
   distinctAircraftTypeCount: number
 }

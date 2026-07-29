@@ -42,14 +42,40 @@ public class GetFlightsQueryHandlerTests
 
         var result = await handler.Handle(new GetFlightsQuery(), CancellationToken.None);
 
+        // Cancelled flights stay in Items (the list badges them) and stay in TotalCount, which is
+        // the pagination denominator — but they're excluded from the dashboard tile figures, which
+        // must agree with GetStatsQuery.
         result.Items.Should().HaveCount(2);
         result.Items.Should().Contain(f => f.AircraftType == "A350" && !f.IsCancelled);
         result.Items.Should().Contain(f => f.AircraftType == "B777" && f.IsCancelled);
         result.TotalCount.Should().Be(2);
-        result.ThisMonthCount.Should().Be(2);
-        result.DistinctAircraftTypeCount.Should().Be(2);
+        result.ActiveCount.Should().Be(1);
+        result.ThisMonthCount.Should().Be(1);
+        result.DistinctAircraftTypeCount.Should().Be(1);
         result.PageNumber.Should().Be(1);
         result.PageSize.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task Handle_Should_Exclude_Cancelled_Flights_From_Tile_Counts_But_Not_Pagination()
+    {
+        await using var context = CreateContext();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        context.Flights.AddRange(
+            NewFlight(today, "A350"),
+            NewFlight(today, "A350", isCancelled: true),
+            NewFlight(today, "B777", isCancelled: true));
+        await context.SaveChangesAsync();
+
+        var handler = new GetFlightsQueryHandler(context);
+
+        var result = await handler.Handle(new GetFlightsQuery(), CancellationToken.None);
+
+        result.Items.Should().HaveCount(3);
+        result.TotalCount.Should().Be(3);
+        result.ActiveCount.Should().Be(1);
+        result.ThisMonthCount.Should().Be(1);
+        result.DistinctAircraftTypeCount.Should().Be(1);
     }
 
     [Fact]

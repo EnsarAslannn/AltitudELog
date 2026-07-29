@@ -33,6 +33,12 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
         builder.Property(f => f.METARInfo)
             .HasMaxLength(2000);
 
+        // Every page of GetFlightsQuery orders by Date desc, Id desc and the month counters filter
+        // on a Date range — this index serves both without a sort or a sequential scan.
+        builder.HasIndex(f => new { f.Date, f.Id })
+            .HasDatabaseName("IX_Flights_Date_Id")
+            .IsDescending(true, true);
+
         // Maps Postgres's built-in "xmin" system column (not an app-managed column) as a
         // concurrency token — detects lost updates when two requests edit the same flight
         // concurrently (SaveChangesAsync throws DbUpdateConcurrencyException on a stale write).

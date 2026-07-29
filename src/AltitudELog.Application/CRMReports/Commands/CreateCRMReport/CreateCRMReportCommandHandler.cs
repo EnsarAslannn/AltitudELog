@@ -1,5 +1,7 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace AltitudELog.Application.CRMReports.Commands.CreateCRMReport;
@@ -24,6 +26,16 @@ public class CreateCRMReportCommandHandler : IRequestHandler<CreateCRMReportComm
     {
         var reporterId = _currentUserService.PilotId
             ?? throw new UnauthorizedAccessException("No authenticated pilot found for this request.");
+
+        // Checked here rather than in the validator: a missing FK is a 404, not a 400. Without it
+        // the insert would fail on the database FK constraint and surface as an unmapped 500.
+        var flightExists = await _context.Flights
+            .AnyAsync(f => f.Id == request.FlightId, cancellationToken);
+
+        if (!flightExists)
+        {
+            throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
+        }
 
         var report = new AltitudELog.Domain.Entities.CRMReport
         {

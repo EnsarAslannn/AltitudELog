@@ -42,9 +42,15 @@ export function PilotProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [exportingFormat, setExportingFormat] = useState<'csv' | 'pdf' | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const isMountedRef = useRef(true)
   useEffect(() => {
+    // Set on every mount, not just declared once: under StrictMode React mounts, runs the
+    // cleanup, then remounts — so without re-arming it here the ref stays false for the rest of
+    // the session and the `finally` below never clears exportingFormat, leaving both export
+    // buttons permanently disabled after the first click.
+    isMountedRef.current = true
     return () => {
       isMountedRef.current = false
     }
@@ -52,9 +58,17 @@ export function PilotProfilePage() {
 
   async function handleExport(format: 'csv' | 'pdf') {
     setExportingFormat(format)
+    setExportError(null)
     try {
       const blob = await pilotService.exportLogbook(pilotId, format)
       downloadBlob(blob, `logbook-${pilotId}.${format}`)
+    } catch (err) {
+      // This is called from onClick, so an uncaught rejection here would vanish silently —
+      // the user would see the button settle back and nothing else.
+      if (isMountedRef.current) {
+        const apiError = err as ApiError
+        setExportError(apiError.title ?? 'Uçuş kaydı indirilemedi.')
+      }
     } finally {
       if (isMountedRef.current) setExportingFormat(null)
     }
@@ -203,6 +217,11 @@ export function PilotProfilePage() {
                 {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
               </Button>
             </div>
+            {exportError && (
+              <p role="alert" className="text-sm text-error">
+                {exportError}
+              </p>
+            )}
           </div>
         </div>
       </section>

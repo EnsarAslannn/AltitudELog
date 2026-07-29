@@ -37,6 +37,25 @@ interface RetriableRequestConfig extends InternalAxiosRequestConfig {
 // fail, since the first rotates the refresh token server-side).
 let refreshPromise: Promise<AuthResponseDto> | null = null
 
+// Bumped by logout(). A refresh that was already in flight when the user signed out must not
+// write its result back into the store — the tokens it returns belong to a session that no
+// longer exists, and applying them silently signs the user back in.
+let sessionEpoch = 0
+
+export function invalidateInFlightRefresh() {
+  sessionEpoch += 1
+  refreshPromise = null
+}
+
+// Covers every way a session can end — the navbar's sign-out button, a failed refresh below, and
+// a logout in another tab replayed through the storage listener — without the store having to
+// import from here (it can't; this module imports the store).
+useAuthStore.subscribe((state, previous) => {
+  if (previous.isAuthenticated && !state.isAuthenticated) {
+    invalidateInFlightRefresh()
+  }
+})
+
 function refreshAccessToken(): Promise<AuthResponseDto> {
   if (!refreshPromise) {
     const refreshToken = useAuthStore.getState().refreshToken
@@ -44,10 +63,23 @@ function refreshAccessToken(): Promise<AuthResponseDto> {
       return Promise.reject(new Error('No refresh token available'))
     }
 
+    const epoch = sessionEpoch
+    const username = useAuthStore.getState().username ?? ''
     const request: RefreshTokenRequest = { refreshToken }
+
     refreshPromise = refreshClient
       .post<AuthResponseDto>('/Auth/refresh', request)
-      .then((res) => res.data)
+      .then((res) => {
+        // The store write happens *inside* the shared promise, before it is cleared below.
+        // Doing it in the awaiting caller instead left a window where refreshPromise was already
+        // null but the store still held the old, now-rotated token — a 401 landing there started
+        // a second refresh with a token the server had already invalidated, ending in a logout
+        // mid-session.
+        if (epoch === sessionEpoch) {
+          useAuthStore.getState().login(res.data, username)
+        }
+        return res.data
+      })
       .finally(() => {
         refreshPromise = null
       })
@@ -69,7 +101,6 @@ apiClient.interceptors.response.use(
       if (!originalRequest._retried) {
         try {
           const auth = await refreshAccessToken()
-          useAuthStore.getState().login(auth, useAuthStore.getState().username ?? '')
 
           originalRequest._retried = true
           originalRequest.headers.Authorization = `Bearer ${auth.token}`
@@ -103,7 +134,22 @@ apiClient.interceptors.response.use(
 )
 
 export function toApiError(error: AxiosError): ApiError {
-  const body = error.response?.data as Partial<ValidationProblemDetails> | undefined
+  const data = error.response?.data
+
+  // Not every error body is ProblemDetails: PilotsController.ExportLogbook answers a bad `format`
+  // with a bare string, and a proxy can return an HTML error page. Treating those as an object
+  // left title undefined and threw away the real message in favour of axios's generic
+  // "Request failed with status code 400".
+  if (typeof data === 'string' && data.trim() !== '') {
+    return {
+      status: error.response?.status ?? 0,
+      title: data,
+      detail: null,
+      fieldErrors: null,
+    }
+  }
+
+  const body = data as Partial<ValidationProblemDetails> | undefined
 
   return {
     status: error.response?.status ?? 0,

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { Save } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Ban, Save } from 'lucide-react'
 import { flightService } from '../services/flightService'
 import { FlightForm, type FlightFormValues } from '../components/flights/FlightForm'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -69,6 +71,25 @@ export function EditFlightPage() {
         <p role="alert" className="text-sm text-error">
           {error ?? 'Uçuş bulunamadı.'}
         </p>
+      </Card>
+    )
+  }
+
+  // FlightDetailPage hides the Düzenle link for a cancelled flight, but /flights/:id/edit is
+  // reachable directly. The API rejects the update with a 409, so without this the user fills the
+  // whole form in before finding out it was never going to save.
+  if (flight.isCancelled) {
+    return (
+      <Card className="mx-auto flex max-w-lg flex-col items-start gap-4">
+        <Badge tone="red" icon={Ban}>
+          İptal Edildi
+        </Badge>
+        <p className="text-sm text-on-surface-variant">
+          Bu uçuş iptal edilmiş ve artık düzenlenemez.
+        </p>
+        <Link to={`/flights/${flightId}`}>
+          <Button variant="secondary">Uçuş detayına dön</Button>
+        </Link>
       </Card>
     )
   }

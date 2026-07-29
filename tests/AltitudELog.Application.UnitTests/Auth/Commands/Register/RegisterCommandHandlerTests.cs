@@ -77,4 +77,58 @@ public class RegisterCommandHandlerTests
 
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
+
+    [Fact]
+    public async Task Handle_Should_Throw_When_Email_Already_Registered()
+    {
+        // Email carries a unique index, so this used to fall through to SaveChangesAsync and be
+        // reported as a username/licence clash — naming two fields that were both fine.
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+
+        await handler.Handle(
+            new RegisterCommand(
+                "pilot_one", "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", "shared@example.com"),
+            CancellationToken.None);
+
+        var act = () => handler.Handle(
+            new RegisterCommand(
+                "pilot_two", "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", "shared@example.com"),
+            CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .WithMessage("*Email*");
+    }
+
+    [Fact]
+    public async Task Handle_Should_Store_Username_And_Email_Normalised()
+    {
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+
+        var pilotId = await handler.Handle(
+            new RegisterCommand(
+                "  Ensar  ", "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", "Ensar@Example.COM"),
+            CancellationToken.None);
+
+        var pilot = await context.Pilots.SingleAsync(p => p.Id == pilotId);
+        pilot.Username.Should().Be("ensar");
+        pilot.Email.Should().Be("ensar@example.com");
+    }
+
+    [Fact]
+    public async Task Handle_Should_Reject_A_Username_Differing_Only_By_Case()
+    {
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+
+        await handler.Handle(ValidCommand("Ensar"), CancellationToken.None);
+
+        var act = () => handler.Handle(
+            new RegisterCommand(
+                "ensar", "P@ssw0rd123!", "Test Pilot", $"LIC-{Guid.NewGuid():N}", "other@example.com"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
 }

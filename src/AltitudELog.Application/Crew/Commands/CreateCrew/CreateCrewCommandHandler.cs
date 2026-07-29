@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,25 @@ public class CreateCrewCommandHandler : IRequestHandler<CreateCrewCommand, Guid>
 
     public async Task<Guid> Handle(CreateCrewCommand request, CancellationToken cancellationToken)
     {
+        // Checked here rather than in the validator: a missing FK is a 404, not a 400. Without
+        // these the insert would fail on the database FK constraint and be misreported as the
+        // "already assigned" conflict below.
+        var flightExists = await _context.Flights
+            .AnyAsync(f => f.Id == request.FlightId, cancellationToken);
+
+        if (!flightExists)
+        {
+            throw new NotFoundException($"Flight '{request.FlightId}' does not exist.");
+        }
+
+        var pilotExists = await _context.Pilots
+            .AnyAsync(p => p.Id == request.PilotId, cancellationToken);
+
+        if (!pilotExists)
+        {
+            throw new NotFoundException($"Pilot '{request.PilotId}' does not exist.");
+        }
+
         var alreadyAssigned = await _context.Crew
             .AnyAsync(c => c.FlightId == request.FlightId && c.PilotId == request.PilotId, cancellationToken);
 

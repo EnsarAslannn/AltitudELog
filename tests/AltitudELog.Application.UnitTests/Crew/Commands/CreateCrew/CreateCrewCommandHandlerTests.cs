@@ -1,3 +1,4 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Crew.Commands.CreateCrew;
 using AltitudELog.Application.UnitTests.TestUtilities;
 using AltitudELog.Domain.Entities;
@@ -78,5 +79,37 @@ public class CreateCrewCommandHandlerTests
         var act = () => handler.Handle(new CreateCrewCommand(flight.Id, pilot.Id, DutyRole.SIC), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Throw_NotFound_When_Flight_Does_Not_Exist()
+    {
+        await using var context = CreateContext();
+        var pilot = NewPilot();
+        context.Pilots.Add(pilot);
+        await context.SaveChangesAsync();
+
+        var handler = new CreateCrewCommandHandler(context, Substitute.For<ILogger<CreateCrewCommandHandler>>());
+        var command = new CreateCrewCommand(Guid.NewGuid(), pilot.Id, DutyRole.PIC);
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Throw_NotFound_When_Pilot_Does_Not_Exist()
+    {
+        await using var context = CreateContext();
+        var flight = NewFlight();
+        context.Flights.Add(flight);
+        await context.SaveChangesAsync();
+
+        var handler = new CreateCrewCommandHandler(context, Substitute.For<ILogger<CreateCrewCommandHandler>>());
+        var command = new CreateCrewCommand(flight.Id, Guid.NewGuid(), DutyRole.PIC);
+
+        var act = () => handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 }

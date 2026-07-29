@@ -6,5 +6,8 @@ export function downloadBlob(blob: Blob, filename: string) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+
+  // Deferred, not revoked inline: Firefox and Safari start reading the blob asynchronously after
+  // click(), so revoking in the same tick can abort the download before it begins.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }

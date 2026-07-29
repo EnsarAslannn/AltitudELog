@@ -14,7 +14,7 @@ export function UnauthorizedPage() {
       </Eyebrow>
       <h1 className="display text-3xl text-on-surface sm:text-4xl">Yetkiniz Yok</h1>
       <p className="max-w-sm text-on-surface-variant">
-        Bu sayfayı görüntülemek için Captain rütbesine sahip olmanız gerekiyor.
+        Bu sayfayı görüntülemek için Captain veya ChiefPilot rütbesine sahip olmanız gerekiyor.
       </p>
       <Link to="/">
         <Button variant="secondary">Ana sayfaya dön</Button>
