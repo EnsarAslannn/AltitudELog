@@ -60,8 +60,25 @@ try
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownIPNetworks.Clear();
-        options.KnownProxies.Clear();
+
+        // Honour exactly one hop — the entry the proxy directly in front of us appended. Anything
+        // further left in X-Forwarded-For is client-supplied. This matters because the rate-limit
+        // policies below partition on the resulting RemoteIpAddress: without the limit, a caller
+        // could rotate a spoofed header per request and get a fresh 5-per-minute login bucket
+        // every time.
+        options.ForwardLimit = 1;
+
+        // Clearing the known-proxy allowlist makes X-Forwarded-For trusted from *any* peer, which
+        // combined with the IP-partitioned rate limiter means anyone who can reach the app
+        // directly gets an unlimited supply of login buckets. Railway's proxy IP isn't stable
+        // enough to allowlist, so it stays opt-in per deployment rather than on by default:
+        // set ForwardedHeaders__TrustAnyProxy=true only where a proxy really does sit in front
+        // (and where the app is not reachable around it).
+        if (builder.Configuration.GetValue<bool>("ForwardedHeaders:TrustAnyProxy"))
+        {
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        }
     });
 
     const string FrontendCorsPolicy = "FrontendCorsPolicy";
@@ -172,6 +189,18 @@ try
             "Railway environment variable).");
     }
 
+    // A warning rather than a throw: running in Production without it is degraded (every client
+    // behind the proxy shares one rate-limit partition, because RemoteIpAddress is the proxy's)
+    // but still correct and safe, whereas throwing would take a working deployment offline.
+    if (app.Environment.IsProduction()
+        && !app.Configuration.GetValue<bool>("ForwardedHeaders:TrustAnyProxy"))
+    {
+        Log.Warning(
+            "ForwardedHeaders:TrustAnyProxy is not enabled in Production. X-Forwarded-For will be " +
+            "ignored, so the per-IP rate limiters will partition every request behind the proxy " +
+            "into a single bucket. Set ForwardedHeaders__TrustAnyProxy=true if a proxy fronts this app.");
+    }
+
     // Apply pending EF Core migrations on startup so a fresh managed database
     // (e.g. Railway Postgres) gets the schema without a manual `dotnet ef` step.
     // Retry a few times: managed DBs / private networking can be briefly unready
@@ -237,6 +266,12 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+
+    // Non-zero exit is what makes the fail-fast guards above (Jwt:Key length, production
+    // Cors:AllowedOrigins, exhausted migration retries) actually fail. Logging Fatal and
+    // falling out of the catch would exit 0, and Railway/Docker/CI would report the deploy
+    // as successful while the app was never able to serve a request.
+    Environment.ExitCode = 1;
 }
 finally
 {

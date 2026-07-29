@@ -21,7 +21,7 @@ public class FlightsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Captain")]
+    [Authorize(Roles = "Captain,ChiefPilot")]
     public async Task<ActionResult<Guid>> Create(CreateFlightCommand command, CancellationToken cancellationToken)
     {
         var id = await _mediator.Send(command, cancellationToken);
@@ -46,7 +46,7 @@ public class FlightsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Captain")]
+    [Authorize(Roles = "Captain,ChiefPilot")]
     public async Task<IActionResult> Update(Guid id, UpdateFlightCommand command, CancellationToken cancellationToken)
     {
         await _mediator.Send(command with { FlightId = id }, cancellationToken);
@@ -54,7 +54,7 @@ public class FlightsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/cancel")]
-    [Authorize(Roles = "Captain")]
+    [Authorize(Roles = "Captain,ChiefPilot")]
     public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new CancelFlightCommand(id), cancellationToken);

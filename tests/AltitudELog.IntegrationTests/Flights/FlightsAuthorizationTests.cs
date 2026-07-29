@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using AltitudELog.Application.Auth.Commands.Login;
 using AltitudELog.Application.Auth.Commands.Register;
 using AltitudELog.Application.Flights.Commands.CreateFlight;
+using AltitudELog.Application.Flights.Commands.UpdateFlight;
 using AltitudELog.Domain.Enums;
 using AltitudELog.Infrastructure.Persistence;
 using AltitudELog.IntegrationTests.Infrastructure;
@@ -102,5 +103,48 @@ public class FlightsAuthorizationTests : IAsyncLifetime
         var response = await _client.GetAsync($"/Flights/{flightId}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Post_Flights_As_Trainee_Returns_Forbidden()
+    {
+        var token = await RegisterAndLoginAsync(PilotRank.Trainee, "trainee");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.PostAsJsonAsync("/Flights", ValidCommand());
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Post_Flights_As_ChiefPilot_Returns_Created()
+    {
+        // ChiefPilot outranks Captain, so a Captain-only role gate would lock the more senior rank
+        // out of logging flights entirely — [Authorize(Roles = ...)] is an exact-match list, not a
+        // hierarchy. StatsController already admitted both ranks; this keeps the rest in step.
+        var token = await RegisterAndLoginAsync(PilotRank.ChiefPilot, "chief");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.PostAsJsonAsync("/Flights", ValidCommand());
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Put_Flights_As_ChiefPilot_Returns_NoContent()
+    {
+        var token = await RegisterAndLoginAsync(PilotRank.ChiefPilot, "chief_editor");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var createResponse = await _client.PostAsJsonAsync("/Flights", ValidCommand());
+        createResponse.EnsureSuccessStatusCode();
+        var flightId = await createResponse.Content.ReadFromJsonAsync<Guid>();
+
+        var updateCommand = new UpdateFlightCommand(
+            flightId, "LTFJ", "EDDF", TimeSpan.FromHours(3), "B738", DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var response = await _client.PutAsJsonAsync($"/Flights/{flightId}", updateCommand);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 }
