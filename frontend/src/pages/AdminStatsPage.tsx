@@ -57,7 +57,7 @@ export function AdminStatsPage() {
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-24 rounded-lg" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
@@ -99,7 +99,7 @@ export function AdminStatsPage() {
       </section>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={stats.totalFlights} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={stats.flightsThisMonth} />
         <StatTile icon={Users} label="Toplam Pilot" value={stats.totalPilots} />

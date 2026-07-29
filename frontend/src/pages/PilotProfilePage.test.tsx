@@ -75,6 +75,25 @@ describe('PilotProfilePage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Uçuş kaydı indirilemedi.')
   })
 
+  it('keeps the certificate form mounted while refreshing after a save', async () => {
+    // The post-save refetch used to run the initial-load path, which flips the page to its
+    // full-page skeleton — unmounting the form the user had just submitted and taking focus and
+    // any pending message with it.
+    const user = userEvent.setup()
+    useAuthStore.setState({ isAuthenticated: true, pilotId: profile.id })
+    vi.mocked(pilotService.updateCertificates).mockResolvedValue({} as never)
+
+    renderProfile()
+    await screen.findByText('Test Pilot')
+
+    const save = screen.getByRole('button', { name: /Kaydet/ })
+    await user.click(save)
+
+    await waitFor(() => expect(pilotService.getProfile).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('button', { name: /Kaydet/ })).toBeInTheDocument()
+    expect(screen.queryByText('Yükleniyor…')).not.toBeInTheDocument()
+  })
+
   it('re-enables the export buttons after a failure under StrictMode', async () => {
     // StrictMode mounts, runs the cleanup, then remounts. The mounted-ref was only ever set to
     // false by that cleanup, so it stayed false for the rest of the session and the button was

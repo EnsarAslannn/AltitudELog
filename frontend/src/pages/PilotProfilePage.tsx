@@ -83,8 +83,8 @@ export function PilotProfilePage() {
   const [certSaveError, setCertSaveError] = useState<string | null>(null)
 
   const fetchProfile = useCallback(
-    (isCancelled: () => boolean) => {
-      setIsLoading(true)
+    (isCancelled: () => boolean, { showSkeleton = true } = {}) => {
+      if (showSkeleton) setIsLoading(true)
       setError(null)
       return pilotService
         .getProfile(pilotId)
@@ -100,14 +100,17 @@ export function PilotProfilePage() {
           setError(apiError.status === 404 ? 'Pilot bulunamadı.' : (apiError.title ?? 'Pilot bilgisi yüklenemedi.'))
         })
         .finally(() => {
-          if (!isCancelled()) setIsLoading(false)
+          if (!isCancelled() && showSkeleton) setIsLoading(false)
         })
     },
     [pilotId],
   )
 
-  function loadProfile() {
-    fetchProfile(() => false)
+  // Refetch after a save, without the full-page skeleton. Going through the initial-load path
+  // unmounted the certificate form the user had just submitted — losing focus and wiping any
+  // message that was about to render — for what is really a background refresh.
+  function refreshProfile() {
+    fetchProfile(() => false, { showSkeleton: false })
   }
 
   useEffect(() => {
@@ -124,7 +127,7 @@ export function PilotProfilePage() {
     setCertSaveError(null)
     try {
       await pilotService.updateCertificates(licenseExpiryDraft || null, medicalExpiryDraft || null)
-      loadProfile()
+      refreshProfile()
     } catch (err) {
       const apiError = err as ApiError
       setCertSaveError(apiError.title ?? 'Sertifika bilgileri kaydedilemedi.')
@@ -138,7 +141,7 @@ export function PilotProfilePage() {
       <div className="flex flex-col gap-8" aria-busy="true">
         <span className="sr-only">Yükleniyor…</span>
         <Skeleton className="h-40 rounded-lg" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
           <Skeleton className="h-24 rounded-lg" />
@@ -227,7 +230,7 @@ export function PilotProfilePage() {
       </section>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={profile.totalFlights} />
         <StatTile icon={Clock3} label="Toplam Saat" value={profile.totalFlightHours} />
         <StatTile icon={Wrench} label="Uçak Tipi Çeşidi" value={profile.hoursByAircraftType.length} />
