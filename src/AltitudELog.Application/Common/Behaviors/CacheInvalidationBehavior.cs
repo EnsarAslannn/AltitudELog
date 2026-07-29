@@ -5,8 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace AltitudELog.Application.Common.Behaviors;
 
+// See ValidationBehavior for why the constraint is `notnull` rather than `IRequest<TResponse>`.
+// This one matters twice over: without it, UpdateFlight/CancelFlight/UpdatePilotCertificates are
+// all void commands, so their cache invalidation never ran and `stats:all`/`pilot:profile:{id}`
+// stayed stale for the full 5-minute expiry after every edit.
 public class CacheInvalidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<CacheInvalidationBehavior<TRequest, TResponse>> _logger;

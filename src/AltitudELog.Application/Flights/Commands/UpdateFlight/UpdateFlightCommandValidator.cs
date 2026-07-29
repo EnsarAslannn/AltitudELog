@@ -1,18 +1,16 @@
-using AltitudELog.Application.Common.Interfaces;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 
 namespace AltitudELog.Application.Flights.Commands.UpdateFlight;
 
 public class UpdateFlightCommandValidator : AbstractValidator<UpdateFlightCommand>
 {
-    public UpdateFlightCommandValidator(IApplicationDbContext context)
+    public UpdateFlightCommandValidator()
     {
-        RuleFor(f => f.FlightId)
-            .NotEmpty()
-            .MustAsync((flightId, cancellationToken) =>
-                context.Flights.AnyAsync(f => f.Id == flightId, cancellationToken))
-            .WithMessage("Flight '{PropertyValue}' does not exist.");
+        // Deliberately no existence check here. Validation failures map to 400, but "this flight
+        // does not exist" is a 404 — UpdateFlightCommandHandler throws NotFoundException for it,
+        // matching CancelFlightCommand (which has no validator) and the documented mapping in
+        // DomainExceptionHandler.
+        RuleFor(f => f.FlightId).NotEmpty();
 
         RuleFor(f => f.OriginICAO)
             .NotEmpty()

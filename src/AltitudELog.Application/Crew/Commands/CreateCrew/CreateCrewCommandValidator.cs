@@ -1,25 +1,15 @@
-using AltitudELog.Application.Common.Interfaces;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 
 namespace AltitudELog.Application.Crew.Commands.CreateCrew;
 
 public class CreateCrewCommandValidator : AbstractValidator<CreateCrewCommand>
 {
-    public CreateCrewCommandValidator(IApplicationDbContext context)
+    public CreateCrewCommandValidator()
     {
-        RuleFor(c => c.FlightId)
-            .NotEmpty()
-            .MustAsync((flightId, cancellationToken) =>
-                context.Flights.AnyAsync(f => f.Id == flightId, cancellationToken))
-            .WithMessage("Flight '{PropertyValue}' does not exist.");
-
-        RuleFor(c => c.PilotId)
-            .NotEmpty()
-            .MustAsync((pilotId, cancellationToken) =>
-                context.Pilots.AnyAsync(p => p.Id == pilotId, cancellationToken))
-            .WithMessage("Pilot '{PropertyValue}' does not exist.");
-
+        // FK existence is checked in the handler, which throws NotFoundException (404) — a
+        // validation failure here would report a nonexistent flight/pilot as a 400 instead.
+        RuleFor(c => c.FlightId).NotEmpty();
+        RuleFor(c => c.PilotId).NotEmpty();
         RuleFor(c => c.DutyRole).IsInEnum();
     }
 }

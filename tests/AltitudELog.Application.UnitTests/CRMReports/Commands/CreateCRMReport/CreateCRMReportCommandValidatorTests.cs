@@ -1,60 +1,74 @@
 using AltitudELog.Application.CRMReports.Commands.CreateCRMReport;
-using AltitudELog.Application.UnitTests.TestUtilities;
-using AltitudELog.Domain.Entities;
 using AltitudELog.Domain.Enums;
 using FluentValidation.TestHelper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AltitudELog.Application.UnitTests.CRMReports.Commands.CreateCRMReport;
 
 public class CreateCRMReportCommandValidatorTests
 {
-    private static TestApplicationDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<TestApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
+    private static readonly CreateCRMReportCommandValidator Validator = new();
 
-        return new TestApplicationDbContext(options);
-    }
-
-    private static Flight NewFlight() => new()
-    {
-        Id = Guid.NewGuid(),
-        OriginICAO = "LTFM",
-        DestinationICAO = "EGLL",
-        FlightTime = TimeSpan.FromHours(4),
-        AircraftType = "A350",
-        Date = DateOnly.FromDateTime(DateTime.UtcNow)
-    };
-
-    private static CreateCRMReportCommand ValidCommand(Guid flightId) => new(
-        flightId, "Unstable approach", "Description of the event.", false, SeverityLevel.Medium);
+    private static CreateCRMReportCommand ValidCommand() => new(
+        Guid.NewGuid(), "Unstable approach", "Description of the event.", false, SeverityLevel.Medium);
 
     [Fact]
-    public async Task Should_Pass_When_Flight_Exists()
+    public async Task Should_Pass_For_Valid_Command()
     {
-        await using var context = CreateContext();
-        var flight = NewFlight();
-        context.Flights.Add(flight);
-        await context.SaveChangesAsync();
-
-        var validator = new CreateCRMReportCommandValidator(context);
-
-        var result = await validator.TestValidateAsync(ValidCommand(flight.Id));
+        var result = await Validator.TestValidateAsync(ValidCommand());
 
         result.ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
-    public async Task Should_HaveError_When_Flight_Does_Not_Exist()
+    public async Task Should_HaveError_When_FlightId_Is_Empty()
     {
-        await using var context = CreateContext();
-
-        var validator = new CreateCRMReportCommandValidator(context);
-
-        var result = await validator.TestValidateAsync(ValidCommand(Guid.NewGuid()));
+        var result = await Validator.TestValidateAsync(ValidCommand() with { FlightId = Guid.Empty });
 
         result.ShouldHaveValidationErrorFor(c => c.FlightId);
+    }
+
+    [Fact]
+    public async Task Should_Not_Reject_An_Unknown_FlightId()
+    {
+        // An unknown-but-well-formed id must reach the handler, which answers 404 for it.
+        var result = await Validator.TestValidateAsync(ValidCommand() with { FlightId = Guid.NewGuid() });
+
+        result.ShouldNotHaveValidationErrorFor(c => c.FlightId);
+    }
+
+    [Fact]
+    public async Task Should_HaveError_When_Title_Is_Empty()
+    {
+        var result = await Validator.TestValidateAsync(ValidCommand() with { Title = "" });
+
+        result.ShouldHaveValidationErrorFor(c => c.Title);
+    }
+
+    [Fact]
+    public async Task Should_HaveError_When_Title_Exceeds_MaxLength()
+    {
+        var result = await Validator.TestValidateAsync(ValidCommand() with { Title = new string('T', 201) });
+
+        result.ShouldHaveValidationErrorFor(c => c.Title);
+    }
+
+    [Fact]
+    public async Task Should_HaveError_When_Description_Exceeds_MaxLength()
+    {
+        var command = ValidCommand() with { Description = new string('D', 4001) };
+
+        var result = await Validator.TestValidateAsync(command);
+
+        result.ShouldHaveValidationErrorFor(c => c.Description);
+    }
+
+    [Fact]
+    public async Task Should_HaveError_When_SeverityLevel_Is_Out_Of_Range()
+    {
+        var command = ValidCommand() with { SeverityLevel = (SeverityLevel)999 };
+
+        var result = await Validator.TestValidateAsync(command);
+
+        result.ShouldHaveValidationErrorFor(c => c.SeverityLevel);
     }
 }

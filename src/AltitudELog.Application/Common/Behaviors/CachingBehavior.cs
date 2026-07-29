@@ -6,8 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace AltitudELog.Application.Common.Behaviors;
 
+// See ValidationBehavior for why the constraint is `notnull` rather than `IRequest<TResponse>`.
 public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<CachingBehavior<TRequest, TResponse>> _logger;
