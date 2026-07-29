@@ -66,6 +66,28 @@ public class LoginCommandHandlerTests
         updated.RefreshTokenExpiresAtUtc.Should().BeAfter(DateTime.UtcNow);
     }
 
+    [Theory]
+    [InlineData("ENSAR")]
+    [InlineData("Ensar")]
+    [InlineData("  ensar  ")]
+    public async Task Handle_Should_Match_The_Stored_Username_Regardless_Of_Casing(string typedUsername)
+    {
+        // Usernames are persisted normalised by RegisterCommandHandler; a case-sensitive lookup
+        // here would lock out anyone who typed their name with different capitalisation.
+        await using var context = CreateContext();
+        await SeedPilotAsync(context, "ensar", "P@ssw0rd123!");
+
+        var jwtGenerator = Substitute.For<IJwtTokenGenerator>();
+        jwtGenerator.GenerateToken(Arg.Any<Pilot>()).Returns(("fake-token", DateTime.UtcNow.AddHours(1)));
+
+        var handler = new LoginCommandHandler(context, jwtGenerator, Substitute.For<ILogger<LoginCommandHandler>>());
+
+        var result = await handler.Handle(
+            new LoginCommand(typedUsername, "P@ssw0rd123!"), CancellationToken.None);
+
+        result.Token.Should().Be("fake-token");
+    }
+
     [Fact]
     public async Task Handle_Should_Throw_Unauthorized_When_Username_Not_Found()
     {

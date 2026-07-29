@@ -34,8 +34,13 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
     {
         var stopwatch = Stopwatch.StartNew();
 
+        // Emails are stored normalised (see CredentialNormalizer). Matching the raw input would
+        // silently no-op for a differently-cased address — and since this endpoint answers 204
+        // either way by design, the user would never learn why no mail arrived.
+        var email = CredentialNormalizer.NormalizeEmail(request.Email);
+
         var pilot = await _context.Pilots
-            .FirstOrDefaultAsync(p => p.Email == request.Email, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
 
         // Always generate + hash a token, whether or not the email matches a pilot, so the
         // CPU-bound cost of this path doesn't itself leak which emails are registered via

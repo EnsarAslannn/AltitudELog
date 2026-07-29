@@ -50,5 +50,16 @@ public class PilotConfiguration : IEntityTypeConfiguration<Pilot>
 
         builder.Property(p => p.RefreshTokenHash)
             .HasMaxLength(500);
+
+        // Both token flows look a pilot up *by hash* (RefreshTokenCommandHandler,
+        // ResetPasswordCommandHandler), so without these every token refresh is a sequential scan
+        // of Pilots. Filtered, because the columns are null for every pilot not mid-flow.
+        builder.HasIndex(p => p.RefreshTokenHash)
+            .HasDatabaseName("IX_Pilots_RefreshTokenHash")
+            .HasFilter("\"RefreshTokenHash\" IS NOT NULL");
+
+        builder.HasIndex(p => p.PasswordResetTokenHash)
+            .HasDatabaseName("IX_Pilots_PasswordResetTokenHash")
+            .HasFilter("\"PasswordResetTokenHash\" IS NOT NULL");
     }
 }

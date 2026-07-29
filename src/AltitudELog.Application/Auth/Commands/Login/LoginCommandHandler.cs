@@ -36,8 +36,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
     public async Task<AuthResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        // Usernames are stored normalised (see CredentialNormalizer) — look up the same way, or
+        // someone who registered as "Ensar" could never sign in as "ensar".
+        var username = CredentialNormalizer.NormalizeUsername(request.Username);
+
         var pilot = await _context.Pilots
-            .FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Username == username, cancellationToken);
 
         if (pilot is null)
         {
