@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Common.Security;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -30,8 +31,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
             return;
         }
 
-        pilot.RefreshTokenHash = null;
-        pilot.RefreshTokenExpiresAtUtc = null;
+        RefreshTokenPolicy.RevokeSession(pilot);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Pilot {PilotId} logged out", pilotId);

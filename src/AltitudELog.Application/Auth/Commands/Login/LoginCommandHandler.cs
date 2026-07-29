@@ -10,10 +10,6 @@ namespace AltitudELog.Application.Auth.Commands.Login;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto>
 {
-    // Matches ForgotPasswordCommandHandler's hardcoded-lifetime convention rather than
-    // reading from config. A stolen refresh token's exposure window is bounded by this.
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
-
     private readonly IApplicationDbContext _context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ILogger<LoginCommandHandler> _logger;
@@ -63,9 +59,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
 
-        var refreshToken = OpaqueTokenGenerator.Generate();
-        pilot.RefreshTokenHash = TokenHasher.Hash(refreshToken);
-        pilot.RefreshTokenExpiresAtUtc = DateTime.UtcNow.Add(RefreshTokenLifetime);
+        // Starts a *new* session: this is the only place the absolute-lifetime clock is set, and
+        // it also clears any leftover previous-token hash so a token from the old session can't
+        // be mistaken for a reuse of this one.
+        var refreshToken = RefreshTokenPolicy.StartSession(pilot, DateTime.UtcNow);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Pilot {PilotId} ({Username}) logged in", pilot.Id, pilot.Username);

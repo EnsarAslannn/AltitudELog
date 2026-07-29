@@ -89,4 +89,103 @@ public class RefreshTokenCommandHandlerTests
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
+
+    private static RefreshTokenCommandHandler CreateHandler(TestApplicationDbContext context)
+    {
+        var jwtGenerator = Substitute.For<IJwtTokenGenerator>();
+        jwtGenerator.GenerateToken(Arg.Any<Pilot>())
+            .Returns(("access-token", DateTime.UtcNow.AddMinutes(15)));
+
+        return new RefreshTokenCommandHandler(
+            context, jwtGenerator, Substitute.For<ILogger<RefreshTokenCommandHandler>>());
+    }
+
+    [Fact]
+    public async Task Handle_Should_Revoke_The_Session_When_A_Rotated_Token_Is_Replayed()
+    {
+        // The whole point of rotation is that an exchanged token is dead. Before reuse detection
+        // the replay simply matched no pilot and 401ed, which quietly let a thief keep trying —
+        // and left the legitimate (stolen) session running.
+        await using var context = CreateContext();
+        const string firstToken = "first-refresh-token";
+        var pilot = NewPilot(firstToken, DateTime.UtcNow.AddDays(1));
+        pilot.RefreshTokenSessionStartedAtUtc = DateTime.UtcNow;
+        context.Pilots.Add(pilot);
+        await context.SaveChangesAsync();
+
+        var handler = CreateHandler(context);
+
+        await handler.Handle(new RefreshTokenCommand(firstToken), CancellationToken.None);
+
+        var act = () => handler.Handle(new RefreshTokenCommand(firstToken), CancellationToken.None);
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var stored = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
+        stored.RefreshTokenHash.Should().BeNull("the session is revoked, not just this request denied");
+        stored.PreviousRefreshTokenHash.Should().BeNull();
+        stored.RefreshTokenSessionStartedAtUtc.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Invalidate_The_Rotated_Token_For_Everyone_After_A_Replay()
+    {
+        // Revocation has to bite the newly issued token too, or the attacker's replay merely
+        // inconveniences them while the real client carries on.
+        await using var context = CreateContext();
+        const string firstToken = "first-refresh-token";
+        var pilot = NewPilot(firstToken, DateTime.UtcNow.AddDays(1));
+        pilot.RefreshTokenSessionStartedAtUtc = DateTime.UtcNow;
+        context.Pilots.Add(pilot);
+        await context.SaveChangesAsync();
+
+        var handler = CreateHandler(context);
+
+        var rotated = await handler.Handle(new RefreshTokenCommand(firstToken), CancellationToken.None);
+
+        await FluentActions
+            .Awaiting(() => handler.Handle(new RefreshTokenCommand(firstToken), CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var act = () => handler.Handle(new RefreshTokenCommand(rotated.RefreshToken), CancellationToken.None);
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Reject_And_Revoke_A_Session_Past_Its_Absolute_Lifetime()
+    {
+        // The sliding expiry is pushed out on every rotation, so without this ceiling refreshing
+        // once a week keeps a session — and a stolen token — alive indefinitely.
+        await using var context = CreateContext();
+        const string rawToken = "long-lived-refresh-token";
+        var pilot = NewPilot(rawToken, DateTime.UtcNow.AddDays(1));
+        pilot.RefreshTokenSessionStartedAtUtc =
+            DateTime.UtcNow - RefreshTokenPolicy.AbsoluteLifetime - TimeSpan.FromDays(1);
+        context.Pilots.Add(pilot);
+        await context.SaveChangesAsync();
+
+        var handler = CreateHandler(context);
+
+        var act = () => handler.Handle(new RefreshTokenCommand(rawToken), CancellationToken.None);
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var stored = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
+        stored.RefreshTokenHash.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Not_Extend_The_Absolute_Lifetime_On_Rotation()
+    {
+        await using var context = CreateContext();
+        const string rawToken = "refresh-token";
+        var sessionStart = DateTime.UtcNow.AddDays(-5);
+        var pilot = NewPilot(rawToken, DateTime.UtcNow.AddDays(1));
+        pilot.RefreshTokenSessionStartedAtUtc = sessionStart;
+        context.Pilots.Add(pilot);
+        await context.SaveChangesAsync();
+
+        await CreateHandler(context).Handle(new RefreshTokenCommand(rawToken), CancellationToken.None);
+
+        var stored = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
+        stored.RefreshTokenSessionStartedAtUtc.Should().BeCloseTo(sessionStart, TimeSpan.FromSeconds(1));
+    }
 }

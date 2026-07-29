@@ -38,8 +38,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand>
         // A password reset should end any outstanding session's ability to renew — the
         // still-live access token (if any) expires naturally within Jwt:ExpiryMinutes, but
         // it can no longer be refreshed past that point.
-        pilot.RefreshTokenHash = null;
-        pilot.RefreshTokenExpiresAtUtc = null;
+        RefreshTokenPolicy.RevokeSession(pilot);
 
         await _context.SaveChangesAsync(cancellationToken);
 

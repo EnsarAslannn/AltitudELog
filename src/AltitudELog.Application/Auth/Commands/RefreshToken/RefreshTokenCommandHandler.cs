@@ -9,8 +9,6 @@ namespace AltitudELog.Application.Auth.Commands.RefreshToken;
 
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResponseDto>
 {
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
-
     private readonly IApplicationDbContext _context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ILogger<RefreshTokenCommandHandler> _logger;
@@ -30,20 +28,52 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         var tokenHash = TokenHasher.Hash(request.RefreshToken);
         var now = DateTime.UtcNow;
 
+        // Matches the current token *or* the one it replaced, so a replay can be told apart from
+        // a random string. Rotation means an already-exchanged token matches no pilot at all,
+        // which is why PreviousRefreshTokenHash exists.
         var pilot = await _context.Pilots
             .FirstOrDefaultAsync(
-                p => p.RefreshTokenHash == tokenHash && p.RefreshTokenExpiresAtUtc > now,
+                p => p.RefreshTokenHash == tokenHash || p.PreviousRefreshTokenHash == tokenHash,
                 cancellationToken)
             ?? throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
-        var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
+        // Reuse detection. The legitimate client has already exchanged this token, so whoever
+        // presents it now either replayed a stolen copy or is a client that never received the
+        // rotated one. Either way, revoking the whole session beats handing out a fresh pair: if
+        // it was a theft the attacker gets nothing, at the cost of the real user signing in again.
+        if (pilot.PreviousRefreshTokenHash == tokenHash)
+        {
+            _logger.LogWarning(
+                "Refresh token reuse detected for pilot {PilotId}; revoking the session", pilot.Id);
 
-        // Rotate on every use: the presented refresh token is invalidated the moment a new
-        // one is issued, so a stolen-and-replayed copy stops working as soon as the
-        // legitimate client refreshes.
-        var refreshToken = OpaqueTokenGenerator.Generate();
-        pilot.RefreshTokenHash = TokenHasher.Hash(refreshToken);
-        pilot.RefreshTokenExpiresAtUtc = now.Add(RefreshTokenLifetime);
+            RefreshTokenPolicy.RevokeSession(pilot);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+        }
+
+        if (pilot.RefreshTokenExpiresAtUtc is null || pilot.RefreshTokenExpiresAtUtc <= now)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+        }
+
+        // Rotation on its own bounds a stolen token only until the next legitimate refresh; the
+        // absolute ceiling is what stops a session being kept alive forever by refreshing.
+        if (RefreshTokenPolicy.HasExceededAbsoluteLifetime(pilot, now))
+        {
+            _logger.LogInformation(
+                "Session for pilot {PilotId} exceeded its absolute lifetime; re-authentication required",
+                pilot.Id);
+
+            RefreshTokenPolicy.RevokeSession(pilot);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            throw new UnauthorizedAccessException("Session expired. Please sign in again.");
+        }
+
+        var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
+        var refreshToken = RefreshTokenPolicy.Rotate(pilot, now);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Pilot {PilotId} refreshed their access token", pilot.Id);

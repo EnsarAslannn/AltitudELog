@@ -1,7 +1,8 @@
 using System.Diagnostics;
-using System.Security.Cryptography;
+using AltitudELog.Application.Auth.Jobs;
 using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.Common.Security;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,23 +11,25 @@ namespace AltitudELog.Application.Auth.Commands.ForgotPassword;
 
 public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand>
 {
-    private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
-
-    // Floor on total handler duration, regardless of which branch below runs. Without this, the
-    // matching-email branch's extra SaveChangesAsync + SMTP send makes it measurably slower than the
-    // immediate return for a non-matching email, letting an attacker infer registered emails from
-    // response timing alone — defeating the point of generating the token unconditionally below.
+    // Floor on total handler duration. Both branches now do comparable work — a lookup, and at
+    // most one small enqueue INSERT — so this only has to absorb that difference. It used to be
+    // asked to hide an inline SMTP round trip as well, which it could not: a floor bounds the
+    // fast path from below but leaves the slow path unbounded above, so the matching-email branch
+    // stayed measurably slower and still leaked which addresses are registered. Token issuing and
+    // delivery moved to SendPasswordResetEmailJob for exactly that reason.
     private static readonly TimeSpan MinimumDuration = TimeSpan.FromMilliseconds(300);
 
     private readonly IApplicationDbContext _context;
-    private readonly IEmailService _emailService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly ILogger<ForgotPasswordCommandHandler> _logger;
 
     public ForgotPasswordCommandHandler(
-        IApplicationDbContext context, IEmailService emailService, ILogger<ForgotPasswordCommandHandler> logger)
+        IApplicationDbContext context,
+        IBackgroundJobClient backgroundJobClient,
+        ILogger<ForgotPasswordCommandHandler> logger)
     {
         _context = context;
-        _emailService = emailService;
+        _backgroundJobClient = backgroundJobClient;
         _logger = logger;
     }
 
@@ -39,38 +42,24 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         // either way by design, the user would never learn why no mail arrived.
         var email = CredentialNormalizer.NormalizeEmail(request.Email);
 
-        var pilot = await _context.Pilots
-            .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
+        // Only the id is needed, and selecting it keeps both branches' database work alike.
+        var pilotId = await _context.Pilots
+            .Where(p => p.Email == email)
+            .Select(p => (Guid?)p.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        // Always generate + hash a token, whether or not the email matches a pilot, so the
-        // CPU-bound cost of this path doesn't itself leak which emails are registered via
-        // response timing (the response shape/return value already doesn't leak it).
-        var tokenBytes = RandomNumberGenerator.GetBytes(32);
-        var token = Convert.ToBase64String(tokenBytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-        var tokenHash = TokenHasher.Hash(token);
-
-        if (pilot is null)
+        if (pilotId is null)
         {
             _logger.LogInformation("Password reset requested for unregistered email {Email}", request.Email);
         }
         else
         {
-            pilot.PasswordResetTokenHash = tokenHash;
-            pilot.PasswordResetTokenExpiresAtUtc = DateTime.UtcNow.Add(TokenLifetime);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            try
-            {
-                await _emailService.SendPasswordResetEmailAsync(pilot.Email!, token, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to send password reset email to {Email}; token was still generated.", pilot.Email);
-            }
+            // CancellationToken.None: once enqueued the job is Hangfire's to run, and the caller
+            // disconnecting must not cancel a reset they asked for.
+            _backgroundJobClient.Enqueue<SendPasswordResetEmailJob>(
+                job => job.ExecuteAsync(pilotId.Value, CancellationToken.None));
         }
 
-        // Equalize total response time across both branches (see MinimumDuration comment above) —
-        // a no-op on the slower, matching-email path.
         var remaining = MinimumDuration - stopwatch.Elapsed;
         if (remaining > TimeSpan.Zero)
         {

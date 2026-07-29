@@ -54,9 +54,19 @@ public class PilotConfiguration : IEntityTypeConfiguration<Pilot>
         // Both token flows look a pilot up *by hash* (RefreshTokenCommandHandler,
         // ResetPasswordCommandHandler), so without these every token refresh is a sequential scan
         // of Pilots. Filtered, because the columns are null for every pilot not mid-flow.
+        builder.Property(p => p.PreviousRefreshTokenHash)
+            .HasMaxLength(500);
+
         builder.HasIndex(p => p.RefreshTokenHash)
             .HasDatabaseName("IX_Pilots_RefreshTokenHash")
             .HasFilter("\"RefreshTokenHash\" IS NOT NULL");
+
+        // RefreshTokenCommandHandler looks a pilot up by either hash in one query, so the
+        // previous-token column needs its own index or reuse detection reintroduces the
+        // sequential scan the current-token index was added to remove.
+        builder.HasIndex(p => p.PreviousRefreshTokenHash)
+            .HasDatabaseName("IX_Pilots_PreviousRefreshTokenHash")
+            .HasFilter("\"PreviousRefreshTokenHash\" IS NOT NULL");
 
         builder.HasIndex(p => p.PasswordResetTokenHash)
             .HasDatabaseName("IX_Pilots_PasswordResetTokenHash")
