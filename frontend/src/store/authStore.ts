@@ -47,7 +47,22 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
         }),
     }),
-    { name: AUTH_STORAGE_KEY },
+    {
+      name: AUTH_STORAGE_KEY,
+      // The persisted state is trusted straight out of localStorage, so a session whose access
+      // token expired while the tab was closed would render the authenticated app, fire a
+      // request, get a 401, fail to refresh and only then bounce to /login — the user sees a
+      // flash of the dashboard and an error card on the way out. Drop the session up front when
+      // there is provably nothing left to refresh with.
+      onRehydrateStorage: () => (state) => {
+        if (!state?.isAuthenticated) return
+
+        const expired = state.expiresAtUtc !== null && new Date(state.expiresAtUtc) <= new Date()
+        if (expired && !state.refreshToken) {
+          state.logout()
+        }
+      },
+    },
   ),
 )
 

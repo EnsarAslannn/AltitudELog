@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { hasCommandRank } from './ranks'
 
 export function CaptainRoute() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -10,7 +11,7 @@ export function CaptainRoute() {
     return <Navigate to="/login" replace state={{ from: location }} />
   }
 
-  if (rank !== 'Captain') {
+  if (!hasCommandRank(rank)) {
     return <Navigate to="/unauthorized" replace />
   }
 

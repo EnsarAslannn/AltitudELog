@@ -45,4 +45,14 @@ describe('CaptainRoute', () => {
 
     expect(screen.getByText('Captain-only Content')).toBeInTheDocument()
   })
+
+  it('renders the child route for a ChiefPilot', () => {
+    // ChiefPilot outranks Captain and the API now admits both to the flight/crew write endpoints;
+    // gating the UI on Captain alone locked the more senior rank out of pages it can use.
+    useAuthStore.setState({ isAuthenticated: true, rank: 'ChiefPilot' as PilotRank })
+
+    renderCaptainRoute()
+
+    expect(screen.getByText('Captain-only Content')).toBeInTheDocument()
+  })
 })

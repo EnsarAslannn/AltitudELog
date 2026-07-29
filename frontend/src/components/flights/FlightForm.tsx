@@ -7,6 +7,7 @@ import { Input } from '../ui/Input'
 import { RouteRibbon } from '../ui/RouteRibbon'
 import { airports } from '../../data/airports'
 import { aircraftTypes } from '../../data/aircraftTypes'
+import { apiErrorMessage } from '../../lib/apiMessages'
 import type { ApiError } from '../../types/problemDetails'
 
 export interface FlightFormValues {
@@ -77,7 +78,7 @@ export function FlightForm({
     } catch (err) {
       const apiError = err as ApiError
       setFieldErrors(apiError.fieldErrors)
-      setError(apiError.detail ?? apiError.title ?? 'İşlem başarısız.')
+      setError(apiErrorMessage(apiError, 'İşlem başarısız.'))
     } finally {
       setIsSubmitting(false)
     }

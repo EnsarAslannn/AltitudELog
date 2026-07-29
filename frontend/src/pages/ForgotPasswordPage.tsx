@@ -6,22 +6,31 @@ import { AuthHero } from '../components/layout/AuthHero'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
+import { apiErrorMessage } from '../lib/apiMessages'
+import type { ApiError } from '../types/problemDetails'
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setIsSubmitting(true)
+    setError(null)
     try {
       await authService.forgotPassword({ email })
-    } finally {
-      // Always show the same outcome, whether or not the email is registered —
-      // otherwise the response would leak which emails have an account.
-      setIsSubmitting(false)
+
+      // Same outcome whether or not the email is registered — the API deliberately answers 204
+      // either way, so showing anything conditional here would undo that. A transport failure is
+      // a different thing though: reporting "sent" when the request never completed (429, 500,
+      // offline) leaves the user waiting for mail that was never going to arrive.
       setSubmitted(true)
+    } catch (err) {
+      setError(apiErrorMessage(err as ApiError, 'İstek gönderilemedi. Lütfen tekrar deneyin.'))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -56,6 +65,11 @@ export function ForgotPasswordPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                {error && (
+                  <p role="alert" className="text-sm text-error">
+                    {error}
+                  </p>
+                )}
                 <Input
                   label="E-posta"
                   name="email"

@@ -7,9 +7,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: LucideIcon
 }
 
-export function Button({ variant = 'primary', icon: Icon, className, children, ...props }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  icon: Icon,
+  className,
+  children,
+  // Without an explicit default a <Button> inside a <form> inherits type="submit" and silently
+  // submits it — the opposite of what a plain action button should do.
+  type = 'button',
+  ...props
+}: ButtonProps) {
   return (
     <button
+      type={type}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-sm font-semibold tracking-tight transition-all',
         'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30',

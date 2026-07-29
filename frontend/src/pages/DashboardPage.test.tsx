@@ -30,6 +30,7 @@ const page1: FlightsPageResult = {
   totalCount: 21,
   pageNumber: 1,
   pageSize: 20,
+  activeCount: 19,
   thisMonthCount: 5,
   distinctAircraftTypeCount: 3,
 }
@@ -39,6 +40,7 @@ const page2: FlightsPageResult = {
   totalCount: 21,
   pageNumber: 2,
   pageSize: 20,
+  activeCount: 19,
   thisMonthCount: 5,
   distinctAircraftTypeCount: 3,
 }
@@ -79,6 +81,31 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('B777')).toBeInTheDocument()
     await waitFor(() => expect(flightService.getAll).toHaveBeenCalledWith(2, 20))
     expect(screen.getByText('Sayfa 2 / 2')).toBeInTheDocument()
+  })
+
+  it('clamps back to the last page when the list shrinks underneath it', async () => {
+    const user = userEvent.setup()
+    // The user is on page 2; by the time it loads, the list has shrunk to a single page. Without
+    // clamping, Pagination renders nothing (it hides below two pages) and the user is stranded on
+    // an empty card with no way back.
+    const shrunk: FlightsPageResult = { ...page1, items: [], totalCount: 3, pageNumber: 2 }
+
+    vi.mocked(flightService.getAll)
+      .mockResolvedValueOnce(page1)
+      .mockResolvedValueOnce(shrunk)
+      .mockResolvedValueOnce({ ...page1, totalCount: 3 })
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    await screen.findByText('A350')
+    await user.click(screen.getByRole('button', { name: /Sonraki/ }))
+
+    await waitFor(() => expect(flightService.getAll).toHaveBeenLastCalledWith(1, 20))
+    expect(await screen.findByText('A350')).toBeInTheDocument()
   })
 
   it('shows an error message when the fetch fails', async () => {

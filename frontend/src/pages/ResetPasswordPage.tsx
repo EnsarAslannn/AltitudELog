@@ -63,6 +63,18 @@ export function ResetPasswordPage() {
           <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Şifre Sıfırla</h1>
           <p className="mb-6 text-sm text-on-surface-variant">Yeni şifrenizi girin.</p>
           <Card>
+            {token === '' ? (
+              // Landing here without a token can only come from a malformed or truncated link.
+              // Rendering the form anyway meant the user typed a password twice only to get a
+              // generic 400 from the token's NotEmpty rule.
+              <p role="alert" className="text-sm text-error">
+                Bağlantı geçersiz. Sıfırlama e-postasındaki bağlantıyı olduğu gibi kullanın veya{' '}
+                <Link to="/forgot-password" className="font-medium underline underline-offset-4">
+                  yeni bir istek gönderin
+                </Link>
+                .
+              </p>
+            ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input
                 label="Yeni Şifre"
@@ -86,11 +98,16 @@ export function ResetPasswordPage() {
                 minLength={8}
                 required
               />
-              {error && <p className="text-sm text-error">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-error">
+                  {error}
+                </p>
+              )}
               <Button type="submit" icon={KeyRound} disabled={isSubmitting}>
                 {isSubmitting ? 'Kaydediliyor…' : 'Şifreyi Sıfırla'}
               </Button>
             </form>
+            )}
           </Card>
           <p className="mt-4 text-sm text-on-surface-variant">
             <Link to="/login" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
