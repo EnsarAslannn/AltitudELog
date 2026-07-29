@@ -60,6 +60,12 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     validated with `Enum.IsDefined`) — a deliberate demo choice so visitors to the public deployment can pick
     Captain and try the Captain-only write features. This intentionally trades away the earlier "force Trainee"
     privilege-escalation guard; do not re-add that guard without a go-ahead.
+    `Username` and `Email` are stored **normalised** (trimmed, `ToLowerInvariant`) via
+    `Application/Common/Security/CredentialNormalizer.cs`, because Postgres's default collation is
+    case-sensitive and both columns carry unique indexes — otherwise "Ensar" and "ensar" are two accounts and
+    forgot-password silently no-ops for a differently-cased address. Every write *and* every lookup
+    (`RegisterCommandHandler`, `LoginCommandHandler`, `ForgotPasswordCommandHandler`) must go through the
+    normalizer; a normalised write with an unnormalised lookup is worse than neither.
   - `Crew` is an explicit join entity between `Flight` and `Pilot` (not an EF Core implicit skip-navigation) — it
     carries a flight-specific `DutyRole`, separate from `Pilot.Rank` (a pilot's general rank vs. their role on one
     particular flight can differ). A unique composite index on `(FlightId, PilotId)` plus a handler-level check
@@ -99,6 +105,16 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
 - `Common/Behaviors/`: the MediatR pipeline, registered in this exact order (see `DependencyInjection.cs`) —
   `ValidationBehavior<,>` → `CachingBehavior<,>` → `CacheInvalidationBehavior<,>`. Order matters: validation
   short-circuits before anything touches the cache or the handler.
+  **All three are constrained `where TRequest : notnull`, never `where TRequest : IRequest<TResponse>`.**
+  MediatR 12's non-generic `IRequest` — what every void command implements (`UpdateFlightCommand`,
+  `CancelFlightCommand`, `UpdatePilotCertificatesCommand`, `ForgotPasswordCommand`, `ResetPasswordCommand`,
+  `LogoutCommand`) — derives from `IBaseRequest`, **not** from `IRequest<Unit>`. With the tighter constraint the
+  DI container silently fails the constraint check when closing the open generic over `<TVoidCommand, Unit>` and
+  registers nothing at all: no exception, no log, and those six commands run with no validation and no cache
+  invalidation whatsoever. `tests/AltitudELog.Application.UnitTests/Common/Behaviors/PipelineBehaviorRegistrationTests.cs`
+  resolves the behaviors through a real container to guard this; `tests/AltitudELog.IntegrationTests/Common/
+  VoidCommandValidationTests.cs` asserts it at the HTTP level. The behaviors' own unit tests construct them
+  directly and so cannot catch it.
   - `ValidationBehavior`: runs every registered `IValidator<TRequest>`; throws `FluentValidation.ValidationException`
     on failure (mapped to `400` by `ValidationExceptionHandler` in the API — see below).
   - `CachingBehavior`: only acts when `TRequest : ICacheableQuery`; reads/writes through `IDistributedCache`
@@ -136,8 +152,12 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     `pilot:profile:{id}` for every pilot currently crewed on that flight, since `GetPilotProfileQuery`'s
     hours/currency figures are derived from crewed flights), `Flights/Queries/GetFlights/`
     (paginated — `PageNumber`/`PageSize` query params, default 1/20, validated 1-100 via
-    `GetFlightsQueryValidator`; returns `FlightsPageResult` with `Items`/`TotalCount`/`ThisMonthCount`/
-    `DistinctAircraftTypeCount`; **not cached** — a deliberate choice, see "Background jobs & caching"),
+    `GetFlightsQueryValidator`; returns `FlightsPageResult` with `Items`/`TotalCount`/`ActiveCount`/
+    `ThisMonthCount`/`DistinctAircraftTypeCount`; **not cached** — a deliberate choice, see "Background jobs &
+    caching". `TotalCount` counts every row `Items` pages through, cancelled flights included, because it is the
+    pagination denominator; `ActiveCount`/`ThisMonthCount`/`DistinctAircraftTypeCount` exclude cancelled flights
+    so the dashboard tiles agree with `GetStatsQuery`. Don't collapse the two — filtering `TotalCount` breaks
+    paging, and unfiltering the tiles makes the dashboard contradict `/admin/stats`),
     `Flights/Events/FlightCreatedEvent` + `FlightCreatedEventHandler` (MediatR notification published after
     a flight is saved; enqueues the METAR Hangfire job), `Flights/Jobs/UpdateFlightMetarJob` (the Hangfire
     job itself — not a MediatR request).
@@ -147,10 +167,13 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     (scopes edits to the caller via `ICurrentUserService`, ignoring any client-supplied pilot id) — no
     standalone create-pilot command outside `Register`.
   - `Stats/Queries/GetStats/` (cached, `stats:all`, 5 min) — dashboard aggregate counts.
-  - `Crew/Commands/CreateCrew/` (+ validator: both `FlightId`/`PilotId` FK existence checked via `MustAsync`,
-    invalidates `crew:flight:{flightId}` and `pilot:profile:{PilotId}`), `Crew/Queries/GetCrewByFlight/`
-    (cached per flight, 5 min).
-  - `CRMReports/Commands/CreateCRMReport/` (+ validator: `FlightId` FK exists, `Title` ≤200, `Description` ≤4000,
+  - `Crew/Commands/CreateCrew/` (+ validator: `FlightId`/`PilotId` `NotEmpty` only — **FK existence is checked in
+    the handler**, which throws `NotFoundException` → `404`; a validator rule would report a nonexistent
+    flight/pilot as `400`. Same reasoning applies to `UpdateFlightCommandValidator` and
+    `CreateCRMReportCommandValidator`: none of them do existence lookups. Invalidates `crew:flight:{flightId}`
+    and `pilot:profile:{PilotId}`), `Crew/Queries/GetCrewByFlight/` (cached per flight, 5 min).
+  - `CRMReports/Commands/CreateCRMReport/` (+ validator: `Title` ≤200, `Description` ≤4000 — `FlightId`
+    existence is a handler-side `NotFoundException`, see above;
     invalidates `crmreports:flight:{flightId}` and `stats:all`; resolves `ReporterId` via `ICurrentUserService`
     regardless of `IsAnonymous`, per the accountability note in the Domain section above),
     `CRMReports/Queries/GetCRMReportsByFlight/` (cached per flight, 5 min).
@@ -248,16 +271,21 @@ looser since these aren't retried in a tight loop the way login is) — both pol
 
 ### API — Flights, Crew, CRMReports, Pilots, Stats endpoints
 
+**Role gates use `[Authorize(Roles = "Captain,ChiefPilot")]`, never `"Captain"` alone.** `Roles` is an
+exact-match list, not a rank hierarchy, so a Captain-only gate locks out `ChiefPilot` — the *higher* rank in
+`PilotRank`. The frontend mirrors this through `hasCommandRank` (`frontend/src/routes/ranks.ts`), which
+`CaptainRoute`, `CommandRoute`, `Navbar` and `FlightDetailPage` all share; keep the two in step.
+
 - `Controllers/FlightsController.cs`: `POST /Flights` (→ `CreateFlightCommand`, returns the new `Guid`,
-  **`[Authorize(Roles = "Captain")]`** — only Captains can log flights), `GET /Flights` (→ `GetFlightsQuery`,
+  **`[Authorize(Roles = "Captain,ChiefPilot")]`**), `GET /Flights` (→ `GetFlightsQuery`,
   **`[Authorize]`** — any authenticated pilot, not anonymous; paginated via `?pageNumber=&pageSize=`, returns
   `FlightsPageResult`) and `GET /Flights/{id}` (→ `GetFlightByIdQuery`, **`[Authorize]`**),
-  `PUT /Flights/{id}` and `POST /Flights/{id}/cancel` (**`[Authorize(Roles = "Captain")]`**, throw
+  `PUT /Flights/{id}` and `POST /Flights/{id}/cancel` (**`[Authorize(Roles = "Captain,ChiefPilot")]`**, throw
   `NotFoundException` → `404` for a nonexistent `FlightId`, see "API — Global exception handling"). Creating a
   flight publishes `FlightCreatedEvent`, which enqueues the METAR-fetch Hangfire job — see "Background jobs &
   caching".
 - `Controllers/CrewController.cs`: class-level `[Authorize]`. `POST /Crew` (→ `CreateCrewCommand`,
-  **`[Authorize(Roles = "Captain")]`** override, tightens the class-level attribute), `GET /Crew/flight/{flightId}`
+  **`[Authorize(Roles = "Captain,ChiefPilot")]`** override, tightens the class-level attribute), `GET /Crew/flight/{flightId}`
   (→ `GetCrewByFlightQuery`, any authenticated pilot).
 - `Controllers/CRMReportsController.cs`: class-level `[Authorize]`, no extra role restriction. `POST /CRMReports`
   (→ `CreateCRMReportCommand`), `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) — any
@@ -338,8 +366,8 @@ re-introducing caching here; revisit with a version-counter key if profiling eve
 | Query | Cache key | Invalidated by |
 |---|---|---|
 | `GetPilotsQuery` | `pilots:all` | `RegisterCommand` |
-| `GetStatsQuery` | `stats:all` | `RegisterCommand`, `CreateFlightCommand`, `UpdateFlightCommand`, `CancelFlightCommand`, `CreateCRMReportCommand` |
-| `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight) |
+| `GetStatsQuery` | `stats:all` | `RegisterCommand`, `CreateFlightCommand`, `UpdateFlightCommand`, `CancelFlightCommand`, `CreateCRMReportCommand`, `UpdatePilotCertificatesCommand` |
+| `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight), `UpdatePilotCertificatesCommand` (the caller's own profile) |
 | `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand` (same flight only) |
 | `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand` (same flight only) |
 
@@ -441,11 +469,24 @@ specifically.
   without crash-looping) → `MapOpenApi()` + `MapScalarApiReference()` (both unconditional, not dev-gated, so
   the live deployment is explorable too — there is no Swagger UI, Scalar is the API explorer) →
   `UseForwardedHeaders()` (needed for the rate limiter's per-IP partitioning to see the real client IP behind a
-  platform proxy) → `UseExceptionHandler()` → `UseSerilogRequestLogging()` → `UseHttpsRedirection()`
+  platform proxy — see "Forwarded headers" below) → `UseExceptionHandler()` → `UseSerilogRequestLogging()` → `UseHttpsRedirection()`
   (Development-only — TLS is terminated by the platform proxy in production) → `UseCors("FrontendCorsPolicy")`
   → `UseAuthentication()` → `UseAuthorization()` → `UseRateLimiter()` → `MapControllers()` →
   `MapHealthChecks("/health", ...)` → `UseHangfireDashboard("/hangfire", ...)`. `UseAuthentication()` must
   precede `UseAuthorization()`; `UseCors()` must precede both.
+- **Startup failures must exit non-zero.** The top-level `try/catch` around the whole of `Program.cs` sets
+  `Environment.ExitCode = 1` in its `catch`. Without that, the fail-fast guards (`Jwt:Key`, production
+  `Cors:AllowedOrigins`, exhausted migration retries) log `Fatal` and then exit **0**, so Railway/Docker/CI
+  report a successful deploy for an app that never served a request. Don't remove it.
+- **Forwarded headers.** `ForwardedHeadersOptions` sets `ForwardLimit = 1` and only clears
+  `KnownIPNetworks`/`KnownProxies` when `ForwardedHeaders:TrustAnyProxy` is true (default **false**, committed in
+  `appsettings.json`). Clearing them makes `X-Forwarded-For` trusted from any peer, and since the rate-limit
+  policies partition on the resulting `RemoteIpAddress`, anyone able to reach the app directly could rotate the
+  header per request for an unlimited supply of login buckets. The live Railway deployment therefore needs
+  `ForwardedHeaders__TrustAnyProxy=true`; without it `Program.cs` logs a startup warning in Production and every
+  client behind the proxy shares one rate-limit partition. `tests/AltitudELog.IntegrationTests/Auth/
+  RateLimitSpoofingTests.cs` guards this (`RateLimitTestWebAppFactory` injects a concrete `RemoteIpAddress`,
+  because `TestServer` leaves it null and the middleware then skips its known-proxy check entirely).
 - `QuestPDF.Settings.License = LicenseType.Community` is set once at startup, before the host is built — the
   PDF logbook export (`PdfLogbookWriter`) uses QuestPDF, Community-licensed the same revenue-gated way as
   MediatR above.
