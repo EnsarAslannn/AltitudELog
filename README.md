@@ -10,6 +10,12 @@ background job that fetches the METAR report for the flight's departure airport.
 **Live demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) (frontend) — backed by a .NET API on
 Railway. Register with any rank, including **Captain**, to unlock flight-creation.
 
+## Screenshots
+
+| Login | Flights | New Flight | Profile | Statistics |
+|---|---|---|---|---|
+| ![Login](./docs/screenshots/login.png) | ![Flights](./docs/screenshots/flights.png) | ![New Flight](./docs/screenshots/new-flight.png) | ![Profile](./docs/screenshots/profile.png) | ![Statistics](./docs/screenshots/statistics.png) |
+
 ## Tech stack
 
 **Backend**
