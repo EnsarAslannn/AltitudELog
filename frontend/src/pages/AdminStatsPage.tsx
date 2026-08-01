@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BadgeCheck,
@@ -11,7 +11,6 @@ import {
 import { statsService } from '../services/statsService'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
-import { CrmTrendChart } from '../components/ui/CrmTrendChart'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
@@ -21,9 +20,17 @@ import type { PilotRank } from '../types/auth'
 import type { SeverityLevel } from '../types/crmReport'
 import type { ApiError } from '../types/problemDetails'
 
+// Module-scope, not component state — created once for the life of the app rather than
+// per render, so there's nothing here for useMemo to improve on.
 const pilotRanks: PilotRank[] = ['Trainee', 'FirstOfficer', 'Captain', 'ChiefPilot']
 
 const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
+
+// Code-split: the chart pulls in its own SVG-layout math that only the admin/Captain
+// audience for this page ever needs.
+const CrmTrendChart = lazy(() =>
+  import('../components/ui/CrmTrendChart').then((mod) => ({ default: mod.CrmTrendChart })),
+)
 
 export function AdminStatsPage() {
   const [stats, setStats] = useState<StatsDto | null>(null)
@@ -80,7 +87,7 @@ export function AdminStatsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="relative min-h-[180px] overflow-hidden rounded-lg bg-surface rise">
+      <section className="relative min-h-[140px] overflow-hidden rounded-lg bg-surface rise sm:min-h-[160px] lg:min-h-[180px]">
         <img
           src="/images/instruments.jpg"
           alt=""
@@ -88,11 +95,11 @@ export function AdminStatsPage() {
           loading="eager"
         />
         <div className="absolute inset-0 hero-scrim" />
-        <div className="relative flex h-full flex-col justify-center gap-2 p-8 sm:p-10">
+        <div className="relative flex h-full flex-col justify-center gap-2 p-6 sm:p-10">
           <Eyebrow tone="soft" rule={false}>
             Yönetim Paneli
           </Eyebrow>
-          <h1 className="display text-3xl leading-[1.15] text-on-surface sm:text-4xl">
+          <h1 className="display text-3xl leading-[1.15] text-on-surface sm:text-4xl md:text-5xl">
             Operasyon İstatistikleri
           </h1>
         </div>
@@ -133,7 +140,9 @@ export function AdminStatsPage() {
       <section className="flex flex-col gap-4">
         <Eyebrow>CRM Trend (Son 6 Ay)</Eyebrow>
         <Card className="p-5">
-          <CrmTrendChart data={stats.crmTrendByMonth} />
+          <Suspense fallback={<Skeleton className="h-[220px] rounded-lg" />}>
+            <CrmTrendChart data={stats.crmTrendByMonth} />
+          </Suspense>
         </Card>
       </section>
 
