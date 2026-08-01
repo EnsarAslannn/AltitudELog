@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LogIn, Lock, User } from 'lucide-react'
 import { authService } from '../services/authService'
 import { useAuthStore } from '../store/authStore'
-import { AuthHero } from '../components/layout/AuthHero'
+import { ScrollExpandHero } from '../components/ui/ScrollExpandHero'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -37,71 +37,63 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <AuthHero
-        image="/images/taxi-dusk.jpg"
-        eyebrow="Flight Operations Console"
-        title={
-          <>
-            Uçuş kayıtlarınız,
-            <br />
-            tek kokpitte.
-          </>
-        }
-        subtitle="Mürettebat atamaları, CRM raporları ve METAR akışı — uçuş ekipleri için tasarlanmış tek panel."
-        stat={{ value: 'METAR', label: 'Her uçuşta otomatik hava durumu' }}
-      />
-      <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
-        <div className="w-full max-w-sm rise">
-          <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Giriş Yap</h1>
-          <p className="mb-6 text-sm text-on-surface-variant">Hesabınıza erişmek için bilgilerinizi girin.</p>
-          <Card>
-            <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
+    <ScrollExpandHero
+      mediaType="image"
+      mediaSrc="/images/taxi-dusk.jpg"
+      bgImageSrc="/images/hero-approach.jpg"
+      date="Flight Operations Console"
+      title="Uçuş Kayıtlarınız Kokpitte"
+      scrollToExpand="Kaydırarak devam edin"
+    >
+      <div className="w-full max-w-sm rise">
+        <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Giriş Yap</h1>
+        <p className="mb-6 text-sm text-on-surface-variant">Hesabınıza erişmek için bilgilerinizi girin.</p>
+        <Card>
+          <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
+            <Input
+              label="Kullanıcı Adı"
+              name="username"
+              icon={User}
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <div className="flex flex-col gap-1.5">
               <Input
-                label="Kullanıcı Adı"
-                name="username"
-                icon={User}
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                label="Şifre"
+                name="password"
+                type="password"
+                icon={Lock}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <div className="flex flex-col gap-1.5">
-                <Input
-                  label="Şifre"
-                  name="password"
-                  type="password"
-                  icon={Lock}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <Link
-                  to="/forgot-password"
-                  className="self-end text-xs font-medium text-on-surface-variant underline decoration-outline-variant underline-offset-4 transition-colors hover:text-on-surface hover:decoration-on-surface"
-                >
-                  Şifremi unuttum
-                </Link>
-              </div>
-              {error && (
-                <p role="alert" className="text-sm text-error">
-                  {error}
-                </p>
-              )}
-              <Button type="submit" icon={LogIn} disabled={isSubmitting}>
-                {isSubmitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
-              </Button>
-            </form>
-          </Card>
-          <p className="mt-4 text-sm text-on-surface-variant">
-            Hesabın yok mu?{' '}
-            <Link to="/register" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
-              Kayıt ol
-            </Link>
-          </p>
-        </div>
+              <Link
+                to="/forgot-password"
+                className="self-end text-xs font-medium text-on-surface-variant underline decoration-outline-variant underline-offset-4 transition-colors hover:text-on-surface hover:decoration-on-surface"
+              >
+                Şifremi unuttum
+              </Link>
+            </div>
+            {error && (
+              <p role="alert" className="text-sm text-error">
+                {error}
+              </p>
+            )}
+            <Button type="submit" icon={LogIn} disabled={isSubmitting}>
+              {isSubmitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
+            </Button>
+          </form>
+        </Card>
+        <p className="mt-4 text-sm text-on-surface-variant">
+          Hesabın yok mu?{' '}
+          <Link to="/register" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
+            Kayıt ol
+          </Link>
+        </p>
       </div>
-    </div>
+    </ScrollExpandHero>
   )
 }
