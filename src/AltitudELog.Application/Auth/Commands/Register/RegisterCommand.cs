@@ -10,10 +10,6 @@ public record RegisterCommand(
     string Name,
     string LicenseNumber,
     string Email,
-    // Self-selected at registration. Optional for backward compatibility; defaults to
-    // Trainee when omitted. (This is a deliberate demo choice — the app previously forced
-    // Trainee to prevent privilege escalation; here we let visitors pick their rank so they
-    // can try Captain-only features.)
     PilotRank Rank = PilotRank.Trainee,
     DateOnly? LicenseExpiryDate = null,
     DateOnly? MedicalExpiryDate = null

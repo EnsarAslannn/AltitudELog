@@ -40,7 +40,6 @@ describe('Combobox', () => {
   })
 
   it('points aria-activedescendant at the highlighted option while arrowing', async () => {
-    // The highlight is otherwise purely visual — a screen reader hears nothing as it moves.
     const user = userEvent.setup()
     render(<Harness />)
 
@@ -70,8 +69,6 @@ describe('Combobox', () => {
   })
 
   it('closes the list when focus leaves', async () => {
-    // Tabbing away used to leave a 50-row dropdown covering the fields underneath, dismissable
-    // only by going back and pressing Escape.
     const user = userEvent.setup()
     render(<Harness />)
 

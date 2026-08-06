@@ -9,9 +9,6 @@ namespace AltitudELog.Application.UnitTests.Common.Behaviors;
 
 public class ValidationBehaviorTests
 {
-    // Public (not private/nested-private) because ValidationBehavior substitutes
-    // IValidator<TRequest>, and NSubstitute/Castle DynamicProxy needs to generate a proxy over
-    // that closed generic type — which requires TRequest to be an accessible (public) type.
     public record TestCommand(string Name) : IRequest<string>;
 
     [Fact]

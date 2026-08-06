@@ -92,8 +92,6 @@ public class PipelineBehaviorRegistrationTests
         using var provider = BuildProvider();
         using var scope = provider.CreateScope();
 
-        // Resolving the behavior is not enough on its own — it must also receive the command's
-        // validators, which is what actually turns an invalid void command into a 400.
         var validators = scope.ServiceProvider
             .GetServices<FluentValidation.IValidator<UpdateFlightCommand>>()
             .ToList();

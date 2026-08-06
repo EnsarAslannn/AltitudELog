@@ -42,8 +42,6 @@ public class NoaaMetarServiceTests
     [InlineData(HttpStatusCode.NoContent)]
     public async Task Returns_Null_Rather_Than_Throwing_When_There_Is_No_Observation(HttpStatusCode statusCode)
     {
-        // An unknown or unreported ICAO used to throw, exhaust all three retries, and leave the
-        // job Failed in the dashboard.
         var service = CreateService(statusCode, "");
 
         var metar = await service.GetRawMetarAsync("ZZZZ", CancellationToken.None);
@@ -66,8 +64,6 @@ public class NoaaMetarServiceTests
     [InlineData("""{"error":"unexpected shape"}""")]
     public async Task Returns_Null_For_An_Unparseable_200(string body)
     {
-        // A 200 carrying HTML or an object instead of an array is the upstream misbehaving;
-        // retrying will not fix it, so the enrichment is skipped instead of failing the job.
         var service = CreateService(HttpStatusCode.OK, body);
 
         var metar = await service.GetRawMetarAsync("LTFM", CancellationToken.None);
@@ -80,8 +76,6 @@ public class NoaaMetarServiceTests
     [InlineData(HttpStatusCode.TooManyRequests)]
     public async Task Still_Throws_On_Statuses_Worth_Retrying(HttpStatusCode statusCode)
     {
-        // These are transient, so Hangfire's retry should get its chance — swallowing them would
-        // silently drop METAR for flights that would have succeeded a minute later.
         var service = CreateService(statusCode, "");
 
         var act = () => service.GetRawMetarAsync("LTFM", CancellationToken.None);

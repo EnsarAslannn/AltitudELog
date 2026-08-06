@@ -26,8 +26,6 @@ public class RateLimitSpoofingTests : IAsyncLifetime
         _factory = factory;
         _client = factory.CreateClient();
 
-        // Own connection address, so this class's deliberate exhaustion of the login bucket
-        // doesn't spill into LoginRateLimitTests, which shares the factory.
         _client.DefaultRequestHeaders.Add("X-Test-Client-Ip", "198.51.100.20");
     }
 
@@ -45,8 +43,6 @@ public class RateLimitSpoofingTests : IAsyncLifetime
 
         var loginCommand = new LoginCommand(username, "P@ssw0rd123!");
 
-        // Each request claims to come from a different client. If the header were honoured, every
-        // one of these would land in its own partition and none would ever be throttled.
         for (var attempt = 1; attempt <= 5; attempt++)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/Auth/login")

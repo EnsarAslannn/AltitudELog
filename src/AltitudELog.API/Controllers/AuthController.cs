@@ -14,10 +14,6 @@ namespace AltitudELog.API.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Produces("application/json")]
-// Declared once at class level because they apply to every action here: FluentValidation
-// failures come back as ValidationProblemDetails via ValidationExceptionHandler, and every
-// endpoint on this controller is rate limited. The OpenAPI document is served publicly through
-// Scalar, so what it advertises is the API's actual contract to a reader.
 [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
 public class AuthController : ControllerBase

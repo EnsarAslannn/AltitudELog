@@ -14,8 +14,6 @@ namespace AltitudELog.Application.Common.Security;
 /// </summary>
 public static class CredentialNormalizer
 {
-    // Invariant rather than current-culture: under a Turkish culture "I".ToLower() is "ı", so the
-    // same username would normalise differently depending on the server's locale.
     public static string NormalizeUsername(string username) => username.Trim().ToLowerInvariant();
 
     public static string? NormalizeEmail(string? email) =>

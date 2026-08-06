@@ -7,13 +7,6 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   icon?: LucideIcon
 }
 
-/*
- * `solid` is the one tone that carries brand significance rather than status: it marks
- * Captain / ChiefPilot rank and the PIC duty role. The design system is monochrome, so
- * that weight is expressed as a filled ink chip against outlined neutrals — never a hue.
- * Every other tone encodes status (certificate expiry, CRM severity) and keeps its
- * desaturated colour so safety data stays distinguishable.
- */
 const toneClasses: Record<NonNullable<BadgeProps['tone']>, string> = {
   neutral: 'border-outline-variant bg-surface-container-low text-on-surface-variant',
   solid: 'border-primary bg-primary text-on-primary',

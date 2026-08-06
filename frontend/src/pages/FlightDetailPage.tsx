@@ -97,10 +97,6 @@ export function FlightDetailPage() {
     }
   }, [flightId, canCommand])
 
-  // These refetch after a successful create/cancel action elsewhere on the page — the
-  // mutation itself already succeeded, so a failure here shouldn't blow away the page
-  // (that's what the full-page `error` state is for on initial load); it just means the
-  // list shown might be stale, which we surface as a small non-blocking notice instead.
   function refreshFlight() {
     setRefreshError(null)
     flightService
@@ -147,7 +143,7 @@ export function FlightDetailPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Boarding-pass header */}
+      {}
       <section className="relative min-h-[280px] overflow-hidden rounded-lg bg-surface rise sm:min-h-[340px]">
         <img
           src="/images/clouds.jpg"
@@ -222,7 +218,7 @@ export function FlightDetailPage() {
         </p>
       )}
 
-      {/* Tabs */}
+      {}
       <div className="inline-flex w-fit gap-1 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-1 shadow-sm">
         <TabButton active={tab === 'crew'} onClick={() => setTab('crew')} icon={Users}>
           Mürettebat
@@ -262,8 +258,6 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
       const apiError = err as ApiError
       setError(apiErrorMessage(apiError, 'Uçuş iptal edilemedi.'))
 
-      // A 409 means the flight already moved on (cancelled by someone else, or edited
-      // concurrently) — refetch so the page stops offering an action that can't succeed.
       if (apiError.status === 409) {
         onCancelled()
       }

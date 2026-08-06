@@ -2,9 +2,7 @@ import type { HTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
 interface EyebrowProps extends HTMLAttributes<HTMLDivElement> {
-  /** Draw a hairline rule after the label. */
   rule?: boolean
-  /** `soft` is for eyebrows sitting over hero photography, where full ink reads too heavy. */
   tone?: 'ink' | 'soft'
 }
 

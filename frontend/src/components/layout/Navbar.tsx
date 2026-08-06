@@ -21,9 +21,6 @@ export function Navbar() {
   const isCommand = hasCommandRank(rank)
 
   function handleLogout() {
-    // Best-effort: revoke the refresh token server-side so it can't be used to silently
-    // renew a session after this point. Client-side logout proceeds either way — a failed
-    // revoke call (e.g. the access token already expired) shouldn't block signing out.
     authService.logout().catch(() => {})
     logout()
     navigate('/login')
@@ -36,8 +33,6 @@ export function Navbar() {
       isActive && 'text-on-surface after:scale-x-100',
     )
 
-  // Pill styling for the same destinations on narrow screens, where the underline
-  // treatment above has no room to breathe.
   const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
@@ -46,12 +41,6 @@ export function Navbar() {
         : 'border-outline-variant bg-surface-container-lowest text-on-surface-variant',
     )
 
-  /*
-   * One source of truth for the destinations, rendered twice: as an inline underline
-   * nav from `sm` up, and as a scrollable pill row below the brand bar underneath it.
-   * Before this the nav was `hidden sm:flex` with no mobile counterpart at all, which
-   * left phone users with no way to reach Yeni Uçuş, Profil or İstatistikler.
-   */
   const destinations = [
     { to: '/', label: 'Uçuşlar', icon: null, end: true, show: true },
     { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: isCommand },
@@ -98,7 +87,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile destinations — scrolls sideways rather than wrapping or overflowing */}
+      {}
       <nav
         className="flex gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 pb-3 pt-2 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Ana menü"

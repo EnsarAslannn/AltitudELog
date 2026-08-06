@@ -31,10 +31,6 @@ public class CreateFlightHappyPathTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        // _factory.BackgroundJobClient is a substitute shared for the whole "Integration"
-        // collection fixture (see IntegrationTestWebAppFactory), so calls recorded by other test
-        // classes that also POST /Flights (e.g. FlightsAuthorizationTests, LogbookCsvExportTests)
-        // would otherwise leak into this class's ReceivedCalls()/SingleOrDefault assertions.
         _factory.BackgroundJobClient.ClearReceivedCalls();
         return _factory.ResetDatabaseAsync();
     }

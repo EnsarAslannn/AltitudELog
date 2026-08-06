@@ -24,8 +24,6 @@ describe('toApiError', () => {
   })
 
   it('keeps a plain-string error body as the title', () => {
-    // PilotsController.ExportLogbook answers a bad `format` with a bare string, not
-    // ProblemDetails — treating it as an object discarded the message.
     const error = {
       response: { status: 400, data: "format must be 'csv' or 'pdf'." },
       message: 'Request failed with status code 400',
@@ -85,7 +83,6 @@ describe('apiClient response interceptor', () => {
   })
 
   it('does not log out on a 401 from an anonymous request without a bearer token', async () => {
-    // No token in the auth store, so the request interceptor never attaches Authorization.
     const redirect = vi.fn()
     setLoginRedirect(redirect)
 
@@ -140,10 +137,6 @@ describe('apiClient response interceptor', () => {
   })
 
   it('shares one refresh between concurrent 401s and applies it before the promise clears', async () => {
-    // The store write used to happen in the awaiting caller, after the shared promise had already
-    // been cleared. A second 401 landing in that window started its own refresh, read the
-    // still-old refresh token from the store, and got rejected — the server rotates on every use
-    // — which logged the user out mid-session.
     useAuthStore.setState({
       isAuthenticated: true,
       token: 'expired-token',
@@ -172,7 +165,6 @@ describe('apiClient response interceptor', () => {
     let refreshCallCount = 0
     refreshMock.onPost('/Auth/refresh').reply((config) => {
       refreshCallCount += 1
-      // A second refresh would be sent the pre-rotation token; fail it the way the API would.
       if (JSON.parse(config.data as string).refreshToken !== 'old-refresh-token') {
         return [401, { title: 'Invalid or expired refresh token.' }]
       }
@@ -209,7 +201,6 @@ describe('apiClient response interceptor', () => {
     }
 
     mock.onGet('/Flights').reply(401, { title: 'Unauthorized' })
-    // Held open so the user can sign out while the refresh is still in flight.
     refreshMock.onPost('/Auth/refresh').reply(
       () => new Promise((resolve) => setTimeout(() => resolve([200, refreshedAuth]), 20)),
     )

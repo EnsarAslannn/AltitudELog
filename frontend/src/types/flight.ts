@@ -11,11 +11,9 @@ export interface FlightDto {
 
 export interface FlightsPageResult {
   items: FlightDto[]
-  /** Every row `items` pages through, cancelled flights included — the pagination denominator. */
   totalCount: number
   pageNumber: number
   pageSize: number
-  /** Non-cancelled flights only; this is the figure the dashboard tile shows. */
   activeCount: number
   thisMonthCount: number
   distinctAircraftTypeCount: number
@@ -31,7 +29,6 @@ export const FLIGHT_SORT_FIELDS = [
 
 export type FlightSortField = (typeof FLIGHT_SORT_FIELDS)[number]
 
-/** Mirrors GetFlightsQuery. Every field is optional; omitting one means "don't filter on it". */
 export interface FlightQuery {
   pageNumber?: number
   pageSize?: number

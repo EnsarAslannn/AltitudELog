@@ -23,10 +23,6 @@ public class NoaaMetarService : IMetarService
             $"api/data/metar?ids={Uri.EscapeDataString(icaoCode)}&format=json",
             cancellationToken);
 
-        // "No observation for this airport" is a normal outcome, not a failure. Letting a 404
-        // throw meant UpdateFlightMetarJob burned all three retries and then sat in the Hangfire
-        // dashboard as Failed, even though the job already handles a null perfectly well.
-        // 5xx and 429 still throw, because those are worth retrying.
         if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
         {
             _logger.LogInformation(
@@ -50,10 +46,6 @@ public class NoaaMetarService : IMetarService
         }
         catch (JsonException ex)
         {
-            // A 200 carrying an HTML error page or an unexpected object shape is the upstream
-            // misbehaving, not something a retry fixes. Swallow it so the enrichment is simply
-            // skipped: METAR is a nice-to-have on a flight record, and a malformed upstream
-            // response must not leave a permanently Failed job behind.
             _logger.LogWarning(
                 ex, "NOAA returned an unparseable METAR payload for {IcaoCode}", icaoCode);
             return null;

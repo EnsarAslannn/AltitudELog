@@ -61,8 +61,6 @@ describe('authStore', () => {
     }
 
     it('drops a session whose access token expired and has no refresh token left', async () => {
-      // Otherwise the app boots "authenticated", renders the dashboard, 401s, fails to refresh
-      // and only then bounces to /login — the user sees a flash of the app and an error card.
       persist({
         token: 'expired-token',
         refreshToken: null,
@@ -79,8 +77,6 @@ describe('authStore', () => {
     })
 
     it('keeps an expired access token when a refresh token is still available', async () => {
-      // The interceptor can silently renew this one; dropping it would sign the user out for no
-      // reason on every visit after the 15-minute access-token lifetime.
       persist({
         token: 'expired-token',
         refreshToken: 'still-good-refresh-token',

@@ -20,14 +20,10 @@ import type { PilotRank } from '../types/auth'
 import type { SeverityLevel } from '../types/crmReport'
 import type { ApiError } from '../types/problemDetails'
 
-// Module-scope, not component state — created once for the life of the app rather than
-// per render, so there's nothing here for useMemo to improve on.
 const pilotRanks: PilotRank[] = ['Trainee', 'FirstOfficer', 'Captain', 'ChiefPilot']
 
 const severityLevels: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 
-// Code-split: the chart pulls in its own SVG-layout math that only the admin/Captain
-// audience for this page ever needs.
 const CrmTrendChart = lazy(() =>
   import('../components/ui/CrmTrendChart').then((mod) => ({ default: mod.CrmTrendChart })),
 )
@@ -105,7 +101,7 @@ export function AdminStatsPage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={stats.totalFlights} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={stats.flightsThisMonth} />
@@ -113,7 +109,7 @@ export function AdminStatsPage() {
         <StatTile icon={ShieldAlert} label="Toplam CRM Raporu" value={stats.totalCrmReports} />
       </div>
 
-      {/* Pilots by rank */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Rütbeye Göre Pilotlar</Eyebrow>
         <div className="flex flex-col gap-3">
@@ -136,7 +132,7 @@ export function AdminStatsPage() {
         </div>
       </section>
 
-      {/* CRM trend */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>CRM Trend (Son 6 Ay)</Eyebrow>
         <Card className="p-5">
@@ -146,7 +142,7 @@ export function AdminStatsPage() {
         </Card>
       </section>
 
-      {/* Expiring certifications */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Yaklaşan Sertifika Süreleri</Eyebrow>
         {stats.expiringCertifications.length === 0 ? (
@@ -182,7 +178,7 @@ export function AdminStatsPage() {
         )}
       </section>
 
-      {/* CRM reports by severity */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Ciddiyete Göre CRM Raporları</Eyebrow>
         <div className="flex flex-col gap-3">

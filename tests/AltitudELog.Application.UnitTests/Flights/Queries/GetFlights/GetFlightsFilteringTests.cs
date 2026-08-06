@@ -59,7 +59,6 @@ public class GetFlightsFilteringTests
 
         var result = await RunAsync(context, new GetFlightsQuery { Search = "ltf" });
 
-        // LTFM->EGLL, LTFJ->EDDF, and LTAI->LTFM (matched on its destination).
         result.Items.Should().HaveCount(3);
         result.Items.Should().OnlyContain(f =>
             f.OriginICAO.Contains("LTF") || f.DestinationICAO.Contains("LTF"));
@@ -119,8 +118,6 @@ public class GetFlightsFilteringTests
     [Fact]
     public async Task Counts_Should_Reflect_The_Filtered_Set_Not_The_Whole_Table()
     {
-        // TotalCount is the pagination denominator, so it has to match the filtered rows or the
-        // page count disagrees with what is actually returned.
         await using var context = await SeedAsync();
 
         var result = await RunAsync(context, new GetFlightsQuery { AircraftType = "A320" });
@@ -195,8 +192,6 @@ public class GetFlightsFilteringTests
     [Fact]
     public async Task SortBy_AircraftType_Should_Order_By_Type()
     {
-        // Asserted on the sorted column, not on origin: two rows share A320, so which of them
-        // comes first is decided by the Guid tiebreaker and isn't something to pin down.
         await using var context = await SeedAsync();
 
         var result = await RunAsync(context, new GetFlightsQuery
@@ -212,7 +207,6 @@ public class GetFlightsFilteringTests
     [Fact]
     public async Task Paging_Should_Stay_Stable_When_Many_Rows_Share_A_Sort_Value()
     {
-        // Same date on every row, so only the Id tiebreaker keeps pages from overlapping.
         await using var context = CreateContext();
         for (var i = 0; i < 6; i++)
         {

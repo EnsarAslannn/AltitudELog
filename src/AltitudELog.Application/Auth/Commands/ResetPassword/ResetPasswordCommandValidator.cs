@@ -9,9 +9,6 @@ public class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordComm
         RuleFor(c => c.Token)
             .NotEmpty();
 
-        // MaximumLength matters as much as MinimumLength here: this endpoint is anonymous and the
-        // handler feeds the value straight to PasswordHasher, so an unbounded string is a cheap
-        // DoS vector. Same cap and rationale as RegisterCommandValidator/LoginCommandValidator.
         RuleFor(c => c.NewPassword)
             .NotEmpty()
             .MinimumLength(8)

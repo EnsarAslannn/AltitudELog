@@ -35,13 +35,8 @@ export function FlightFilterBar({
   isLoading,
 }: FlightFilterBarProps) {
   const panelId = useId()
-  // Open by default once something is filtered, so a shared URL doesn't look like an empty list
-  // with no explanation.
   const [isOpen, setIsOpen] = useState(activeFilterCount > 0)
 
-  // Local mirror of the search box: typing updates it immediately (so the field stays
-  // responsive) and only lands in the URL once typing pauses, instead of firing a request and a
-  // history entry per keystroke.
   const [searchDraft, setSearchDraft] = useState(query.search ?? '')
 
   useEffect(() => {
@@ -184,8 +179,7 @@ export function FlightFilterBar({
         </div>
       )}
 
-      {/* aria-live so screen-reader users hear the result count change after a filter edit —
-          the list itself updating silently gives them no feedback that anything happened. */}
+      {}
       <p aria-live="polite" className="text-xs text-on-surface-variant">
         {isLoading
           ? 'Uçuşlar filtreleniyor…'

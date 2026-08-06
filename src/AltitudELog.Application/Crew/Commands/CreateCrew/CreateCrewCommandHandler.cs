@@ -19,9 +19,6 @@ public class CreateCrewCommandHandler : IRequestHandler<CreateCrewCommand, Guid>
 
     public async Task<Guid> Handle(CreateCrewCommand request, CancellationToken cancellationToken)
     {
-        // Checked here rather than in the validator: a missing FK is a 404, not a 400. Without
-        // these the insert would fail on the database FK constraint and be misreported as the
-        // "already assigned" conflict below.
         var flightExists = await _context.Flights
             .AnyAsync(f => f.Id == request.FlightId, cancellationToken);
 

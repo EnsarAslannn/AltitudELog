@@ -21,8 +21,6 @@ public class ResetPasswordCommandHandlerTests
         return new TestApplicationDbContext(options);
     }
 
-    // Focused on the refresh-token revocation added alongside the refresh-token feature —
-    // not a full test of ResetPasswordCommandHandler's pre-existing behavior.
     [Fact]
     public async Task Handle_Should_Clear_Refresh_Token_When_Password_Is_Reset()
     {

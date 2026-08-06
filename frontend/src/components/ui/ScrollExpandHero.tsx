@@ -12,12 +12,6 @@ interface ScrollExpandHeroProps {
   children?: ReactNode
 }
 
-/**
- * Full-viewport hero: the media panel grows as the user scrolls/swipes, then the
- * title splits apart and `children` fades in once fully expanded. Ported from a
- * Next.js community component — swapped `next/image` for `<img>` and reads the
- * design system's colour/radius tokens instead of hardcoded Tailwind defaults.
- */
 export function ScrollExpandHero({
   mediaType = 'image',
   mediaSrc,
@@ -36,14 +30,10 @@ export function ScrollExpandHero({
   const reducedMotion = useRef(false)
 
   useEffect(() => {
-    // jsdom (unit tests) has no matchMedia implementation — feature-detect rather
-    // than crash in that environment.
     if (typeof window.matchMedia !== 'function') return
 
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
     reducedMotion.current = query.matches
-    // Vestibular-sensitive/keyboard users get the full hero + form immediately,
-    // rather than being forced through the scroll-hijack interaction to reach it.
     if (query.matches) {
       setScrollProgress(1)
       setMediaFullyExpanded(true)

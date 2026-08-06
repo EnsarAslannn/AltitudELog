@@ -3,29 +3,10 @@ import { aircraftCategory, type AircraftCategory } from '../../data/aircraftType
 import { cn } from '../../lib/cn'
 
 interface AircraftSilhouetteProps {
-  /** Raw aircraft type code as stored on the flight — resolved to a category internally. */
   code: string
   className?: string
 }
 
-/*
- * Top-down plan-view silhouettes, one per airframe family. Drawn on the same 24×24 grid and
- * with the same `fill="currentColor"` convention as the aircraft mark in RouteRibbon, so they
- * inherit the surrounding text colour rather than introducing a palette entry of their own.
- *
- * These distinguish *categories*, not models. At 16px the three jet silhouettes (widebody /
- * narrowbody / regional) differ only in fuselage width, wing sweep and tail shape and will read
- * similarly — that is accepted, because the type code is always rendered next to the silhouette
- * and the job here is instant family recognition, not identification. Propeller discs are drawn
- * as outlined circles: they are the one cue that stays unmistakable at the smallest size used.
- *
- * Each silhouette is one `d` built from several closed subpaths (fuselage, wings, engines, tail)
- * that overlap. **Every subpath must wind the same way — clockwise in this y-down coordinate
- * system.** Under SVG's default `nonzero` fill rule, two overlapping subpaths of opposite winding
- * cancel, which punches white notches out of the wing and tail roots. Mirrored left-hand parts
- * are therefore written in reversed vertex order relative to their right-hand twin, not as a
- * naive x-mirror.
- */
 const shapes: Record<AircraftCategory, ReactNode> = {
   widebody: (
     <path
@@ -49,8 +30,6 @@ const shapes: Record<AircraftCategory, ReactNode> = {
          M11.1 19 L11.1 21.1 L6.5 22.9 L6.5 21.8 Z"
     />
   ),
-  // Short fuselage, mild sweep, and the T-tail that visually separates a regional jet from a
-  // narrowbody at a glance.
   regional: (
     <path
       d="M12 2 C13.1 2 13.4 4 13.4 6.5 L13.4 19 L12.7 22.4 L11.3 22.4 L10.6 19 L10.6 6.5 C10.6 4 10.9 2 12 2 Z
@@ -61,12 +40,6 @@ const shapes: Record<AircraftCategory, ReactNode> = {
          M6 20.9 L18 20.9 L18 22.4 L6 22.4 Z"
     />
   ),
-  /*
-   * The two straight-wing families. Their wings are drawn as tapered trapezoids (thicker at the
-   * root than the tip) rather than plain bars — an untapered bar crossing a thin fuselage reads
-   * as a plus sign, not an aircraft. Nacelles overlap their prop discs so the disc sits on the
-   * wing instead of floating above it.
-   */
   turboprop: (
     <>
       <path
@@ -94,7 +67,6 @@ const shapes: Record<AircraftCategory, ReactNode> = {
       <circle cx="12" cy="3.6" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.3" />
     </>
   ),
-  // Sharp sweep plus engines mounted on the rear fuselage rather than under the wing.
   bizjet: (
     <path
       d="M12 1.5 C13 1.5 13.3 3.5 13.3 6 L13.3 18.5 L12.7 22.8 L11.3 22.8 L10.7 18.5 L10.7 6 C10.7 3.5 11 1.5 12 1.5 Z
@@ -121,18 +93,11 @@ const shapes: Record<AircraftCategory, ReactNode> = {
       />
     </>
   ),
-  // Reuses the generic aircraft mark already used as the in-transit figure on RouteRibbon,
-  // so an unrecognised type falls back to the app's existing aviation glyph rather than a gap.
   unknown: (
     <path d="M12 2 L14 12 L22 16 L22 18 L13 16 L13 21 L16 23 L16 24 L12 22.5 L8 24 L8 23 L11 21 L11 16 L2 18 L2 16 L10 12 Z" />
   ),
 }
 
-/**
- * Category silhouette for an aircraft type code. Decorative: the code (and usually the model
- * name) is always rendered alongside it, so the graphic carries no information of its own and
- * is hidden from assistive technology.
- */
 export function AircraftSilhouette({ code, className }: AircraftSilhouetteProps) {
   return (
     <svg

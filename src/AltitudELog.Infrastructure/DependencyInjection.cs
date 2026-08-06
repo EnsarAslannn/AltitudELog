@@ -25,9 +25,6 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IEmailService, SmtpEmailService>();
 
-        // Parse the full StackExchange.Redis connection string so managed Redis
-        // (e.g. Railway) with a password works — `host:port,password=…`. Fail-fast
-        // timeouts are layered on top; the caching pipeline stays fail-open.
         var redisOptions = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis")!);
         redisOptions.ConnectTimeout = 200;
         redisOptions.SyncTimeout = 200;

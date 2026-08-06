@@ -14,11 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AltitudELog.IntegrationTests.Pilots;
 
-// Covers the CSV formula-injection fix in AltitudELog.API.Common.Export.CsvLogbookWriter: a cell
-// value starting with =, +, -, or @ must be prefixed with a leading apostrophe so spreadsheet
-// apps (Excel, Sheets) read it as literal text instead of executing it as a formula. This lives
-// in AltitudELog.API (not Application), so it's exercised here at the HTTP level rather than as
-// an Application-layer unit test.
 [Collection("Integration")]
 public class LogbookCsvExportTests : IAsyncLifetime
 {

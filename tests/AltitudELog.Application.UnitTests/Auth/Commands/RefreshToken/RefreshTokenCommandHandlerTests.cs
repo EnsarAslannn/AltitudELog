@@ -103,9 +103,6 @@ public class RefreshTokenCommandHandlerTests
     [Fact]
     public async Task Handle_Should_Revoke_The_Session_When_A_Rotated_Token_Is_Replayed()
     {
-        // The whole point of rotation is that an exchanged token is dead. Before reuse detection
-        // the replay simply matched no pilot and 401ed, which quietly let a thief keep trying —
-        // and left the legitimate (stolen) session running.
         await using var context = CreateContext();
         const string firstToken = "first-refresh-token";
         var pilot = NewPilot(firstToken, DateTime.UtcNow.AddDays(1));
@@ -129,8 +126,6 @@ public class RefreshTokenCommandHandlerTests
     [Fact]
     public async Task Handle_Should_Invalidate_The_Rotated_Token_For_Everyone_After_A_Replay()
     {
-        // Revocation has to bite the newly issued token too, or the attacker's replay merely
-        // inconveniences them while the real client carries on.
         await using var context = CreateContext();
         const string firstToken = "first-refresh-token";
         var pilot = NewPilot(firstToken, DateTime.UtcNow.AddDays(1));
@@ -153,8 +148,6 @@ public class RefreshTokenCommandHandlerTests
     [Fact]
     public async Task Handle_Should_Reject_And_Revoke_A_Session_Past_Its_Absolute_Lifetime()
     {
-        // The sliding expiry is pushed out on every rotation, so without this ceiling refreshing
-        // once a week keeps a session — and a stolen token — alive indefinitely.
         await using var context = CreateContext();
         const string rawToken = "long-lived-refresh-token";
         var pilot = NewPilot(rawToken, DateTime.UtcNow.AddDays(1));

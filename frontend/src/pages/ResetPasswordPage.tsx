@@ -64,9 +64,6 @@ export function ResetPasswordPage() {
           <p className="mb-6 text-sm text-on-surface-variant">Yeni şifrenizi girin.</p>
           <Card>
             {token === '' ? (
-              // Landing here without a token can only come from a malformed or truncated link.
-              // Rendering the form anyway meant the user typed a password twice only to get a
-              // generic 400 from the token's NotEmpty rule.
               <p role="alert" className="text-sm text-error">
                 Bağlantı geçersiz. Sıfırlama e-postasındaki bağlantıyı olduğu gibi kullanın veya{' '}
                 <Link to="/forgot-password" className="font-medium underline underline-offset-4">

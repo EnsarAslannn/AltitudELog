@@ -8,11 +8,6 @@ interface CrmTrendChartProps {
 
 const severityOrder: SeverityLevel[] = ['Low', 'Medium', 'High', 'Critical']
 
-// Fixed status ramp (good/warning/serious/critical) — reserved colors, never
-// reused for arbitrary series, matched 1:1 to the severity levels they name.
-// These mirror the Badge green/warning/orange/red tones exactly, so a report's
-// chip and its bar always agree. Carried at full strength so they read as real
-// colour against the cool navy surfaces rather than as tinted grey.
 const severityColor: Record<SeverityLevel, string> = {
   Low: '#1e7a4d',
   Medium: '#a8751a',
@@ -24,11 +19,6 @@ const monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', '
 
 const CHART_WIDTH = 640
 const CHART_HEIGHT = 220
-// Below this real rendered width, bar/label text (sized in viewBox units, which scale
-// with the whole SVG) would shrink past legibility — scroll horizontally instead of
-// shrinking further. This div carries the positioning context for the tooltip too, so
-// its own box always matches the SVG's actual rendered width (scrolled or not) and the
-// percentage math below still lines up.
 const CHART_MIN_WIDTH = 480
 const PADDING_TOP = 24
 const PADDING_BOTTOM = 28
@@ -93,10 +83,6 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                         onMouseEnter={() => setHovered(point)}
                         onMouseLeave={() => setHovered(null)}
                         onClick={(e) => {
-                          // Touch has no real hover: a tap fires a synthetic mouseenter right
-                          // before this click, so setting (rather than toggling) is what keeps
-                          // a tap and the hover it triggers in agreement instead of cancelling
-                          // out. Dismissed by tapping elsewhere (see the wrapper's onClick).
                           e.stopPropagation()
                           setHovered(point)
                         }}

@@ -15,8 +15,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
     private readonly ILogger<LoginCommandHandler> _logger;
     private readonly PasswordHasher<Pilot> _passwordHasher = new();
 
-    // Verifying against this dummy hash when no pilot matches keeps Handle's cost roughly
-    // constant whether or not the username exists, so response timing doesn't reveal it.
     private static readonly string DummyPasswordHash = new PasswordHasher<Pilot>()
         .HashPassword(new Pilot(), Guid.NewGuid().ToString());
 
@@ -32,8 +30,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
     public async Task<AuthResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // Usernames are stored normalised (see CredentialNormalizer) — look up the same way, or
-        // someone who registered as "Ensar" could never sign in as "ensar".
         var username = CredentialNormalizer.NormalizeUsername(request.Username);
 
         var pilot = await _context.Pilots
@@ -41,9 +37,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         if (pilot is null)
         {
-            // Still run a hash verification against a dummy hash so this path costs roughly
-            // the same as the "pilot exists, password wrong" path below — otherwise the early
-            // return here would make username enumeration observable via response timing.
             _passwordHasher.VerifyHashedPassword(new Pilot(), DummyPasswordHash, request.Password);
             _logger.LogWarning("Login failed for username {Username}: no such pilot", request.Username);
             throw new UnauthorizedAccessException("Invalid username or password.");
@@ -59,9 +52,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
 
-        // Starts a *new* session: this is the only place the absolute-lifetime clock is set, and
-        // it also clears any leftover previous-token hash so a token from the old session can't
-        // be mistaken for a reuse of this one.
         var refreshToken = RefreshTokenPolicy.StartSession(pilot, DateTime.UtcNow);
         await _context.SaveChangesAsync(cancellationToken);
 

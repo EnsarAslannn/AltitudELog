@@ -21,10 +21,6 @@ public class FlightConcurrencyTests : IAsyncLifetime
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    // xmin-based concurrency tokens can't be simulated against the EF Core InMemory
-    // provider used by the unit test project (it's a real Postgres system column), so this
-    // has to run against the Testcontainers-backed Postgres instance to prove
-    // FlightConfiguration's UseXminAsConcurrencyToken() actually detects a lost update.
     [Fact]
     public async Task Concurrent_Saves_On_Same_Flight_Throw_DbUpdateConcurrencyException()
     {
@@ -50,9 +46,6 @@ public class FlightConcurrencyTests : IAsyncLifetime
         var contextA = scopeA.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var contextB = scopeB.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // Both contexts load the row before either writes, so each tracks the same
-        // "original" xmin — mirroring two requests that both read the flight before
-        // either one's update lands.
         var flightA = await contextA.Flights.SingleAsync(f => f.Id == flightId);
         var flightB = await contextB.Flights.SingleAsync(f => f.Id == flightId);
 

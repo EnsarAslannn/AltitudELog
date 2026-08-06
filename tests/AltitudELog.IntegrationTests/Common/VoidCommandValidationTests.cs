@@ -120,8 +120,6 @@ public class VoidCommandValidationTests : IAsyncLifetime
     [Fact]
     public async Task Post_ResetPassword_With_Too_Short_Password_Returns_BadRequest()
     {
-        // Anonymous endpoint, and a void command: the MinimumLength(8) rule never ran, so the
-        // handler was reached and answered 401 for the bogus token instead of 400 for the password.
         var response = await _client.PostAsJsonAsync(
             "/Auth/reset-password", new { token = "irrelevant-token", newPassword = "abc" });
 

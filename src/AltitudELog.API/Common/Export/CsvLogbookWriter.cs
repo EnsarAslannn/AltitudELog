@@ -28,8 +28,6 @@ public static class CsvLogbookWriter
 
     private static readonly char[] FormulaTriggerChars = ['=', '+', '-', '@'];
 
-    // Spreadsheet apps (Excel, Sheets) treat a cell starting with =/+/-/@ as a formula; a
-    // leading apostrophe forces it to be read as literal text, closing the CSV-injection vector.
     private static string EscapeFormulaInjection(string value) =>
         value.Length > 0 && FormulaTriggerChars.Contains(value[0])
             ? $"'{value}"

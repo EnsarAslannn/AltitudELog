@@ -119,9 +119,6 @@ public class FlightsAuthorizationTests : IAsyncLifetime
     [Fact]
     public async Task Post_Flights_As_ChiefPilot_Returns_Created()
     {
-        // ChiefPilot outranks Captain, so a Captain-only role gate would lock the more senior rank
-        // out of logging flights entirely — [Authorize(Roles = ...)] is an exact-match list, not a
-        // hierarchy. StatsController already admitted both ranks; this keeps the rest in step.
         var token = await RegisterAndLoginAsync(PilotRank.ChiefPilot, "chief");
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

@@ -75,9 +75,6 @@ export function EditFlightPage() {
     )
   }
 
-  // FlightDetailPage hides the Düzenle link for a cancelled flight, but /flights/:id/edit is
-  // reachable directly. The API rejects the update with a 409, so without this the user fills the
-  // whole form in before finding out it was never going to save.
   if (flight.isCancelled) {
     return (
       <Card className="mx-auto flex max-w-lg flex-col items-start gap-4">

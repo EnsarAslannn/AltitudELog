@@ -18,8 +18,6 @@ import type { FlightsPageResult } from '../types/flight'
 import type { ApiError } from '../types/problemDetails'
 
 export function DashboardPage() {
-  // Filters and page number live in the URL (see useFlightQuery) so a filtered view is
-  // shareable and Back returns to it instead of resetting to an unfiltered page 1.
   const { query, updateQuery, clearFilters, activeFilterCount } = useFlightQuery()
   const page = query.pageNumber ?? 1
 
@@ -43,9 +41,6 @@ export function DashboardPage() {
       .then((data) => {
         if (cancelled) return
 
-        // Cancelling a flight, or narrowing a filter, can shrink the list out from under the
-        // current page. Pagination renders nothing below two pages, so without this the user is
-        // stranded on an empty card with no control to get back.
         const lastPage = Math.max(1, Math.ceil(data.totalCount / data.pageSize))
         if (page > lastPage) {
           updateQuery({ pageNumber: lastPage })
@@ -108,7 +103,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      {/* Hero band */}
+      {}
       <section className="relative min-h-[280px] overflow-hidden rounded-lg bg-surface rise sm:min-h-[340px]">
         <img
           src="/images/runway.jpg"
@@ -130,14 +125,14 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-1 gap-4 rise sm:grid-cols-3" style={{ '--rise-delay': '80ms' } as React.CSSProperties}>
         <StatTile icon={Plane} label="Toplam Uçuş" value={activeCount} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={thisMonthCount} />
         <StatTile icon={Wrench} label="Uçak Tipi" value={distinctAircraftTypeCount} />
       </div>
 
-      {/* Flight strips */}
+      {}
       <section className="flex flex-col gap-5" aria-busy={isPageLoading}>
         <Eyebrow>Uçuş Kayıtları</Eyebrow>
 
@@ -155,9 +150,7 @@ export function DashboardPage() {
             <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            {/* An empty list means two very different things depending on whether a filter is on,
-                and telling the user "add your first flight" when they have 200 of them behind a
-                filter is actively misleading. */}
+            {}
             {activeFilterCount > 0 ? (
               <>
                 <p className="font-medium text-on-surface">Bu filtrelere uyan uçuş yok.</p>
@@ -188,7 +181,7 @@ export function DashboardPage() {
               >
                 <Card interactive className={cn('overflow-hidden p-0', flight.isCancelled && 'opacity-60')}>
                   <div className="flex flex-col sm:flex-row">
-                    {/* boarding-pass stub */}
+                    {}
                     <div className="flex items-center gap-3 border-b border-dashed border-outline-variant/50 bg-surface-container-low px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
                       <span className="eyebrow text-[10px] text-outline">Aircraft</span>
                       <span className="flex items-center gap-2">
@@ -201,7 +194,7 @@ export function DashboardPage() {
                         </span>
                       </span>
                     </div>
-                    {/* route + meta */}
+                    {}
                     <div className="flex flex-1 flex-col gap-4 px-6 py-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <RouteRibbon origin={flight.originICAO} destination={flight.destinationICAO} size="md" />

@@ -12,8 +12,6 @@ export function Button({
   icon: Icon,
   className,
   children,
-  // Without an explicit default a <Button> inside a <form> inherits type="submit" and silently
-  // submits it — the opposite of what a plain action button should do.
   type = 'button',
   ...props
 }: ButtonProps) {

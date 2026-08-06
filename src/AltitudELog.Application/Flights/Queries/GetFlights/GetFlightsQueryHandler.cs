@@ -16,28 +16,16 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
 
     public async Task<FlightsPageResult> Handle(GetFlightsQuery request, CancellationToken cancellationToken)
     {
-        // Every figure below is derived from the *filtered* set, not the whole table. With a
-        // filter bar on screen, global tiles next to a filtered list would just be confusing —
-        // and TotalCount has to match the filtered rows or pagination breaks. With no filters
-        // applied this is identical to the pre-filter behaviour.
         var flights = ApplyFilters(_context.Flights.AsNoTracking(), request);
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var firstOfMonth = new DateOnly(today.Year, today.Month, 1);
         var firstOfNextMonth = firstOfMonth.AddMonths(1);
 
-        // Counts every row Items pages through — cancelled flights stay in the list (shown with a
-        // badge via FlightDto.IsCancelled), so excluding them here would make the page count
-        // disagree with the rows actually returned.
         var totalCount = await flights.CountAsync(cancellationToken);
 
-        // The dashboard tiles exclude cancelled flights, matching GetStatsQuery,
-        // GetPilotProfileQuery and GetPilotLogbookQuery — otherwise they disagree with the stats
-        // page as soon as anything is cancelled.
         var activeCount = await flights.CountAsync(f => !f.IsCancelled, cancellationToken);
 
-        // Half-open range rather than Year/Month equality: the latter translates to date_part()
-        // on the column, which no index can serve.
         var thisMonthCount = await flights
             .CountAsync(
                 f => !f.IsCancelled && f.Date >= firstOfMonth && f.Date < firstOfNextMonth,
@@ -79,10 +67,6 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
     {
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            // ToLower().Contains rather than EF.Functions.ILike: ILike lives in the Npgsql
-            // package, and Application deliberately takes no provider dependency. This
-            // translates to lower(col) LIKE '%term%' on Postgres and works under the InMemory
-            // provider the unit tests use.
             var term = request.Search.Trim().ToLowerInvariant();
 
             flights = flights.Where(f =>
@@ -127,8 +111,6 @@ public class GetFlightsQueryHandler : IRequestHandler<GetFlightsQuery, FlightsPa
         return flights;
     }
 
-    // Id is always the final tiebreaker: without it, rows sharing a sort value can be returned in
-    // a different order per page, so the same flight shows up twice or not at all while paging.
     private static IOrderedQueryable<Flight> ApplySort(IQueryable<Flight> flights, GetFlightsQuery request)
     {
         var descending = request.SortDescending;

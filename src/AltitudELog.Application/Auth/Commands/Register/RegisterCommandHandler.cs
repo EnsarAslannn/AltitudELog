@@ -42,8 +42,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             throw new InvalidOperationException($"License number '{request.LicenseNumber}' is already registered.");
         }
 
-        // Email carries a unique index too (PilotConfiguration), so without this check a duplicate
-        // address fell through to SaveChangesAsync and got reported as a username/licence clash.
         if (email is not null)
         {
             var emailTaken = await _context.Pilots.AnyAsync(p => p.Email == email, cancellationToken);
@@ -59,7 +57,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             Id = Guid.NewGuid(),
             Name = request.Name,
             LicenseNumber = request.LicenseNumber,
-            // Honour the requested rank, guarding against out-of-range enum values.
             Rank = Enum.IsDefined(request.Rank) ? request.Rank : PilotRank.Trainee,
             Username = username,
             Email = email,
@@ -77,7 +74,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         }
         catch (DbUpdateException ex)
         {
-            // Backstop for a unique-index violation that raced past the checks above.
             throw new InvalidOperationException(
                 "Username, license number or email is already registered.", ex);
         }

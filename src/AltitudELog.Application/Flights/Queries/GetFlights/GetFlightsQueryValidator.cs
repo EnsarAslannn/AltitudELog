@@ -12,8 +12,6 @@ public class GetFlightsQueryValidator : AbstractValidator<GetFlightsQuery>
         RuleFor(q => q.PageSize)
             .InclusiveBetween(1, 100);
 
-        // Bounded because the term goes into a leading-wildcard LIKE, which no index can serve —
-        // an unbounded string is a cheap way to make the database do a lot of work per request.
         RuleFor(q => q.Search)
             .MaximumLength(100);
 
@@ -33,8 +31,6 @@ public class GetFlightsQueryValidator : AbstractValidator<GetFlightsQuery>
             .When(q => q.DateFrom.HasValue && q.DateTo.HasValue)
             .WithMessage("DateTo must be on or after DateFrom.");
 
-        // Without IsInEnum an out-of-range value would fall through the handler's sort switch to
-        // its default arm and be served as a Date sort, quietly ignoring what was asked for.
         RuleFor(q => q.SortBy)
             .IsInEnum();
     }

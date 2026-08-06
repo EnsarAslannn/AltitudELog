@@ -22,10 +22,6 @@ export function ForgotPasswordPage() {
     try {
       await authService.forgotPassword({ email })
 
-      // Same outcome whether or not the email is registered — the API deliberately answers 204
-      // either way, so showing anything conditional here would undo that. A transport failure is
-      // a different thing though: reporting "sent" when the request never completed (429, 500,
-      // offline) leaves the user waiting for mail that was never going to arrive.
       setSubmitted(true)
     } catch (err) {
       setError(apiErrorMessage(err as ApiError, 'İstek gönderilemedi. Lütfen tekrar deneyin.'))

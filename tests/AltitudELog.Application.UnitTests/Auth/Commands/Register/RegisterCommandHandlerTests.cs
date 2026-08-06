@@ -81,8 +81,6 @@ public class RegisterCommandHandlerTests
     [Fact]
     public async Task Handle_Should_Throw_When_Email_Already_Registered()
     {
-        // Email carries a unique index, so this used to fall through to SaveChangesAsync and be
-        // reported as a username/licence clash — naming two fields that were both fine.
         await using var context = CreateContext();
         var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
 

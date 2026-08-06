@@ -57,8 +57,6 @@ describe('PilotProfilePage', () => {
   })
 
   it('surfaces an error when the logbook export fails', async () => {
-    // handleExport is wired to onClick, so before this the rejection was unhandled and the user
-    // got no feedback at all — the button just settled back.
     const user = userEvent.setup()
     vi.mocked(pilotService.exportLogbook).mockRejectedValueOnce({
       status: 500,
@@ -76,9 +74,6 @@ describe('PilotProfilePage', () => {
   })
 
   it('keeps the certificate form mounted while refreshing after a save', async () => {
-    // The post-save refetch used to run the initial-load path, which flips the page to its
-    // full-page skeleton — unmounting the form the user had just submitted and taking focus and
-    // any pending message with it.
     const user = userEvent.setup()
     useAuthStore.setState({ isAuthenticated: true, pilotId: profile.id })
     vi.mocked(pilotService.updateCertificates).mockResolvedValue({} as never)
@@ -95,9 +90,6 @@ describe('PilotProfilePage', () => {
   })
 
   it('re-enables the export buttons after a failure under StrictMode', async () => {
-    // StrictMode mounts, runs the cleanup, then remounts. The mounted-ref was only ever set to
-    // false by that cleanup, so it stayed false for the rest of the session and the button was
-    // left disabled on "İndiriliyor…" forever after the first click.
     const user = userEvent.setup()
     vi.mocked(pilotService.exportLogbook).mockRejectedValueOnce({
       status: 500,

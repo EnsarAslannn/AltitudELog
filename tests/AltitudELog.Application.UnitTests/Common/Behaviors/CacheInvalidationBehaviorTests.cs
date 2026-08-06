@@ -11,10 +11,6 @@ namespace AltitudELog.Application.UnitTests.Common.Behaviors;
 
 public class CacheInvalidationBehaviorTests
 {
-    // Public (not private/nested-private) because CacheInvalidationBehavior<TRequest,TResponse>
-    // depends on ILogger<CacheInvalidationBehavior<TRequest,TResponse>>, and NSubstitute/Castle
-    // DynamicProxy needs to generate a proxy over that closed generic type — which requires
-    // TRequest to be an accessible (public) type, not a private nested class.
     public record InvalidatingTestCommand(string[] Keys) : IRequest<string>, ICacheInvalidatorCommand
     {
         public string[] CacheKeysToInvalidate => Keys;

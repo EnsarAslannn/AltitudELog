@@ -17,9 +17,6 @@ describe('CancelFlightControl', () => {
 
   it('reports a 409 in Turkish and refetches so the stale action goes away', async () => {
     const user = userEvent.setup()
-    // DomainExceptionHandler's 409 detail is raw English ("Flight ... is already cancelled."),
-    // which used to be rendered verbatim in an otherwise Turkish UI — and the page kept offering
-    // a Cancel button for a flight that was already cancelled.
     vi.mocked(flightService.cancel).mockRejectedValueOnce({
       status: 409,
       title: 'Conflict',

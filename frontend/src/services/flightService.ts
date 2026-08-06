@@ -8,8 +8,6 @@ import type {
 } from '../types/flight'
 
 export const flightService = {
-  // Empty strings are dropped rather than sent: the API validates OriginICAO as exactly 4
-  // characters *when present*, so posting `originICAO=` for a cleared filter would 400.
   getAll: (query: FlightQuery = {}) => {
     const params = Object.fromEntries(
       Object.entries({ pageNumber: 1, pageSize: 20, ...query }).filter(

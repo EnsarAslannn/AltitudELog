@@ -89,9 +89,6 @@ describe('DashboardPage', () => {
 
   it('clamps back to the last page when the list shrinks underneath it', async () => {
     const user = userEvent.setup()
-    // The user is on page 2; by the time it loads, the list has shrunk to a single page. Without
-    // clamping, Pagination renders nothing (it hides below two pages) and the user is stranded on
-    // an empty card with no way back.
     const shrunk: FlightsPageResult = { ...page1, items: [], totalCount: 3, pageNumber: 2 }
 
     vi.mocked(flightService.getAll)
@@ -115,7 +112,6 @@ describe('DashboardPage', () => {
   })
 
   it('reads filters from the URL and passes them to the API', async () => {
-    // Filters live in the URL so a filtered view is shareable and survives Back.
     vi.mocked(flightService.getAll).mockResolvedValue(page1)
 
     render(
@@ -138,7 +134,6 @@ describe('DashboardPage', () => {
   })
 
   it('offers to clear filters instead of "add your first flight" on an empty filtered list', async () => {
-    // Telling someone with 200 flights to add their first one is actively misleading.
     const user = userEvent.setup()
     vi.mocked(flightService.getAll).mockResolvedValue({ ...page1, items: [], totalCount: 0 })
 

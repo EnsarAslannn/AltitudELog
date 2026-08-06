@@ -28,15 +28,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
     public IBackgroundJobClient BackgroundJobClient { get; } = Substitute.For<IBackgroundJobClient>();
 
-    // WebApplicationFactory's in-process HttpClient always originates from the same
-    // loopback IP, so the login rate limiter's per-IP bucket is shared across every test in
-    // a collection using this factory. Most integration tests just need many legitimate
-    // logins to work — only LoginRateLimitTests (via RateLimitTestWebAppFactory) needs the
-    // real, restrictive limit to actually observe a 429.
     protected virtual int LoginRateLimitPermitLimit => 1000;
 
-    // Same rationale as LoginRateLimitPermitLimit above, for the shared "auth" policy
-    // (register/forgot-password/reset-password/refresh) — only AuthRateLimitTests needs the real limit.
     protected virtual int AuthRateLimitPermitLimit => 1000;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -55,9 +48,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Hangfire:DashboardPassword"] = "test-password",
                 ["RateLimiting:Login:PermitLimit"] = LoginRateLimitPermitLimit.ToString(),
                 ["RateLimiting:Auth:PermitLimit"] = AuthRateLimitPermitLimit.ToString(),
-                // WebApplicationFactory hosts run with EnvironmentName defaulting to
-                // "Production" (no ASPNETCORE_ENVIRONMENT is set for the test process), which
-                // trips Program.cs's Cors:AllowedOrigins fail-fast unless configured explicitly here.
                 ["Cors:AllowedOrigins:0"] = "http://localhost:5180"
             });
         });

@@ -57,8 +57,6 @@ export function FlightForm({
     [],
   )
 
-  // Backend rejects future flight dates (CreateFlightCommandValidator/UpdateFlightCommandValidator);
-  // block them in the date picker itself instead of only surfacing it via a round-trip 400.
   const maxDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   async function handleSubmit(event: FormEvent) {

@@ -1,8 +1,3 @@
-/**
- * Broad airframe families, used to pick a silhouette. Deliberately coarse: a category is
- * still correct when the exact variant isn't recognised, which matters because the aircraft
- * type field is free text (the API only length-checks it) and any code can arrive here.
- */
 export type AircraftCategory =
   | 'widebody'
   | 'narrowbody'
@@ -19,10 +14,7 @@ export interface AircraftType {
   category: AircraftCategory
 }
 
-// Curated list of common commercial, regional/GA, and business-jet types.
-// Not exhaustive — users can still type any aircraft type not listed here.
 export const aircraftTypes: AircraftType[] = [
-  // Airbus narrow/wide-body
   { code: 'A318', label: 'Airbus A318', category: 'narrowbody' },
   { code: 'A319', label: 'Airbus A319', category: 'narrowbody' },
   { code: 'A320', label: 'Airbus A320', category: 'narrowbody' },
@@ -40,7 +32,6 @@ export const aircraftTypes: AircraftType[] = [
   { code: 'A35K', label: 'Airbus A350-1000', category: 'widebody' },
   { code: 'A380', label: 'Airbus A380', category: 'widebody' },
 
-  // Boeing narrow/wide-body
   { code: 'B734', label: 'Boeing 737-400', category: 'narrowbody' },
   { code: 'B737', label: 'Boeing 737', category: 'narrowbody' },
   { code: 'B738', label: 'Boeing 737-800', category: 'narrowbody' },
@@ -59,7 +50,6 @@ export const aircraftTypes: AircraftType[] = [
   { code: 'B789', label: 'Boeing 787-9', category: 'widebody' },
   { code: 'B78X', label: 'Boeing 787-10', category: 'widebody' },
 
-  // Regional jets & turboprops
   { code: 'E170', label: 'Embraer E170', category: 'regional' },
   { code: 'E175', label: 'Embraer E175', category: 'regional' },
   { code: 'E190', label: 'Embraer E190', category: 'regional' },
@@ -75,8 +65,6 @@ export const aircraftTypes: AircraftType[] = [
   { code: 'DH8D', label: 'Bombardier Dash 8 Q400', category: 'turboprop' },
   { code: 'SB20', label: 'Saab 2000', category: 'turboprop' },
 
-  // General aviation — split by powerplant, since a turbine single and a piston single
-  // read differently in silhouette even though both sit in this group.
   { code: 'C152', label: 'Cessna 152', category: 'piston' },
   { code: 'C172', label: 'Cessna 172 Skyhawk', category: 'piston' },
   { code: 'C182', label: 'Cessna 182 Skylane', category: 'piston' },
@@ -96,7 +84,6 @@ export const aircraftTypes: AircraftType[] = [
   { code: 'BE20', label: 'Beechcraft King Air 200', category: 'turboprop' },
   { code: 'BE9L', label: 'Beechcraft King Air 90', category: 'turboprop' },
 
-  // Business jets
   { code: 'C25A', label: 'Cessna Citation CJ2', category: 'bizjet' },
   { code: 'C25B', label: 'Cessna Citation CJ3', category: 'bizjet' },
   { code: 'C25C', label: 'Cessna Citation CJ4', category: 'bizjet' },
@@ -125,7 +112,6 @@ export const aircraftTypes: AircraftType[] = [
   { code: 'FA8X', label: 'Dassault Falcon 8X', category: 'bizjet' },
   { code: 'F2TH', label: 'Dassault Falcon 2000', category: 'bizjet' },
 
-  // Helicopters
   { code: 'R44', label: 'Robinson R44', category: 'helicopter' },
   { code: 'R66', label: 'Robinson R66', category: 'helicopter' },
   { code: 'EC35', label: 'Airbus H135', category: 'helicopter' },
@@ -138,11 +124,6 @@ export const aircraftTypes: AircraftType[] = [
 
 const byCode = new Map(aircraftTypes.map((t) => [t.code, t]))
 
-/**
- * Case- and whitespace-tolerant exact lookup. Deliberately no fuzzy or prefix matching
- * (`B7*` → jet and the like): silently labelling an aircraft as something it isn't would be
- * worse in a logbook than showing nothing, so unrecognised codes fall through to `unknown`.
- */
 export function lookupAircraft(code: string): AircraftType | undefined {
   return byCode.get(code.trim().toUpperCase())
 }
@@ -151,7 +132,6 @@ export function aircraftCategory(code: string): AircraftCategory {
   return lookupAircraft(code)?.category ?? 'unknown'
 }
 
-/** Full model name (e.g. `Boeing 737-800`), or `undefined` for a code that isn't in the list. */
 export function aircraftLabel(code: string): string | undefined {
   return lookupAircraft(code)?.label
 }

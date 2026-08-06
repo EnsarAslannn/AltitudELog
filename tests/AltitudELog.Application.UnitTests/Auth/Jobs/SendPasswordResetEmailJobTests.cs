@@ -59,7 +59,6 @@ public class SendPasswordResetEmailJobTests
     [Fact]
     public async Task ExecuteAsync_Should_Email_The_Raw_Token_But_Store_Only_Its_Hash()
     {
-        // A database read must not be convertible into a password reset.
         await using var context = CreateContext();
         var pilot = NewPilot("pilot@example.com");
         context.Pilots.Add(pilot);

@@ -47,7 +47,6 @@ public class GetFlightsQueryValidatorTests
     [Fact]
     public void Validate_Should_Fail_When_Search_Exceeds_MaxLength()
     {
-        // The term goes into a leading-wildcard LIKE, which no index can serve.
         var result = _validator.Validate(new GetFlightsQuery { Search = new string('a', 101) });
 
         result.IsValid.Should().BeFalse();
@@ -65,7 +64,6 @@ public class GetFlightsQueryValidatorTests
     [Fact]
     public void Validate_Should_Ignore_An_Empty_Icao_Filter()
     {
-        // Empty means "no filter", which the handler skips — it must not trip the length rule.
         var result = _validator.Validate(new GetFlightsQuery { OriginICAO = "" });
 
         result.IsValid.Should().BeTrue();
@@ -97,8 +95,6 @@ public class GetFlightsQueryValidatorTests
     [Fact]
     public void Validate_Should_Fail_For_A_SortBy_Outside_The_Enum()
     {
-        // Otherwise it falls through the handler's switch to a Date sort, silently ignoring the
-        // caller's request rather than telling them it was invalid.
         var result = _validator.Validate(new GetFlightsQuery { SortBy = (FlightSortField)999 });
 
         result.IsValid.Should().BeFalse();

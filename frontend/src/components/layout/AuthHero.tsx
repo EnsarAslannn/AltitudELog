@@ -24,7 +24,7 @@ export function AuthHero({
         className="photo-rich absolute inset-0 h-full w-full object-cover"
         loading="eager"
       />
-      {/* bottom-weighted scrim: copy sits on solid surface, photo stays open up top */}
+      {}
       <div className="absolute inset-0 hero-scrim-panel" />
 
       <div className="relative flex flex-1 flex-col justify-between p-12">

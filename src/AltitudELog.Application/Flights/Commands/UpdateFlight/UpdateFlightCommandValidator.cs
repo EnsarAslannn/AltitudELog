@@ -6,10 +6,6 @@ public class UpdateFlightCommandValidator : AbstractValidator<UpdateFlightComman
 {
     public UpdateFlightCommandValidator()
     {
-        // Deliberately no existence check here. Validation failures map to 400, but "this flight
-        // does not exist" is a 404 — UpdateFlightCommandHandler throws NotFoundException for it,
-        // matching CancelFlightCommand (which has no validator) and the documented mapping in
-        // DomainExceptionHandler.
         RuleFor(f => f.FlightId).NotEmpty();
 
         RuleFor(f => f.OriginICAO)

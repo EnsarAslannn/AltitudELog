@@ -5,11 +5,7 @@ export interface Airport {
   country: string
 }
 
-// Curated set of major/notable airports, weighted toward Turkey (app locale)
-// plus major global hubs. Not exhaustive — users can still type any ICAO code
-// not listed here.
 export const airports: Airport[] = [
-  // Turkey
   { icao: 'LTFM', name: 'Istanbul Airport', city: 'İstanbul', country: 'Türkiye' },
   { icao: 'LTFJ', name: 'Sabiha Gökçen', city: 'İstanbul', country: 'Türkiye' },
   { icao: 'LTAC', name: 'Esenboğa', city: 'Ankara', country: 'Türkiye' },
@@ -47,7 +43,6 @@ export const airports: Airport[] = [
   { icao: 'LTCI', name: 'Hatay', city: 'Hatay', country: 'Türkiye' },
   { icao: 'LTFY', name: 'Ordu-Giresun', city: 'Ordu', country: 'Türkiye' },
 
-  // Europe
   { icao: 'EHAM', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Hollanda' },
   { icao: 'EGLL', name: 'Heathrow', city: 'Londra', country: 'Birleşik Krallık' },
   { icao: 'EGKK', name: 'Gatwick', city: 'Londra', country: 'Birleşik Krallık' },
@@ -119,7 +114,6 @@ export const airports: Airport[] = [
   { icao: 'EETN', name: 'Tallinn', city: 'Tallinn', country: 'Estonya' },
   { icao: 'UKBB', name: 'Boryspil', city: 'Kiev', country: 'Ukrayna' },
 
-  // Middle East
   { icao: 'OMDB', name: 'Dubai Uluslararası', city: 'Dubai', country: 'BAE' },
   { icao: 'OMAA', name: 'Abu Dabi', city: 'Abu Dabi', country: 'BAE' },
   { icao: 'OMSJ', name: 'Sharjah', city: 'Sharjah', country: 'BAE' },
@@ -133,7 +127,6 @@ export const airports: Airport[] = [
   { icao: 'OLBA', name: 'Rafic Hariri', city: 'Beyrut', country: 'Lübnan' },
   { icao: 'OIIE', name: 'İmam Humeyni', city: 'Tahran', country: 'İran' },
 
-  // North America
   { icao: 'KJFK', name: 'John F. Kennedy', city: 'New York', country: 'ABD' },
   { icao: 'KLGA', name: 'LaGuardia', city: 'New York', country: 'ABD' },
   { icao: 'KEWR', name: 'Newark Liberty', city: 'Newark', country: 'ABD' },
@@ -177,7 +170,6 @@ export const airports: Airport[] = [
   { icao: 'MMMX', name: 'Mexico City', city: 'Mexico City', country: 'Meksika' },
   { icao: 'MMUN', name: 'Cancún', city: 'Cancún', country: 'Meksika' },
 
-  // South America
   { icao: 'SBGR', name: 'Guarulhos', city: 'São Paulo', country: 'Brezilya' },
   { icao: 'SBSP', name: 'Congonhas', city: 'São Paulo', country: 'Brezilya' },
   { icao: 'SBGL', name: 'Galeão', city: 'Rio de Janeiro', country: 'Brezilya' },
@@ -191,7 +183,6 @@ export const airports: Airport[] = [
   { icao: 'SUMU', name: 'Carrasco', city: 'Montevideo', country: 'Uruguay' },
   { icao: 'MPTO', name: 'Tocumen', city: 'Panama City', country: 'Panama' },
 
-  // Africa
   { icao: 'HECA', name: 'Kahire', city: 'Kahire', country: 'Mısır' },
   { icao: 'FAOR', name: 'O.R. Tambo', city: 'Johannesburg', country: 'Güney Afrika' },
   { icao: 'FACT', name: 'Cape Town', city: 'Cape Town', country: 'Güney Afrika' },
@@ -202,7 +193,6 @@ export const airports: Airport[] = [
   { icao: 'HAAB', name: 'Bole', city: 'Addis Ababa', country: 'Etiyopya' },
   { icao: 'DAAG', name: 'Houari Boumediene', city: 'Cezayir', country: 'Cezayir' },
 
-  // Asia
   { icao: 'RJTT', name: 'Haneda', city: 'Tokyo', country: 'Japonya' },
   { icao: 'RJAA', name: 'Narita', city: 'Tokyo', country: 'Japonya' },
   { icao: 'RJBB', name: 'Kansai', city: 'Osaka', country: 'Japonya' },
@@ -243,7 +233,6 @@ export const airports: Airport[] = [
   { icao: 'UAAA', name: 'Almatı', city: 'Almatı', country: 'Kazakistan' },
   { icao: 'UACC', name: 'Astana', city: 'Astana', country: 'Kazakistan' },
 
-  // Oceania
   { icao: 'YSSY', name: 'Kingsford Smith', city: 'Sidney', country: 'Avustralya' },
   { icao: 'YMML', name: 'Melbourne', city: 'Melbourne', country: 'Avustralya' },
   { icao: 'YBBN', name: 'Brisbane', city: 'Brisbane', country: 'Avustralya' },

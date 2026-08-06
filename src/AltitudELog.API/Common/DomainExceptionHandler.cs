@@ -26,9 +26,6 @@ public class DomainExceptionHandler : IExceptionHandler
             return false;
         }
 
-        // EF's default DbUpdateConcurrencyException.Message is a technical, unhelpful
-        // sentence ("Database operation expected to affect 1 row(s) but affected 0...") —
-        // surface a message the caller can actually act on instead.
         var detail = exception is DbUpdateConcurrencyException
             ? "The record was modified by another request. Please reload and try again."
             : exception.Message;

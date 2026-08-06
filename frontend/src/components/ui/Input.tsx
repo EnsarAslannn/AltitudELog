@@ -24,8 +24,6 @@ export function Input({ label, errors, icon: Icon, id, className, ...props }: In
         )}
         <input
           id={inputId}
-          // Without these the error text below is visually adjacent but programmatically
-          // unrelated — a screen reader announces the field as valid and never reads the reason.
           aria-invalid={hasError || undefined}
           aria-describedby={hasError ? errorId : undefined}
           className={cn(

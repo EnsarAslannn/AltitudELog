@@ -13,10 +13,6 @@ namespace AltitudELog.Application.UnitTests.Common.Behaviors;
 
 public class CachingBehaviorTests
 {
-    // Public (not private/nested-private) because CachingBehavior<TRequest,TResponse> depends on
-    // ILogger<CachingBehavior<TRequest,TResponse>>, and NSubstitute/Castle DynamicProxy needs to
-    // generate a proxy over that closed generic type — which requires TRequest to be an accessible
-    // (public) type, not a private nested class.
     public record CacheableTestQuery(string Key) : IRequest<string>, ICacheableQuery
     {
         public string CacheKey => Key;

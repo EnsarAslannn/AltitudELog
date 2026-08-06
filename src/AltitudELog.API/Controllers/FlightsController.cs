@@ -12,7 +12,6 @@ namespace AltitudELog.API.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Produces("application/json")]
-// Every action requires a token and validates its input, so these are declared once here.
 [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
 public class FlightsController : ControllerBase

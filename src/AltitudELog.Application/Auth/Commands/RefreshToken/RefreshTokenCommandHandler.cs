@@ -28,19 +28,12 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         var tokenHash = TokenHasher.Hash(request.RefreshToken);
         var now = DateTime.UtcNow;
 
-        // Matches the current token *or* the one it replaced, so a replay can be told apart from
-        // a random string. Rotation means an already-exchanged token matches no pilot at all,
-        // which is why PreviousRefreshTokenHash exists.
         var pilot = await _context.Pilots
             .FirstOrDefaultAsync(
                 p => p.RefreshTokenHash == tokenHash || p.PreviousRefreshTokenHash == tokenHash,
                 cancellationToken)
             ?? throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
-        // Reuse detection. The legitimate client has already exchanged this token, so whoever
-        // presents it now either replayed a stolen copy or is a client that never received the
-        // rotated one. Either way, revoking the whole session beats handing out a fresh pair: if
-        // it was a theft the attacker gets nothing, at the cost of the real user signing in again.
         if (pilot.PreviousRefreshTokenHash == tokenHash)
         {
             _logger.LogWarning(
@@ -57,8 +50,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             throw new UnauthorizedAccessException("Invalid or expired refresh token.");
         }
 
-        // Rotation on its own bounds a stolen token only until the next legitimate refresh; the
-        // absolute ceiling is what stops a session being kept alive forever by refreshing.
         if (RefreshTokenPolicy.HasExceededAbsoluteLifetime(pilot, now))
         {
             _logger.LogInformation(

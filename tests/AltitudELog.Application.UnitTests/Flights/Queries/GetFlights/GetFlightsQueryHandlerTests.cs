@@ -42,9 +42,6 @@ public class GetFlightsQueryHandlerTests
 
         var result = await handler.Handle(new GetFlightsQuery(), CancellationToken.None);
 
-        // Cancelled flights stay in Items (the list badges them) and stay in TotalCount, which is
-        // the pagination denominator — but they're excluded from the dashboard tile figures, which
-        // must agree with GetStatsQuery.
         result.Items.Should().HaveCount(2);
         result.Items.Should().Contain(f => f.AircraftType == "A350" && !f.IsCancelled);
         result.Items.Should().Contain(f => f.AircraftType == "B777" && f.IsCancelled);

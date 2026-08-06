@@ -34,8 +34,6 @@ public class ForgotPasswordCommandHandlerTests
         Email = email
     };
 
-    // Enqueue<T> is an extension method over Create(Job, IState), so that's what a substitute can
-    // actually observe.
     private static IEnumerable<Job> EnqueuedJobs(IBackgroundJobClient client) =>
         client.ReceivedCalls()
             .Where(call => call.GetMethodInfo().Name == nameof(IBackgroundJobClient.Create))
@@ -113,9 +111,6 @@ public class ForgotPasswordCommandHandlerTests
     [Fact]
     public async Task Handle_Should_Not_Send_Email_Inline()
     {
-        // The anti-enumeration design rests on both branches costing the same. An inline SMTP
-        // round trip has no upper bound, so the matching branch was reliably slower than the
-        // floor and the timing still gave away which addresses are registered.
         await using var context = CreateContext();
         var pilot = NewPilot("pilot@example.com");
         context.Pilots.Add(pilot);
@@ -128,7 +123,6 @@ public class ForgotPasswordCommandHandlerTests
 
         await handler.Handle(new ForgotPasswordCommand("pilot@example.com"), CancellationToken.None);
 
-        // The token is issued by the job, so nothing is written on the request path at all.
         var unchanged = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
         unchanged.PasswordResetTokenHash.Should().BeNull();
     }
@@ -150,7 +144,6 @@ public class ForgotPasswordCommandHandlerTests
         var started = DateTime.UtcNow;
         await handler.Handle(new ForgotPasswordCommand(email), CancellationToken.None);
 
-        // 280ms rather than the 300ms floor: timer resolution makes an exact comparison flaky.
         (DateTime.UtcNow - started).Should().BeGreaterThan(TimeSpan.FromMilliseconds(280));
     }
 }

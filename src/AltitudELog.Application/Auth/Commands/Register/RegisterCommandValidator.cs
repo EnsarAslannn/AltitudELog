@@ -10,10 +10,6 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
             .NotEmpty()
             .MaximumLength(100);
 
-        // MinimumLength matches ResetPasswordCommandValidator, so a password set at
-        // registration can't be weaker than one set via password reset. MaximumLength
-        // bounds the input fed to PasswordHasher's CPU-bound KDF (an unbounded string
-        // would otherwise be a cheap DoS vector).
         RuleFor(c => c.Password)
             .NotEmpty()
             .MinimumLength(8)

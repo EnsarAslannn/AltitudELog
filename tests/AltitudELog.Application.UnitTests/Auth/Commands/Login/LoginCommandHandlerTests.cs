@@ -72,8 +72,6 @@ public class LoginCommandHandlerTests
     [InlineData("  ensar  ")]
     public async Task Handle_Should_Match_The_Stored_Username_Regardless_Of_Casing(string typedUsername)
     {
-        // Usernames are persisted normalised by RegisterCommandHandler; a case-sensitive lookup
-        // here would lock out anyone who typed their name with different capitalisation.
         await using var context = CreateContext();
         await SeedPilotAsync(context, "ensar", "P@ssw0rd123!");
 

@@ -51,8 +51,6 @@ public class CreateCrewCommandValidatorTests
     [Fact]
     public async Task Should_Not_Reject_Unknown_Foreign_Keys()
     {
-        // Unknown-but-well-formed ids must reach the handler, which answers 404 for them.
-        // See CreateCrewCommandHandlerTests for that half of the contract.
         var command = new CreateCrewCommand(Guid.NewGuid(), Guid.NewGuid(), DutyRole.SIC);
 
         var result = await Validator.TestValidateAsync(command);

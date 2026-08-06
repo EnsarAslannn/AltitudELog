@@ -46,10 +46,6 @@ export function PilotProfilePage() {
 
   const isMountedRef = useRef(true)
   useEffect(() => {
-    // Set on every mount, not just declared once: under StrictMode React mounts, runs the
-    // cleanup, then remounts — so without re-arming it here the ref stays false for the rest of
-    // the session and the `finally` below never clears exportingFormat, leaving both export
-    // buttons permanently disabled after the first click.
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
@@ -63,8 +59,6 @@ export function PilotProfilePage() {
       const blob = await pilotService.exportLogbook(pilotId, format)
       downloadBlob(blob, `logbook-${pilotId}.${format}`)
     } catch (err) {
-      // This is called from onClick, so an uncaught rejection here would vanish silently —
-      // the user would see the button settle back and nothing else.
       if (isMountedRef.current) {
         const apiError = err as ApiError
         setExportError(apiError.title ?? 'Uçuş kaydı indirilemedi.')
@@ -106,9 +100,6 @@ export function PilotProfilePage() {
     [pilotId],
   )
 
-  // Refetch after a save, without the full-page skeleton. Going through the initial-load path
-  // unmounted the certificate form the user had just submitted — losing focus and wiping any
-  // message that was about to render — for what is really a background refresh.
   function refreshProfile() {
     fetchProfile(() => false, { showSkeleton: false })
   }
@@ -166,7 +157,7 @@ export function PilotProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Profile header — photo-backed band, same hero recipe as the dashboard */}
+      {}
       <section className="relative min-h-[220px] overflow-hidden rounded-lg bg-surface rise">
         <img
           src="/images/terminal.jpg"
@@ -185,8 +176,7 @@ export function PilotProfilePage() {
               <p className="mt-1 text-sm text-on-surface-variant">@{profile.username}</p>
             </div>
           </div>
-          {/* Status and actions are grouped separately so they stack as two clean rows on
-              a phone instead of wrapping into each other mid-flow. */}
+          {}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -229,7 +219,7 @@ export function PilotProfilePage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={profile.totalFlights} />
         <StatTile icon={Clock3} label="Toplam Saat" value={profile.totalFlightHours} />
@@ -237,7 +227,7 @@ export function PilotProfilePage() {
         <StatTile icon={CalendarDays} label="Son 90 Gün" value={profile.hoursLast90Days} />
       </div>
 
-      {/* Hours by aircraft type */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Uçak Tipine Göre Saatler</Eyebrow>
         {profile.hoursByAircraftType.length === 0 ? (
@@ -266,7 +256,7 @@ export function PilotProfilePage() {
         )}
       </section>
 
-      {/* Certificates */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Sertifikalar</Eyebrow>
         <div className="flex flex-col gap-3">
@@ -332,7 +322,7 @@ export function PilotProfilePage() {
         )}
       </section>
 
-      {/* Recent flights */}
+      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Son Uçuşlar</Eyebrow>
         {profile.recentFlights.length === 0 ? (

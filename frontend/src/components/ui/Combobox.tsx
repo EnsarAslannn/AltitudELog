@@ -76,14 +76,10 @@ export function Combobox({
   const optionId = (index: number) => `${inputId}-option-${index}`
   const showDropdown = isOpen && filtered.length > 0
 
-  // Keeps the active option in view when arrowing past the visible slice of a 50-row list —
-  // otherwise the highlight moves somewhere the user cannot see.
   useEffect(() => {
     if (!showDropdown) return
 
     const active = listRef.current?.querySelector(`#${CSS.escape(optionId(highlightedIndex))}`)
-    // Feature-detected because this is pure presentation: jsdom has no scrollIntoView, and it
-    // isn't worth failing a render (or a test) over keeping a row in view.
     if (active instanceof HTMLElement && typeof active.scrollIntoView === 'function') {
       active.scrollIntoView({ block: 'nearest' })
     }
@@ -97,8 +93,6 @@ export function Combobox({
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Escape') {
       if (!isOpen) return
-      // Only swallow Escape when this component actually consumed it, so it still reaches an
-      // enclosing dialog when the list is already closed.
       event.stopPropagation()
       setIsOpen(false)
       return
@@ -111,7 +105,6 @@ export function Combobox({
     }
     if (event.key === 'ArrowUp') {
       event.preventDefault()
-      // Symmetric with ArrowDown: opening the list is the natural response to either arrow.
       setIsOpen(true)
       setHighlightedIndex((i) => Math.max(i - 1, 0))
       return
@@ -138,8 +131,6 @@ export function Combobox({
           aria-expanded={showDropdown}
           aria-autocomplete="list"
           aria-controls={listboxId}
-          // Without this a screen reader announces nothing as the user arrows through the list:
-          // the highlight is purely visual otherwise.
           aria-activedescendant={showDropdown ? optionId(highlightedIndex) : undefined}
           aria-invalid={hasError || undefined}
           aria-describedby={hasError ? errorId : undefined}
@@ -153,9 +144,6 @@ export function Combobox({
             setIsOpen(true)
           }}
           onFocus={() => setIsOpen(true)}
-          // Tabbing away left the 50-row list open on top of the fields below it, with no way to
-          // dismiss it from the keyboard short of going back and pressing Escape. The dropdown's
-          // own onMouseDown preventDefault keeps focus here, so a click-to-select still works.
           onBlur={() => setIsOpen(false)}
           onKeyDown={handleKeyDown}
           className={cn(

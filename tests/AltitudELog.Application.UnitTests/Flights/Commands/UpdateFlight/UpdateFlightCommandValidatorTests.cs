@@ -34,8 +34,6 @@ public class UpdateFlightCommandValidatorTests
     [Fact]
     public async Task Should_Not_Reject_An_Unknown_FlightId()
     {
-        // An unknown-but-well-formed id must reach the handler, which answers 404. Reinstating an
-        // existence rule here would turn that into a 400 and break FlightNotFoundTests.
         var result = await Validator.TestValidateAsync(ValidCommand() with { FlightId = Guid.NewGuid() });
 
         result.ShouldNotHaveValidationErrorFor(c => c.FlightId);

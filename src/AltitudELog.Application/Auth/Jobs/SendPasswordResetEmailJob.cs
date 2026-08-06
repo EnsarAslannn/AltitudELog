@@ -51,7 +51,6 @@ public class SendPasswordResetEmailJob
         var tokenBytes = RandomNumberGenerator.GetBytes(32);
         var token = Convert.ToBase64String(tokenBytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 
-        // Only the hash is persisted, so a database read can't be turned into a password reset.
         pilot.PasswordResetTokenHash = TokenHasher.Hash(token);
         pilot.PasswordResetTokenExpiresAtUtc = DateTime.UtcNow.Add(TokenLifetime);
         await _context.SaveChangesAsync(cancellationToken);
