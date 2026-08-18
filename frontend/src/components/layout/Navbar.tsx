@@ -42,7 +42,7 @@ export function Navbar() {
     )
 
   const destinations = [
-    { to: '/', label: 'Uçuşlar', icon: null, end: true, show: true },
+    { to: '/dashboard', label: 'Uçuşlar', icon: null, end: true, show: true },
     { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: isCommand },
     { to: `/pilots/${pilotId}`, label: 'Profil', icon: User, end: false, show: !!pilotId },
     { to: '/admin/stats', label: 'İstatistikler', icon: BarChart3, end: false, show: isCommand },

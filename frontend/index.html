@@ -2,16 +2,24 @@
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      'wasm-unsafe-eval' is required by the landing page's 3D hero: the aircraft
+      model is meshopt-compressed and its decoder is WebAssembly, which the plain
+      script-src 'self' blocked outright. It permits WebAssembly compilation only
+      — it does NOT enable eval() or new Function(), so the far broader
+      'unsafe-eval' is still refused. The uncompressed alternative is a 8.8MB
+      download instead of 2.5MB for the same model.
+    -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https: http://localhost:*;"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https: http://localhost:*;"
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
     />
     <title>AltitudELog — Flight & CRM Logbook</title>

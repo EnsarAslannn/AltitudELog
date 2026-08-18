@@ -16,7 +16,7 @@ function renderCreateFlightPage() {
     <MemoryRouter initialEntries={['/flights/new']}>
       <Routes>
         <Route path="/flights/new" element={<CreateFlightPage />} />
-        <Route path="/" element={<div>Dashboard Page</div>} />
+        <Route path="/dashboard" element={<div>Dashboard Page</div>} />
       </Routes>
     </MemoryRouter>,
   )

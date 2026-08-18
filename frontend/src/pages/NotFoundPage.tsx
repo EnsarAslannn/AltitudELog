@@ -17,7 +17,7 @@ export function NotFoundPage() {
         <p className="max-w-sm text-sm text-on-surface-variant">
           Aradığınız rota kayıtlarda yok. Ana panele geri dönün.
         </p>
-        <Link to="/">
+        <Link to="/dashboard">
           <Button variant="primary">Ana sayfaya dön</Button>
         </Link>
       </div>

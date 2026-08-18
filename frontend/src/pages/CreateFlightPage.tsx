@@ -15,7 +15,7 @@ export function CreateFlightPage() {
       aircraftType: values.aircraftType,
       date: values.date,
     })
-    navigate('/')
+    navigate('/dashboard')
   }
 
   return (
