@@ -76,6 +76,35 @@
   /* Soft navy-tinted ambient elevation — DESIGN.md's "hafif gölgeler" */
   --shadow-panel: 0 1px 2px 0 rgba(26, 36, 64, 0.06), 0 8px 24px -10px rgba(26, 36, 64, 0.14);
   --shadow-panel-hover: 0 2px 6px 0 rgba(26, 36, 64, 0.09), 0 18px 36px -12px rgba(26, 36, 64, 0.20);
+
+  /*
+   * Air — the public landing page palette, straight from DESIGN.md. Purely
+   * additive: every token above still drives the signed-in application, which
+   * stays navy-on-light. On the landing page Black Void is now reserved for the
+   * two full-bleed video sections; the sections between them run on the daylight
+   * grounds below. Hairlines everywhere, never shadows.
+   */
+  --color-whiteout: #ffffff;
+  --color-haze: #f5f5f5;
+  --color-ink: #1b1b1b;
+  --color-black-void: #000000;
+  --color-twilight-blue: #426188;
+  --color-signal-blue: #2b7fff;
+
+  /*
+   * Section grounds. DESIGN.md's canvas is Black Void, which made the page read as
+   * one unbroken dark slab; these two are the daylight end of the same palette —
+   * Vapor is Twilight Blue thinned almost to white, Parchment is its warm
+   * counterweight. Alternating them is what gives the page air, and both carry
+   * Ink at ~15:1 so body copy needs no compensation.
+   */
+  --color-vapor: #e8f0f9;
+  --color-parchment: #f7f2e8;
+
+  /* Anton stands in for Control Compressed, Caveat for Control Cursive — the
+     substitutes DESIGN.md names. Inter already covers Control and Control TNT. */
+  --font-compressed: "Anton", "Arial Narrow", system-ui, sans-serif;
+  --font-cursive: "Caveat", "Segoe Script", cursive;
 }
 
 body {
@@ -246,3 +275,221 @@ body {
     animation: float-drift 6s ease-in-out infinite;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Air — utilities for the public landing page only. Everything below is scoped
+ * behind an air- prefix so it can never leak into the signed-in application,
+ * which keeps the navy-on-light system above. DESIGN.md is the source of truth.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Control Compressed → Anton. Poster-scale, always uppercase.
+ *
+ * DESIGN.md pins 259px / leading 0.85. The size is a 1440px-canvas figure, so
+ * call sites clamp it against the viewport instead of hardcoding it and
+ * overflowing on phones. The leading is loosened to 0.98, which is a deliberate
+ * departure: at 0.85 the next line's cap-height lands on top of the previous
+ * line's descenders, and in Turkish the capitals Ç and Ş carry cedillas down
+ * there — "HER UÇUŞ" rendered as "HER UCUS" with the hooks painted over, and
+ * 0.92 still had them touching. The reference this was measured from is
+ * English, whose uppercase has no descenders at all, so 0.85 was safe there.
+ */
+.air-display {
+  font-family: var(--font-compressed);
+  font-weight: 400;
+  line-height: 0.98;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  /* Keeps a trailing cedilla off the container edge if the copy ever ends in Ç/Ş. */
+  padding-bottom: 0.06em;
+}
+
+/* Control Cursive → Caveat. One word per headline, never a whole line — the
+   italic is the personality break against upright Inter, and loses its effect
+   the moment it carries more than a beat. */
+.air-cursive {
+  font-family: var(--font-cursive);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+
+/*
+ * ── Section tones ───────────────────────────────────────────────────────────
+ * The landing page alternates three grounds, and every foreground colour on it
+ * is derived from whichever ground it sits on rather than hardcoded. Components
+ * read `var(--air-fg)` and friends, so a section changes its entire palette by
+ * swapping one class — and the navigation can adopt the exact same values as it
+ * passes over each section.
+ *
+ * Muted values are tuned against their own ground, not shared: #46566b clears
+ * 6.5:1 on Vapor but would be muddy on Parchment, whose warm cast needs a warm
+ * grey to read as deliberate rather than dirty.
+ */
+/*
+ * Grounds are translucent, not solid.
+ *
+ * A single fixed clip runs behind the whole document, so every section is a
+ * tinted pane over it rather than an opaque slab — the sky stays present the
+ * length of the page instead of appearing only in the two unscreened sections.
+ *
+ * 0.8 is derived, not a taste call. Every foreground value below was checked
+ * against the WORST frame the video can produce — pure black behind the pane,
+ * which composites the ground down to roughly #bec0c7 — so contrast never
+ * depends on which frame happens to be playing:
+ *
+ *   fg on vapor    8.1:1      fg on parchment    9.7:1
+ *   muted          4.7:1      muted              5.3:1
+ *   accent         5.0:1      accent             5.1:1
+ *
+ * That is why the muted and accent values here are markedly darker than they
+ * would be on an opaque ground, and why `--air-fg-soft` collapses onto muted:
+ * a third, lighter text tier cannot clear 4.5:1 against a translucent pane, so
+ * the footer's hierarchy comes from size and weight instead of another grey.
+ * Raising the alpha would let those values back up but hide the video, which is
+ * the entire point of the layer beneath.
+ */
+.air-tone-dark {
+  /* The two unscreened sections. Transparent: they show the backdrop at full
+     strength and bring their own scrims instead of a ground. */
+  --air-bg: transparent;
+  --air-fg: #ffffff;
+  --air-fg-muted: rgba(255, 255, 255, 0.74);
+  --air-fg-soft: rgba(255, 255, 255, 0.52);
+  --air-rule: rgba(255, 255, 255, 0.16);
+  --air-accent: #2b7fff;
+  --air-nav-bg: rgba(0, 0, 0, 0.3);
+  --air-nav-bg-solid: rgba(0, 0, 0, 0.82);
+  --air-nav-hover: rgba(255, 255, 255, 0.12);
+}
+
+.air-tone-blue {
+  --air-bg: rgba(232, 240, 249, 0.8);
+  --air-fg: #16233a;
+  --air-fg-muted: #3d4d63;
+  --air-fg-soft: #3d4d63;
+  --air-rule: rgba(22, 35, 58, 0.2);
+  --air-accent: #2f4a6b;
+  --air-nav-bg: rgba(232, 240, 249, 0.68);
+  --air-nav-bg-solid: rgba(232, 240, 249, 0.9);
+  --air-nav-hover: rgba(22, 35, 58, 0.08);
+}
+
+.air-tone-cream {
+  --air-bg: rgba(247, 242, 232, 0.8);
+  --air-fg: #1b1b1b;
+  --air-fg-muted: #4c463a;
+  --air-fg-soft: #4c463a;
+  --air-rule: rgba(27, 27, 27, 0.2);
+  --air-accent: #2f4a6b;
+  --air-nav-bg: rgba(247, 242, 232, 0.68);
+  --air-nav-bg-solid: rgba(247, 242, 232, 0.9);
+  --air-nav-hover: rgba(27, 27, 27, 0.08);
+}
+
+/* Paints a section with its own tone. Kept separate from the tone classes so the
+   navigation can borrow a tone's variables without inheriting an opaque ground. */
+.air-ground {
+  background-color: var(--air-bg);
+  color: var(--air-fg);
+}
+
+/*
+ * The bridge between two adjacent sections. Sections themselves stay flat — this
+ * is the one element allowed a gradient, and only because a hard seam between
+ * two grounds is exactly what the page is meant not to have. Both ends are set
+ * inline by the call site so the ramp always matches its real neighbours.
+ */
+.air-seam {
+  background-image: linear-gradient(to bottom, var(--air-seam-from), var(--air-seam-to));
+}
+
+/* Glassmorphism navigation bar. Sits directly on moving video, so the blur does
+   the legibility work a flat translucent fill cannot: without it the nav labels
+   strobe as bright frames pass under them. The saturate() keeps the sky behind
+   from going grey through the blur. */
+.air-nav {
+  background-color: var(--air-nav-bg);
+  color: var(--air-fg);
+  border-bottom: 1px solid var(--air-rule);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  /*
+   * Colour is inherited, never fixed: the bar carries whichever `air-tone-*`
+   * class matches the section currently beneath it, so it reads white-on-dark
+   * over the hero and ink-on-vapor over the light sections. The long ease is
+   * what makes that swap read as the bar passing through a section rather than
+   * blinking between two states, and it animates colour only — no layout or
+   * blur work is repeated per frame.
+   */
+  transition:
+    background-color 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .air-nav {
+    transition: none;
+  }
+}
+
+/* Scrolled state — past the hero the bar sits on real ground rather than video,
+   so it trades translucency for a near-solid fill of the current tone: the blur
+   alone is not enough separation once dense copy scrolls underneath it. */
+.air-nav-solid {
+  background-color: var(--air-nav-bg-solid);
+}
+
+/*
+ * Hero video scrim. DESIGN.md says "don't use gradients", and that rule holds for
+ * decoration — no gradient buttons, cards or section backgrounds anywhere here.
+ * This is the exception it does not cover: white type sits on a moving image
+ * whose luminance swings frame to frame, and a flat overlay dark enough to hold
+ * 4.5:1 at the brightest frame crushes the footage everywhere else. The gradient
+ * is a legibility device, weighted to the top and bottom edges where the type is.
+ */
+.air-hero-scrim {
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.12) 30%, rgba(0, 0, 0, 0.5) 78%, rgba(0, 0, 0, 0.66) 100%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.14) 58%, rgba(0, 0, 0, 0) 100%);
+}
+
+/*
+ * On phones the hero copy spans the full width, so the horizontal half of the
+ * scrim above has nothing left to protect — the headline lands on open sky and
+ * the Twilight Blue cursive word drops well under contrast. Below `sm` the scrim
+ * becomes a vertical wash weighted to the bottom, where the copy actually sits.
+ */
+@media (max-width: 639px) {
+  .air-hero-scrim {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.2) 24%,
+      rgba(0, 0, 0, 0.6) 58%,
+      rgba(0, 0, 0, 0.72) 100%
+    );
+  }
+}
+
+/* Lighter variant for the mid-page interlude, whose type is a single centred
+   display line rather than a full copy block. */
+/* Auth pages. Weighted to the left, where the headline sits, and lifted overall
+   because the form card has to read as the brightest thing on the screen. */
+.air-auth-scrim {
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.4) 55%, rgba(0, 0, 0, 0.28) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.18) 40%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.air-interlude-scrim {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.34) 45%, rgba(0, 0, 0, 0.62) 100%);
+}
+
+/* Underline Link — DESIGN.md makes the 2px rule the affordance, not a fill. */
+.air-underline {
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 1px;
+}
+

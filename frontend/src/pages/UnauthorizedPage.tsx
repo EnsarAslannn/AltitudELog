@@ -16,7 +16,7 @@ export function UnauthorizedPage() {
       <p className="max-w-sm text-on-surface-variant">
         Bu sayfayı görüntülemek için Captain veya ChiefPilot rütbesine sahip olmanız gerekiyor.
       </p>
-      <Link to="/">
+      <Link to="/dashboard">
         <Button variant="secondary">Ana sayfaya dön</Button>
       </Link>
     </div>

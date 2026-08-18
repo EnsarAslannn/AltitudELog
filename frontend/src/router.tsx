@@ -3,6 +3,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { CaptainRoute } from './routes/CaptainRoute'
 import { CommandRoute } from './routes/CommandRoute'
+import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
@@ -17,6 +18,7 @@ import { UnauthorizedPage } from './pages/UnauthorizedPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export const router = createBrowserRouter([
+  { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
@@ -27,7 +29,7 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/', element: <DashboardPage /> },
+          { path: '/dashboard', element: <DashboardPage /> },
           { path: '/flights/:id', element: <FlightDetailPage /> },
           { path: '/pilots/:id', element: <PilotProfilePage /> },
           { path: '/unauthorized', element: <UnauthorizedPage /> },

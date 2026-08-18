@@ -1,0 +1,209 @@
+import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import { cn } from '../lib/cn'
+import { LandingNav } from '../components/landing/LandingNav'
+import { PageBackdrop } from '../components/landing/PageBackdrop'
+import { SculptureLayer } from '../components/landing/SculptureLayer'
+import { HeroSection } from '../components/landing/HeroSection'
+import { FeatureBlock } from '../components/landing/FeatureBlock'
+import { toneClass } from '../components/landing/tones'
+import { DisplayInterlude } from '../components/landing/DisplayInterlude'
+import { CapabilityGrid } from '../components/landing/CapabilityGrid'
+import { LandingFooter } from '../components/landing/LandingFooter'
+import { SectionSeam } from '../components/landing/SectionSeam'
+import { Reveal } from '../components/landing/Reveal'
+
+const marks = [
+  { value: 'ICAO', label: 'Rota bazlı uçuş kaydı' },
+  { value: 'METAR', label: 'Otomatik hava durumu' },
+  { value: 'CRM', label: 'Anonim güvenlik raporu' },
+  { value: 'CSV · PDF', label: 'Logbook dışa aktarım' },
+]
+
+/*
+ * Layering. Everything on this page lives in one stacking context, and the order
+ * is what lets the aircraft fly through the page without ever sitting on a word:
+ *
+ *   z-0   PageBackdrop  — the fixed video, behind everything
+ *   z-10  section grounds and seams — translucent tints over that video
+ *   z-20  SculptureLayer — the aircraft, above the tints so it stays crisp
+ *   z-30  section content — every heading, paragraph and control
+ *   z-50  LandingNav
+ *
+ * Nothing between the page root and a content wrapper may create a stacking
+ * context (no transform, filter or opacity on a wrapper), or its z-30 would be
+ * trapped inside it and the aircraft would paint over the copy.
+ */
+export function LandingPage() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
+  // The application runs on a light surface, so `body` is light. This page runs
+  // on video, and its first screen is dark; without painting the body to match,
+  // overscroll on macOS/iOS rubber-bands a strip of #f7f9fd in above it.
+  useEffect(() => {
+    const previous = document.body.style.backgroundColor
+    document.body.style.backgroundColor = '#000000'
+    return () => {
+      document.body.style.backgroundColor = previous
+    }
+  }, [])
+
+  const solidCta =
+    'inline-flex min-h-12 items-center justify-center rounded-lg border border-ink bg-haze px-6 text-sm font-medium text-ink transition-colors hover:bg-whiteout focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue'
+
+  const ghostCta =
+    'inline-flex min-h-12 items-center justify-center rounded-lg border border-current px-6 text-sm font-medium text-[color:var(--air-fg)] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue'
+
+  return (
+    <div className="relative min-h-screen bg-black-void">
+      <PageBackdrop />
+      <SculptureLayer />
+      <LandingNav />
+
+      <main className="relative">
+        <HeroSection />
+
+        {/* The hero shows the backdrop unscreened; this is where the tinted panes
+            begin, so it is the longest seam on the page. */}
+        <SectionSeam from="dark" to="blue" height="lg" />
+
+        <section
+          aria-label="Öne çıkanlar"
+          data-nav-tone="blue"
+          className={cn(toneClass.blue, 'air-ground')}
+        >
+          <ul className="relative z-30 mx-auto grid max-w-[1150px] grid-cols-2 gap-px bg-[color:var(--air-rule)] sm:grid-cols-4">
+            {marks.map(({ value, label }) => (
+              <li key={value} className="bg-[color:var(--air-bg)] px-5 py-8 sm:px-8">
+                <p className="data text-xl font-medium tracking-tight text-[color:var(--air-fg)] sm:text-2xl">
+                  {value}
+                </p>
+                <p className="mt-2 text-[13px] leading-snug text-[color:var(--air-fg-muted)]">{label}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <FeatureBlock
+          id="ucus-kaydi"
+          tone="blue"
+          eyebrow="Uçuş kaydı"
+          title={
+            <>
+              Kayıtlı tüm uçuşlar,
+              <br />
+              <span className="air-cursive mr-2 text-[1.14em] text-[color:var(--air-accent)]">tek</span>{' '}
+              bakışta.
+            </>
+          }
+          body="Rota, uçak tipi ve tarih aralığına göre filtreleyin; toplam uçuş, bu ay ve uçak tipi sayıları listedeki filtreyle birlikte güncellenir."
+          points={[
+            'Meydan kodu ve uçak tipinde serbest metin arama',
+            'Tarih aralığı, uçak tipi ve iptal durumu filtreleri',
+            'Sayfalı liste — her sayfa kendi içinde tutarlı sıralanır',
+            'Her uçuşun METAR bilgisi kayıttan sonra otomatik düşer',
+          ]}
+          image="/images/report2.png"
+          imageAlt="Havalimanı terminalinde, apronda bekleyen uçağın önünde asılı duran rota ve uçuş verisi panelleri"
+        />
+
+        <SectionSeam from="blue" to="cream" />
+
+        <FeatureBlock
+          id="crm"
+          tone="cream"
+          eyebrow="CRM raporları"
+          title={
+            <>
+              Güvenlik verisi,
+              <br />
+              <span className="air-cursive mr-2 text-[1.14em] text-[color:var(--air-accent)]">görünür</span>{' '}
+              olduğunda işe yarar.
+            </>
+          }
+          body="Ekip kaynak yönetimi raporları uçuşa bağlı olarak kaydedilir, önem derecesine göre ayrışır ve yönetim panelinde altı aylık trend olarak toplanır."
+          points={[
+            'Uçuş bazlı raporlama, önem derecesi seçimiyle',
+            'İsteğe bağlı anonim gönderim',
+            'Rütbe dağılımı ve toplam rapor sayıları',
+            'Son altı ayın CRM trendi tek grafikte',
+          ]}
+          image="/images/report1.png"
+          imageAlt="Pisti gören bir ofis masasında duran basılı uçuş raporu ve grafik gösteren tablet"
+          reverse
+        />
+
+        <SectionSeam from="cream" to="blue" />
+
+        <FeatureBlock
+          id="logbook"
+          tone="blue"
+          eyebrow="Pilot logbook"
+          title={
+            <>
+              Uçuş saatiniz
+              <br />
+              <span className="air-cursive mr-2 text-[1.14em] text-[color:var(--air-accent)]">her zaman</span>{' '}
+              elinizin altında.
+            </>
+          }
+          body="Profiliniz uçuş saatlerinizi, son uçuşlarınızı ve sertifika geçerlilik tarihlerinizi bir arada tutar. Logbook'u CSV veya PDF olarak dışa aktarabilirsiniz."
+          points={[
+            'Atandığınız uçuşlardan türeyen toplam saat ve güncellik',
+            'Lisans ve sağlık sertifikası son geçerlilik takibi',
+            'Son uçuşlar listesi ve görev rolleri',
+            'Tek tıkla CSV veya PDF logbook çıktısı',
+          ]}
+          image="/images/report3.png"
+          imageAlt="Kokpitte, bulutların üzerinde uçarken elindeki tablette uçuş verilerini inceleyen pilot"
+        />
+
+        <SectionSeam from="blue" to="dark" height="lg" />
+
+        <DisplayInterlude />
+
+        <SectionSeam from="dark" to="blue" height="lg" />
+
+        <CapabilityGrid tone="blue" />
+
+        <SectionSeam from="blue" to="cream" />
+
+        <section data-nav-tone="cream" className={cn(toneClass.cream, 'air-ground py-24 sm:py-32')}>
+          <Reveal className="relative z-30 mx-auto max-w-[1150px] px-5 text-center sm:px-8">
+            <h2 className="mx-auto max-w-3xl text-[clamp(2rem,5vw,4rem)] font-medium leading-[1.05] tracking-[-0.025em] text-[color:var(--air-fg)]">
+              Bir sonraki uçuşunuz
+              <br />
+              <span className="air-cursive mr-2 text-[1.14em] text-[color:var(--air-accent)]">kayıtlı</span>{' '}
+              başlasın.
+            </h2>
+            <p className="mx-auto mt-7 max-w-lg text-base leading-relaxed text-[color:var(--air-fg-muted)]">
+              Rütbenizi seçin, hesabınızı açın ve ilk uçuşunuzu dakikalar içinde kaydedin.
+            </p>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              {isAuthenticated ? (
+                <Link to="/dashboard" className={solidCta}>
+                  Panele Git
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register" className={solidCta}>
+                    Hesap Oluştur
+                  </Link>
+                  <Link to="/login" className={ghostCta}>
+                    Giriş Yap
+                  </Link>
+                </>
+              )}
+            </div>
+          </Reveal>
+        </section>
+
+        <SectionSeam from="cream" to="blue" />
+      </main>
+
+      <LandingFooter tone="blue" />
+    </div>
+  )
+}

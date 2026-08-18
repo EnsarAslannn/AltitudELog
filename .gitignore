@@ -89,3 +89,9 @@ skills-lock.json
 # deployed by running `vercel deploy --prod` from the repo root now that the Vercel project's
 # Root Directory setting is pinned to `frontend/`)
 .vercel
+
+# Source material for the landing page (reference clips, the uncompressed
+# airbus.glb, original report renders). None of it is served: the versions the
+# app ships are committed under frontend/public/. Keeping these out avoids
+# writing ~26MB into git history permanently.
+docs/assets/

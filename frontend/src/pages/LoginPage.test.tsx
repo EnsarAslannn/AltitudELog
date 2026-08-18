@@ -18,7 +18,7 @@ function renderLoginPage() {
     <MemoryRouter initialEntries={['/login']}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<div>Dashboard Page</div>} />
+        <Route path="/dashboard" element={<div>Dashboard Page</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -55,6 +55,16 @@ describe('LoginPage', () => {
     expect(authService.login).toHaveBeenCalledWith({ username: 'jdoe', password: 'P@ssw0rd123!' })
     expect(useAuthStore.getState().isAuthenticated).toBe(true)
     expect(useAuthStore.getState().rank).toBe('Captain')
+  })
+
+  it('renders the form on an opaque card over the auth backdrop clip', () => {
+    renderLoginPage()
+
+    // The clip is decorative; the guarantee that matters is that the fields sit on
+    // a solid surface rather than on moving footage, so their labels and errors
+    // never depend on which frame is playing.
+    expect(document.querySelector('video')).toHaveAttribute('src', '/videos/air-auth.mp4')
+    expect(screen.getByLabelText('Kullanıcı Adı').closest('.bg-surface')).not.toBeNull()
   })
 
   it('shows an error message when login fails', async () => {
