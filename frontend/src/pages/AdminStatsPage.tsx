@@ -94,7 +94,6 @@ export function AdminStatsPage() {
         </div>
       </section>
 
-      {}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={stats.totalFlights} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={stats.flightsThisMonth} />
@@ -102,7 +101,6 @@ export function AdminStatsPage() {
         <StatTile icon={ShieldAlert} label="Toplam CRM Raporu" value={stats.totalCrmReports} />
       </div>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Rütbeye Göre Pilotlar</Eyebrow>
         <div className="flex flex-col gap-3">
@@ -125,7 +123,6 @@ export function AdminStatsPage() {
         </div>
       </section>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>CRM Trend (Son 6 Ay)</Eyebrow>
         <Card className="p-5">
@@ -135,7 +132,6 @@ export function AdminStatsPage() {
         </Card>
       </section>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Yaklaşan Sertifika Süreleri</Eyebrow>
         {stats.expiringCertifications.length === 0 ? (
@@ -171,7 +167,6 @@ export function AdminStatsPage() {
         )}
       </section>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Ciddiyete Göre CRM Raporları</Eyebrow>
         <div className="flex flex-col gap-3">

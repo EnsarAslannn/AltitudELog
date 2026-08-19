@@ -3,27 +3,12 @@ import { useAuthStore } from '../../store/authStore'
 import { cn } from '../../lib/cn'
 import { ghostCta, solidCta } from './ctas'
 
-/**
- * The opening screen.
- *
- * It owns neither a video nor a scrim. `VideoBackdrop` runs one fixed clip behind
- * the whole document and this section simply sits on it, unmodified — as does
- * every section below. The copy is dark rather than white because the clip is a
- * bright sky: white type here was only ever readable because of the black
- * gradient that used to sit under it.
- */
 export function HeroSection() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   return (
     <section className="relative flex min-h-[100svh] items-end">
       <div className="relative z-30 mx-auto w-full max-w-[1150px] px-5 pb-20 pt-32 sm:px-8 sm:pb-28">
-        {/*
-          lang="en" is load-bearing, not decoration. The document is lang="tr", and
-          Turkish casing maps i → İ, so `text-transform: uppercase` rendered the
-          English word "Flight" as "FLİGHT". Tagging the run as English restores
-          the dotless capital I.
-        */}
         <p lang="en" className="eyebrow mb-6 text-xs font-medium text-[color:var(--air-accent)] sm:text-[13px]">
           Flight Ops · CRM · Logbook
         </p>

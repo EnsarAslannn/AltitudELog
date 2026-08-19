@@ -1,16 +1,9 @@
-# Build outputs
 **/bin/
 **/obj/
 **/out/
 **/publish/
-
-# Frontend (deployed separately to Vercel)
 frontend/
-
-# Tests (not needed in the runtime image)
 tests/
-
-# Tooling / IDE / VCS
 .git/
 .github/
 .vs/
@@ -18,8 +11,6 @@ tests/
 .idea/
 .claude/
 .vercel/
-
-# Local artifacts
 Logs/
 **/*.user
 **/appsettings.Development.json

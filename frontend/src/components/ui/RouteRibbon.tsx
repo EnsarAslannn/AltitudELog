@@ -55,9 +55,7 @@ export function RouteRibbon({
             className={animated ? 'arc-live' : undefined}
           />
         </svg>
-        {}
         <span className="absolute bottom-0 left-0 h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-primary bg-surface-container-lowest" />
-        {}
         <svg
           viewBox="0 0 24 24"
           className={cn(
@@ -69,7 +67,6 @@ export function RouteRibbon({
         >
           <path d="M12 2 L14 12 L22 16 L22 18 L13 16 L13 21 L16 23 L16 24 L12 22.5 L8 24 L8 23 L11 21 L11 16 L2 18 L2 16 L10 12 Z" />
         </svg>
-        {}
         <span className="absolute bottom-0 right-0 h-2 w-2 translate-x-1/2 translate-y-1/2 rounded-full bg-primary ring-2 ring-surface" />
       </div>
 

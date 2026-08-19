@@ -66,9 +66,6 @@ describe('LandingPage', () => {
   })
 
   it('runs one page-wide backdrop clip rather than a video per section', () => {
-    // The hero and the display interlude used to own a <video> each. Every section
-    // is now simply a stretch of one fixed backdrop, so a second element here would
-    // mean a second decode for footage the reader experiences as one continuous sky.
     renderLandingPage()
 
     const videos = document.querySelectorAll('video')
@@ -77,9 +74,6 @@ describe('LandingPage', () => {
   })
 
   it('exposes every section the navigation links to', () => {
-    // The panel this page replaced swallowed wheel events to drive an expanding
-    // hero, so the landing page could not be scrolled past at all. These anchors
-    // are the guarantee that ordinary scrolling has somewhere to arrive.
     renderLandingPage()
 
     for (const id of ['ucus-kaydi', 'crm', 'logbook', 'yetenekler']) {
@@ -88,11 +82,6 @@ describe('LandingPage', () => {
   })
 
   it('declares its ground once, on the root, and nowhere per section', () => {
-    // The page used to alternate three translucent grounds and bridge them with
-    // gradient seams, which made the backdrop clip read at a different strength in
-    // every stretch of page. The rule now is that the clip is the only ground: the
-    // root carries the palette, and no section paints one of its own. Anything
-    // re-introducing a per-section tone or a seam trips this.
     const { container } = renderLandingPage()
 
     expect(container.querySelector('.air-page')).toBe(container.firstElementChild)

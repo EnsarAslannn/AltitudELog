@@ -19,30 +19,9 @@ const marks = [
   { value: 'CSV · PDF', label: 'Logbook dışa aktarım' },
 ]
 
-/*
- * Layering. Everything on this page lives in one stacking context, and the order
- * is what lets the aircraft fly through the page without ever sitting on a word:
- *
- *   z-0   VideoBackdrop  — the fixed clip, behind everything, shown as shot
- *   z-20  SculptureLayer — the aircraft
- *   z-30  section content — every heading, paragraph and control
- *   z-50  LandingNav
- *
- * There is no longer a layer between the clip and the content: the tinted section
- * grounds and the gradient seams that used to bridge them are gone, because each
- * of them made the footage read at a different strength in its own stretch of
- * page.
- *
- * Nothing between the page root and a content wrapper may create a stacking
- * context (no transform, filter or opacity on a wrapper), or its z-30 would be
- * trapped inside it and the aircraft would paint over the copy.
- */
 export function LandingPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
-  // The application runs on an opaque light surface, so `body` is light. This page
-  // runs on the clip; painting the body to the sky's own blue means an overscroll
-  // rubber-band on macOS/iOS shows more sky rather than a strip of #f7f9fd.
   useEffect(() => {
     const previous = document.body.style.backgroundColor
     document.body.style.backgroundColor = '#dce8f2'

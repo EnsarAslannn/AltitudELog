@@ -3,20 +3,11 @@ import type { ReactNode } from 'react'
 
 interface RevealProps {
   children: ReactNode
-  /** Stagger offset in seconds, for revealing siblings in sequence. */
   delay?: number
   className?: string
   as?: 'div' | 'section' | 'li'
 }
 
-/**
- * Scroll-entrance wrapper for the landing page. `whileInView` with `once` rather
- * than a scroll-linked transform: the element settles and then stays put, so the
- * long page never re-animates content the reader has already passed.
- *
- * Under `prefers-reduced-motion` the element renders in its final state with no
- * transition at all — not a faster one. A shortened slide is still a slide.
- */
 export function Reveal({ children, delay = 0, className, as = 'div' }: RevealProps) {
   const reduceMotion = useReducedMotion()
   const MotionTag = motion[as]

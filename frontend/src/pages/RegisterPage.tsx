@@ -137,8 +137,6 @@ export function RegisterPage() {
           errors={fieldErrors?.Password ?? fieldErrors?.password}
           required
         />
-        {/* One per row rather than a two-up grid: the panel is a quarter of the
-            screen, and a side-by-side date pair clips its own labels there. */}
         <AuthField
           label="Lisans Bitiş (opsiyonel)"
           name="licenseExpiryDate"

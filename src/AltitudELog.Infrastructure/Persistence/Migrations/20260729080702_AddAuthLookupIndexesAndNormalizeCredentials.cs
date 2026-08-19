@@ -10,11 +10,6 @@ namespace AltitudELog.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Bring existing rows into the canonical form the app now writes and looks up by
-            // (see CredentialNormalizer). Both columns carry unique indexes, so if two rows differ
-            // only by case this statement fails and the migration aborts — loudly, which is right:
-            // silently collapsing two accounts into one would be far worse. Resolve the duplicate
-            // by hand, then re-run.
             migrationBuilder.Sql(
                 """
                 UPDATE "Pilots"

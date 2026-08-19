@@ -12,17 +12,6 @@ const sections = [
   { href: '#yetenekler', label: 'Yetenekler' },
 ]
 
-/**
- * Glassmorphism top bar.
- *
- * It used to recolour itself from a `data-nav-tone` attribute on whichever
- * section was passing beneath it, via an IntersectionObserver collapsed to a
- * 1px band under the bar. That machinery is gone along with the tones it read:
- * the page is now one continuous stretch of unmodified sky, so there is no
- * second ground for the bar to change into. What remains is the part that still
- * describes something real — transparent while it floats over the hero, a light
- * veil once dense copy starts passing underneath.
- */
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -35,8 +24,6 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // The sheet locks the page behind it; without this the body scrolls under the
-  // open menu on iOS and the reader loses their place on a page this long.
   useEffect(() => {
     if (!menuOpen) return
     const previous = document.body.style.overflow
@@ -55,11 +42,6 @@ export function LandingNav() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [menuOpen])
 
-  // No display utility in the imported CTA strings. "hidden sm:inline-flex" and a
-  // baked-in "inline-flex" both set `display`, and which one wins is decided by
-  // Tailwind's stylesheet order, not by the order they appear in the class
-  // attribute — so the register button stayed visible at 390px and shoved the
-  // menu toggle off the edge. Each call site states its own display.
   const compact = 'min-h-11 px-4 py-2.5'
 
   return (

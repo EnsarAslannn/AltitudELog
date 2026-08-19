@@ -103,7 +103,6 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      {}
       <section className="rise">
         <div className="flex flex-col justify-center gap-4">
           <Eyebrow tone="soft" rule={false}>
@@ -118,14 +117,12 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {}
       <div className="grid grid-cols-1 gap-4 rise sm:grid-cols-3" style={{ '--rise-delay': '80ms' } as React.CSSProperties}>
         <StatTile icon={Plane} label="Toplam Uçuş" value={activeCount} />
         <StatTile icon={CalendarDays} label="Bu Ay" value={thisMonthCount} />
         <StatTile icon={Wrench} label="Uçak Tipi" value={distinctAircraftTypeCount} />
       </div>
 
-      {}
       <section className="flex flex-col gap-5" aria-busy={isPageLoading}>
         <Eyebrow>Uçuş Kayıtları</Eyebrow>
 
@@ -143,7 +140,6 @@ export function DashboardPage() {
             <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-twilight-blue/12 text-twilight-blue">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            {}
             {activeFilterCount > 0 ? (
               <>
                 <p className="font-medium text-on-surface">Bu filtrelere uyan uçuş yok.</p>
@@ -174,7 +170,6 @@ export function DashboardPage() {
               >
                 <Card interactive className={cn('overflow-hidden p-0', flight.isCancelled && 'opacity-60')}>
                   <div className="flex flex-col sm:flex-row">
-                    {}
                     <div className="flex items-center gap-3 border-b border-dashed border-outline-variant/50 bg-surface-container-low px-6 py-4 sm:w-40 sm:flex-col sm:items-start sm:justify-center sm:border-b-0 sm:border-r">
                       <span className="eyebrow text-[10px] text-outline">Aircraft</span>
                       <span className="flex items-center gap-2">
@@ -187,7 +182,6 @@ export function DashboardPage() {
                         </span>
                       </span>
                     </div>
-                    {}
                     <div className="flex flex-1 flex-col gap-4 px-6 py-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <RouteRibbon origin={flight.originICAO} destination={flight.destinationICAO} size="md" />

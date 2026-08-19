@@ -58,7 +58,7 @@ public class CreateFlightCommandHandlerTests
         var flightId = await handler.Handle(ValidCommand(), CancellationToken.None);
 
         await publisher.Received(1).Publish(
-            Arg.Is<FlightCreatedEvent>(e => e.FlightId == flightId && e.OriginICAO == "LTFM"),
+            Arg.Is<FlightCreatedEvent>(e => e!.FlightId == flightId && e.OriginICAO == "LTFM"),
             Arg.Any<CancellationToken>());
     }
 }

@@ -26,8 +26,6 @@ export function LandingFooter() {
           </p>
         </div>
 
-        {/* Auth-aware, like every other call to action on the page: offering
-            "Hesap Oluştur" to someone already signed in is a dead end. */}
         <nav className="flex flex-col gap-3" aria-label="Alt menü">
           <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">Hesap</span>
           {isAuthenticated ? (

@@ -4,12 +4,6 @@
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
 
-  /*
-   * Palette — navy ink on cool light surfaces. This keeps DESIGN.md's structure (the
-   * same M3 roles, the same light/airy feel) but swaps its neutral axis: every place
-   * the system previously reached for black now uses navy, and the warm greys are
-   * retuned cool so the page reads as a considered blue-grey rather than washed out.
-   */
   --color-primary: #1b2b55;
   --color-on-primary: #ffffff;
   --color-primary-container: #2b4076;
@@ -35,12 +29,6 @@
   --color-background: #f7f9fd;
   --color-on-background: #1a2440;
 
-  /*
-   * Status ramp — CRM severity, certificate expiry and validation errors. Carried at
-   * full strength rather than the muted values used previously: against a navy-and-
-   * cool-grey page these need to read as genuine colour, not as tinted grey. Brand and
-   * Captain significance still carry no hue of their own — see Badge's `solid` tone.
-   */
   --color-error: #b3261e;
   --color-on-error: #ffffff;
   --color-error-container: #fbdedb;
@@ -62,52 +50,23 @@
   --color-high-container: #fbe3d5;
   --color-on-high-container: #54210a;
 
-  /*
-   * DESIGN.md pins `roundness: 8`. md/lg deliberately collapse onto 8px so the existing
-   * `rounded-lg` call sites render at the spec value — this is intentional, not a typo.
-   * Only full-bleed hero imagery gets the larger 12px.
-   */
   --radius-sm: 0.25rem;
   --radius: 0.5rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
 
-  /* Soft navy-tinted ambient elevation — DESIGN.md's "hafif gölgeler" */
   --shadow-panel: 0 1px 2px 0 rgba(26, 36, 64, 0.06), 0 8px 24px -10px rgba(26, 36, 64, 0.14);
   --shadow-panel-hover: 0 2px 6px 0 rgba(26, 36, 64, 0.09), 0 18px 36px -12px rgba(26, 36, 64, 0.20);
 
-  /*
-   * Air — the public landing page palette, straight from DESIGN.md. Purely
-   * additive: every token above still drives the signed-in application, which
-   * stays navy-on-light. The landing page no longer paints a ground of its own at
-   * all — it runs directly on the backdrop clip — so these are here for the
-   * hairlines, the ink CTAs and the focus rings. Hairlines everywhere, never
-   * shadows.
-   */
   --color-whiteout: #ffffff;
-  --color-haze: #f5f5f5;
-  --color-ink: #1b1b1b;
-  --color-black-void: #000000;
   --color-twilight-blue: #426188;
   --color-signal-blue: #2b7fff;
 
-  /*
-   * Filled-button blue for the signed-in pages.
-   *
-   * Signal Blue itself carries white text at only 3.95:1, and button labels are
-   * 14px semibold — nowhere near the 18.66px-bold threshold that would let the
-   * 3:1 large-text rule apply. This is Signal Blue taken down just far enough to
-   * clear 4.5:1 (it measures 4.86:1); side by side the two are hard to tell
-   * apart. `--color-signal-blue` still does the work where contrast ratios do not
-   * apply — focus rings and hover.
-   */
   --color-action: #1f6feb;
   --color-action-hover: #1a5fd0;
   --color-on-action: #ffffff;
 
-  /* Caveat stands in for Control Cursive, the substitute DESIGN.md names. Inter
-     already covers Control and Control TNT. */
   --font-cursive: "Caveat", "Segoe Script", cursive;
 }
 
@@ -119,42 +78,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/*
- * Editorial display type — Libre Caslon Text. Deliberately scoped to hero headings and
- * page <h1>s only; section headings, card titles and all data stay Inter so the dense
- * flight/CRM lists remain scannable.
- */
 .display {
   font-family: var(--font-serif);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-/* Aviation data — ICAO codes, METAR, timings, stat values */
 .data {
   font-feature-settings: "tnum" 1, "zero" 1;
 }
 
-/* Uppercase eyebrow tracking */
 .eyebrow {
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
-/*
- * Legibility halo for type that lands directly on the backdrop clip rather than on
- * a panel — the destination code of a full-width route ribbon, which by
- * construction sits at the far edge of its row. A light halo rather than a dark
- * one, because the clip is a bright sky and the type on it is navy.
- */
 .on-photo {
   text-shadow:
     0 1px 2px rgba(247, 249, 253, 0.95),
     0 0 18px rgba(247, 249, 253, 0.95);
 }
 
-/* Frosted panel for content floating on the clip inside a page — lighter than
-   `.air-surface`, for callouts rather than for forms. */
 .glass-panel {
   background-color: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(12px);
@@ -163,7 +107,6 @@ body {
   box-shadow: var(--shadow-panel);
 }
 
-/* Great-circle arc dash drift on the signature route ribbon */
 @keyframes arc-drift {
   to {
     stroke-dashoffset: -24;
@@ -177,7 +120,6 @@ body {
   }
 }
 
-/* Gentle fade-and-rise entrance */
 @keyframes rise {
   0% {
     opacity: 0;
@@ -196,32 +138,6 @@ body {
   }
 }
 
-/* Slow drift for a single floating accent element on the auth hero */
-@keyframes float-drift {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .float-slow {
-    animation: float-drift 6s ease-in-out infinite;
-  }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
- * Air — utilities for the public landing page only. Everything below is scoped
- * behind an air- prefix so it can never leak into the signed-in application,
- * which keeps the navy-on-light system above. DESIGN.md is the source of truth.
- * ───────────────────────────────────────────────────────────────────────────── */
-
-/* Control Cursive → Caveat. One word per headline, never a whole line — the
-   italic is the personality break against upright Inter, and loses its effect
-   the moment it carries more than a beat. */
 .air-cursive {
   font-family: var(--font-cursive);
   font-style: italic;
@@ -229,33 +145,6 @@ body {
   letter-spacing: 0.005em;
 }
 
-/*
- * ── One ground, and it is the footage ───────────────────────────────────────
- *
- * The page used to alternate three tinted grounds over the backdrop clip and
- * bridge them with gradients. That is gone. Nothing on this page paints a
- * background any more: the clip is shown exactly as shot, at exactly one
- * strength, from the first pixel of the hero to the last of the footer. A
- * section that tinted its own patch of sky — however lightly — would make the
- * video more visible in some places than others, which is the specific thing
- * this layout must not do.
- *
- * Legibility therefore cannot come from a scrim. It comes from the clip being
- * uniformly BRIGHT: both loops are golden-hour skies running roughly #a8c8e0
- * (the blue band, relative luminance ≈0.53) to #f7f0e8 (cloud, ≈0.86), with the
- * peach band around ≈0.74 as the worst case for dark type. Every value below was
- * checked against that peach band, so contrast holds on every frame rather than
- * on an average one:
- *
- *   fg      #14213d   11.3:1        rule    22% ink hairline
- *   muted   #33405c    7.5:1        accent  #1a4fa0   5.9:1
- *
- * `--air-accent` is a deepened Signal Blue, not #2b7fff itself: DESIGN.md's
- * Signal Blue measures 2.86:1 on that band and fails even the 3:1 large-text
- * floor. #2b7fff survives as the focus-ring colour, where contrast ratios do not
- * apply. If the backdrop clip is ever swapped for a darker one, these four
- * values — not a scrim — are what has to be re-derived.
- */
 .air-page {
   --air-fg: #14213d;
   --air-fg-muted: #33405c;
@@ -265,16 +154,6 @@ body {
   color: var(--air-fg);
 }
 
-/*
- * Glassmorphism navigation bar. Sits directly on moving video, so the blur does
- * the legibility work a flat translucent fill cannot: without it the nav labels
- * strobe as bright frames pass under them. The saturate() keeps the sky behind
- * from going grey through the blur.
- *
- * This is the one element on the page allowed to lighten the footage, and only
- * because it is a fixed 72px band rather than a stretch of page — the sky it
- * covers is the same sky the whole way down, so it costs no uniformity.
- */
 .air-nav {
   background-color: transparent;
   color: var(--air-fg);
@@ -287,8 +166,6 @@ body {
     backdrop-filter 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Scrolled state — once dense copy is passing underneath, the bar earns a veil.
-   Kept high-alpha-free (62%) so the clip still reads through it. */
 .air-nav-scrolled {
   background-color: rgba(255, 255, 255, 0.62);
   border-bottom-color: var(--air-rule);
@@ -302,12 +179,6 @@ body {
   }
 }
 
-/*
- * Frosted surface for content that has to sit on the clip and stay readable at
- * small sizes — the auth form panel, the recovery cards, the 404. Deliberately
- * near-opaque: these carry 13px labels and validation text, which no amount of
- * blur makes safe over moving footage.
- */
 .air-surface {
   background-color: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(20px) saturate(1.2);
@@ -315,7 +186,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
-/* Underline Link — DESIGN.md makes the 2px rule the affordance, not a fill. */
 .air-underline {
   border-bottom: 2px solid currentColor;
   padding-bottom: 1px;

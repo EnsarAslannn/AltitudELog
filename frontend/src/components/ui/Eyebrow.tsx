@@ -11,10 +11,6 @@ export function Eyebrow({ rule = true, tone = 'ink', className, children, ...pro
     <div
       className={cn(
         'flex items-center gap-3',
-        // Twilight Blue for the `ink` tone: section headers now sit on the video
-        // rather than on an opaque page, and the hue reads as a deliberate part of
-        // the sky palette where the old near-black read as pasted on. 4.7:1 on the
-        // composited ground, so it still clears AA for normal text.
         tone === 'ink' ? 'text-twilight-blue' : 'text-on-surface-variant',
         className,
       )}
