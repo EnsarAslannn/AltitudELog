@@ -3,16 +3,6 @@ import { VideoBackdrop } from '../common/VideoBackdrop'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 
-/**
- * The signed-in shell.
- *
- * It runs on the same Air 1 clip as the landing page — one fixed layer for the
- * whole route, shown as shot. The chrome above it (bar, footer) and every panel
- * inside a page are translucent to varying degrees, so the sky is present in the
- * gutters and between cards rather than being boxed out by an opaque page fill.
- * Dense data surfaces stay near-opaque: legibility of a flight list beats another
- * glimpse of cloud.
- */
 export function AppLayout() {
   return (
     <div className="relative flex min-h-screen flex-col">

@@ -124,7 +124,7 @@ public class UpdateFlightCommandHandlerTests
         updated.METARInfo.Should().BeNull();
 
         await publisher.Received(1).Publish(
-            Arg.Is<FlightUpdatedEvent>(e => e.FlightId == flight.Id && e.OriginICAO == "LTBA"),
+            Arg.Is<FlightUpdatedEvent>(e => e!.FlightId == flight.Id && e.OriginICAO == "LTBA"),
             Arg.Any<CancellationToken>());
     }
 

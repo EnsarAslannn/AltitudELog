@@ -10,7 +10,6 @@ interface FeatureBlockProps {
   points: string[]
   image: string
   imageAlt: string
-  /** Puts the photograph on the left. Alternated down the page so the eye zig-zags. */
   reverse?: boolean
 }
 
@@ -27,9 +26,6 @@ export function FeatureBlock({
   return (
     <section
       id={id}
-      // No background of its own: the section is a stretch of the backdrop clip
-      // with copy on it. scroll-mt clears the fixed nav — without it an anchor
-      // jump parks the section heading underneath the bar.
       className="scroll-mt-24 py-20 sm:py-28"
     >
       <div className="relative z-30 mx-auto grid max-w-[1150px] items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
@@ -56,13 +52,6 @@ export function FeatureBlock({
           </ul>
         </Reveal>
 
-        {/*
-          A bare rounded image, not a card. DESIGN.md wraps *product screenshots* in
-          a Haze card so the app's own light UI gets a deliberate edge against a dark
-          ground; these are full-bleed photographs on open sky, where a card would add
-          a frame around a frame. Its "Image Card with Radius" — transparent, 11-14px
-          radius, no padding — is the rule that applies here.
-        */}
         <Reveal delay={0.08} className={cn(reverse && 'lg:order-1')}>
           <img
             src={image}

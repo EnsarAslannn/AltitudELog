@@ -10,14 +10,6 @@ interface AuthCardLayoutProps {
   footer: ReactNode
 }
 
-/**
- * Centred card on the Air 1 clip — the shell for the password-recovery pages.
- *
- * Login and Register get the three-quarter split because they are the pages
- * people arrive at from the landing page and they carry marketing copy. Recovery
- * is a single field and a single decision; a headline column beside it would be
- * padding. Same clip, same surface treatment, no split.
- */
 export function AuthCardLayout({ title, subtitle, children, footer }: AuthCardLayoutProps) {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-12">

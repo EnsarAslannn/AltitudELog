@@ -32,7 +32,8 @@ Railway. Register with any rank, including **Captain**, to unlock flight-creatio
   `ValidationBehavior` (FluentValidation, short-circuits on invalid input) → `CachingBehavior` →
   `CacheInvalidationBehavior` (Redis, fail-open: a down cache degrades gracefully instead of 500ing).
 - **Role-based authorization**: a pilot's `Rank` doubles as their JWT role claim — flight/crew *writes* are
-  gated to `Captain` (`[Authorize(Roles = "Captain")]`), mirrored on the frontend with route guards.
+  gated to command ranks (`[Authorize(Roles = "Captain,ChiefPilot")]`), mirrored on the frontend with route
+  guards.
 - **Async background processing**: creating a flight publishes a domain event that enqueues a Hangfire job to
   fetch and attach the METAR weather report for the flight's airport, decoupling the write path from an
   external API call.
@@ -43,6 +44,8 @@ Railway. Register with any rank, including **Captain**, to unlock flight-creatio
   single consistent error shape.
 - **Containerized deployment**: a multi-stage `Dockerfile` (SDK build stage → ASP.NET runtime stage) ships the
   API to Railway; the frontend deploys separately to Vercel.
+- **Operational endpoints**: `/health` reports Postgres and Redis liveness with per-check timings, `/hangfire`
+  exposes the Basic-auth-protected job dashboard, and the OpenAPI document is browsable through Scalar.
 
 ## Demo notes
 
@@ -80,22 +83,26 @@ Dependency direction: `API → Application, Infrastructure` · `Infrastructure �
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Node.js](https://nodejs.org/) 22+ and npm
-- PostgreSQL (local instance)
-- Redis (local instance — the API degrades gracefully without it, but caching won't work)
-- Docker (only required to run the integration test suite, which uses Testcontainers)
+- Docker — runs the Postgres and Redis the app talks to, and the Testcontainers integration suite
 - [`dotnet-ef`](https://learn.microsoft.com/ef/core/cli/dotnet) global tool for migrations:
   `dotnet tool install --global dotnet-ef`
 
 ### Backend setup
 
-Configure the database connection and JWT signing key via .NET User Secrets (placeholders in
-`appsettings.json` are not real credentials):
+Start the database and cache. `docker-compose.yml` in the repo root defines both, on ports **5434** and
+**6380** rather than the defaults, so they never collide with a Postgres or Redis already running on the
+machine:
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=altitudelog;Username=postgres;Password=<your password>" \
-  --project src/AltitudELog.API
+docker compose up -d
+docker compose ps            # both should report (healthy)
+```
 
+`appsettings.Development.json` already points at those two ports, so no connection-string configuration is
+needed. The JWT signing key is a real secret and is the one value you must supply — `appsettings.json` holds
+a placeholder, and the app refuses to start if the key is missing or shorter than 32 characters:
+
+```bash
 dotnet user-secrets set "Jwt:Key" "<a real key, at least 32 characters>" \
   --project src/AltitudELog.API
 ```
@@ -106,12 +113,13 @@ Then, from the repo root:
 dotnet restore
 dotnet build AltitudELog.slnx
 
-# Apply migrations (requires the Postgres connection above to be reachable)
 dotnet ef database update --project src/AltitudELog.Infrastructure --startup-project src/AltitudELog.API
 
-# Run the API (http://localhost:5264)
-dotnet run --project src/AltitudELog.API --launch-profile http
+dotnet run --project src/AltitudELog.API --launch-profile http   # http://localhost:5264
 ```
+
+`docker compose down` stops both containers and keeps the data; `docker compose down -v` also deletes the
+database volume.
 
 ### Frontend setup
 

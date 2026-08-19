@@ -3,20 +3,6 @@ import { ChevronDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
-/*
- * Form controls for the authentication pages.
- *
- * Separate from `Input`/`Select` rather than a variant of them, because they are
- * solving a different problem. Those are for dense operational forms inside the
- * application, where a visible box per field is what keeps a long grid of inputs
- * legible. These sit alone in a narrow column that is a quarter of the screen and
- * is the only thing the reader is looking at, so the box is noise: a soft fill
- * and a hairline that only appears on focus reads calmer and taller.
- *
- * The label/id/aria contract is identical to `Input`'s, so accessible-name
- * lookups keep working unchanged.
- */
-
 const labelClass = 'text-[11px] font-medium uppercase tracking-[0.16em] text-on-surface-variant'
 
 const controlClass =

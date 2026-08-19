@@ -3,11 +3,6 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /**
-   * `primary` is the Signal Blue action used throughout the signed-in pages.
-   * `brand` is the deep navy it replaced, kept for the authentication pages,
-   * whose design is settled and deliberately out of scope of the glass pass.
-   */
   variant?: 'primary' | 'brand' | 'secondary' | 'ghost'
   icon?: LucideIcon
 }

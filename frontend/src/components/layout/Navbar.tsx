@@ -52,8 +52,6 @@ export function Navbar() {
     <header className="sticky top-0 z-20 border-b border-white/20 bg-white/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-5">
         <div className="flex items-center gap-10">
-          {/* The lockup is the only route back to the public landing page once
-              signed in — the rest of this bar goes to application routes. */}
           <Link
             to="/"
             className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-blue"
@@ -92,7 +90,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {}
       <nav
         className="flex gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 pb-3 pt-2 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Ana menü"

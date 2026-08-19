@@ -1,25 +1,18 @@
-## .NET / Visual Studio / VS Code standard gitignore
-
-# Build results
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
 
-# Visual Studio
 .vs/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 
-# VS Code
 .vscode/
 
-# Rider / IntelliJ
 .idea/
 *.sln.iml
 
-# NuGet
 *.nupkg
 *.snupkg
 **/[Pp]ackages/*
@@ -27,7 +20,6 @@
 *.nuget.props
 *.nuget.targets
 
-# Build artifacts
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -37,61 +29,35 @@ bld/
 [Bb]in/
 [Oo]bj/
 
-# ASP.NET Core
 *.pfx
 
-# User-specific files
 *.rsuser
 *.userprefs
 
-# Test results
 [Tt]est[Rr]esult*/
 *.trx
 *.coverage
 *.coveragexml
 
-# Rider/ReSharper
 _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 
-# Logs
 *.log
 Logs/
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# EF Core
 *.db
 *.sqlite
 
-# dotnet-tools local restore cache
 .dotnet/
 
-# Claude Code skills installed via npx (skills add / claude-code-templates)
 .agents/
-.claude/skills/frontend-design/
-.claude/skills/senior-frontend/
-.claude/skills/senior-backend/
-.claude/skills/webapp-testing/
-.claude/skills/senior-security/
-.claude/skills/ui-ux-pro-max/
-.claude/skills/design-taste-frontend/
-.claude/skills/impeccable/
+.claude/
 skills-lock.json
 
-# Local Claude Code settings (stale debug-session permissions, machine-specific paths)
-.claude/settings.json
-
-# Local Vercel CLI project link (machine-specific, not meant to be committed — the frontend is
-# deployed by running `vercel deploy --prod` from the repo root now that the Vercel project's
-# Root Directory setting is pinned to `frontend/`)
 .vercel
 
-# Source material for the landing page (reference clips, the uncompressed
-# airbus.glb, original report renders). None of it is served: the versions the
-# app ships are committed under frontend/public/. Keeping these out avoids
-# writing ~26MB into git history permanently.
 docs/assets/

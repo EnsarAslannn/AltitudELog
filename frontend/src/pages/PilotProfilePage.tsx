@@ -157,13 +157,6 @@ export function PilotProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {}
-      {/*
-        The identity header is the one block on this page with nothing behind it —
-        a name, a handle and a row of badges landing straight on moving footage.
-        Wrapping it in the same glass the cards use gives it a surface to sit on
-        without reintroducing the opaque photo hero this replaced.
-      */}
       <section className="rise rounded-lg border border-white/30 bg-white/40 p-6 shadow-lg backdrop-blur-md sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -175,7 +168,6 @@ export function PilotProfilePage() {
               <p className="mt-1 text-sm text-on-surface-variant">@{profile.username}</p>
             </div>
           </div>
-          {}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -218,7 +210,6 @@ export function PilotProfilePage() {
         </div>
       </section>
 
-      {}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={profile.totalFlights} />
         <StatTile icon={Clock3} label="Toplam Saat" value={profile.totalFlightHours} />
@@ -226,7 +217,6 @@ export function PilotProfilePage() {
         <StatTile icon={CalendarDays} label="Son 90 Gün" value={profile.hoursLast90Days} />
       </div>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Uçak Tipine Göre Saatler</Eyebrow>
         {profile.hoursByAircraftType.length === 0 ? (
@@ -255,7 +245,6 @@ export function PilotProfilePage() {
         )}
       </section>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Sertifikalar</Eyebrow>
         <div className="flex flex-col gap-3">
@@ -321,7 +310,6 @@ export function PilotProfilePage() {
         )}
       </section>
 
-      {}
       <section className="flex flex-col gap-4">
         <Eyebrow>Son Uçuşlar</Eyebrow>
         {profile.recentFlights.length === 0 ? (

@@ -93,8 +93,9 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   `Microsoft.Extensions.Caching.Abstractions` (`IDistributedCache` contract, for the caching pipeline behaviors),
   `Microsoft.EntityFrameworkCore` (core package only, for `DbSet<T>`/`IQueryable` — no provider dependency here),
   and `Microsoft.Extensions.Identity.Core` (for `PasswordHasher<Pilot>` only — not the full ASP.NET Core Identity
-  system, no `IdentityDbContext`/stores). `Newtonsoft.Json` is also referenced but has no confirmed direct usage —
-  don't assume it's load-bearing; verify before relying on it or removing it.
+  system, no `IdentityDbContext`/stores). A direct `Newtonsoft.Json` reference used to sit here too; it had no
+  usage anywhere in the codebase and was removed — Hangfire.Core still brings it in transitively, so don't
+  re-add it as a top-level reference.
 - `Common/Interfaces/IApplicationDbContext.cs`: the persistence abstraction Application codes against, instead of
   a concrete `DbContext`. Exposes `DbSet<T>` for all four entities (`Flights`, `Pilots`, `Crew`, `CRMReports`) —
   extend it per-entity as new features need them, don't add speculative `DbSet`s ahead of use.
@@ -262,13 +263,11 @@ docker compose down       # stop, keeping the database volume
 docker compose down -v    # stop and DELETE the database
 ```
 
-**Host ports are deliberately not the defaults** — Postgres is on **5434** and Redis on **6380**. 5432 belongs
-to the dev machine's native `postgresql-x64-17` Windows service, and 5432/6379 are also what neighbouring
-projects' compose files claim; the app once silently ran against another project's Redis container because
-both pointed at 6379. Changing these ports means changing `appsettings.Development.json` in the same commit.
-The compose Postgres is **not** the same database as the native service on 5432 — that copy still exists and
-is left alone as a fallback, so if a query returns unexpectedly stale or missing rows, check which port the
-startup log reports (`Migrating using database 'altitudelog' on server 'tcp://localhost:5434'`).
+**Host ports are deliberately not the defaults** — Postgres is on **5434** and Redis on **6380**, so a
+Postgres or Redis already listening on 5432/6379 can never be reached by accident. Changing these ports means
+changing `appsettings.Development.json` in the same commit. If a query returns unexpectedly stale or missing
+rows, check which port the startup log reports
+(`Migrating using database 'altitudelog' on server 'tcp://localhost:5434'`).
 
 **Connection string / secrets convention:** `appsettings.json` holds literal placeholders
 (`KENDI_SIFRENIZI_BURAYA_YAZIN`) — it is **not** meant to carry real credentials in a committed file.
@@ -279,8 +278,7 @@ requiring per-machine setup for it just makes a fresh clone fail to run.
 
 **Do not set `ConnectionStrings:DefaultConnection` in User Secrets.** User Secrets sits *above*
 `appsettings.Development.json` in the configuration chain, so a leftover entry there silently wins and the app
-talks to whatever it names — which is exactly how this project ended up running against the native 5432
-database while its config file said otherwise. Clear it with:
+talks to whatever it names rather than to the compose containers. Clear it with:
 
 ```
 dotnet user-secrets remove "ConnectionStrings:DefaultConnection" --project src/AltitudELog.API
@@ -487,10 +485,11 @@ one without an explicit go-ahead.
 Legibility therefore comes from the clip being uniformly bright — a golden-hour sky running roughly `#a8c8e0`
 to `#f7f0e8` — carrying dark type at 9:1 or better on every frame. The landing palette lives in the
 `.air-page` block in `src/index.css` (`--air-fg`, `--air-fg-muted`, `--air-rule`, `--air-accent`), and every
-one of those four values was derived against the clip's *worst* band rather than its average; the comment there
-records the ratios. `--air-accent` is a deepened Signal Blue because DESIGN.md's `#2b7fff` measures 2.86:1 on
-that band. If the clip is ever swapped for a darker one, those four values are what has to be re-derived —
-a scrim is not the answer.
+one of those four values was derived against the clip's *worst* band — its peach highlights — rather than
+against its average, measuring `#14213d` at 11.3:1, `#33405c` at 7.5:1 and `#1a4fa0` at 5.9:1. `--air-accent`
+is a deepened Signal Blue because the `--color-signal-blue` token's own `#2b7fff` measures only 2.86:1 on the
+same band. If the clip
+is ever swapped for a darker one, those four values are what has to be re-derived — a scrim is not the answer.
 
 Two surface treatments are allowed to cover the footage, both in `index.css`: `.air-nav` (the landing bar,
 transparent over the hero, a light veil once scrolled) and `.air-surface` (near-opaque, for auth forms and the
@@ -506,18 +505,22 @@ between panels. `src/pages/LandingPage.test.tsx` guards the one-ground rule.
   failure must cost only the model), tints the near-white airframe toward a cool steel so it does not vanish
   against cloud, and drives its flight path from a *damped* scroll value rather than from `window.scrollY`
   directly — see `SCROLL_FOLLOW`. Its Suspense boundary must stay **inside** `<Canvas>`; moving it out unmounts
-  the renderer mid-load and leaves a dead context.
+  the renderer mid-load and leaves a dead context. The GLB is meshopt-compressed (2.5MB against 8.8MB
+  uncompressed) and its decoder is WebAssembly, which is why `index.html`'s CSP `script-src` carries
+  `'wasm-unsafe-eval'` — that token permits WebAssembly compilation only and still refuses `eval()`/
+  `new Function()`, so do not widen it to `'unsafe-eval'`.
 - `src/components/layout/`: `AppLayout` (signed-in shell), `AuthSplitLayout` (Login/Register — Air 2 on the left
   three quarters, form panel on the right quarter with a 380px floor so the fields stay usable below ~1520px),
   `AuthCardLayout` (forgot/reset — same clip, centred card), `Navbar`, `Footer`.
 - `src/components/ui/`: shared primitives (`Button`, `Card`, `Input`, `Select`, `Combobox`, `Badge`, `Skeleton`,
-  `Spinner`, `Eyebrow`, `StatTile`, `RouteRibbon`, `Pagination`, `CrmTrendChart`), plus `AuthField`/`AuthSelect`
+  `Eyebrow`, `StatTile`, `RouteRibbon`, `Pagination`, `CrmTrendChart`), plus `AuthField`/`AuthSelect`
   — deliberately separate from `Input`/`Select`, which stay boxed for dense operational forms while the auth
   controls use a soft fill and a hairline that appears on focus. The application's own palette is navy ink on
-  cool light surfaces (the `--color-*` tokens at the top of `index.css`); the `--color-whiteout`/`haze`/`ink`/
-  `black-void`/`twilight-blue`/`signal-blue` "Air" tokens below them serve the landing page. Radii are pinned
-  by DESIGN.md's `roundness: 8`; hairlines rather than shadows. Keep new UI on these primitives and tokens
-  rather than one-off styling in pages.
+  cool light surfaces (the `--color-*` tokens at the top of `index.css`); the `--color-whiteout`/
+  `twilight-blue`/`signal-blue` "Air" tokens below them serve the landing page and the signed-in accents.
+  Radii come from the `--radius-*` scale, which centres on `0.5rem`/8px (`--radius`, `-md` and `-lg` are all
+  8px); hairlines rather than shadows. Keep new UI on these primitives and tokens rather than one-off styling
+  in pages.
 - Config: `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:5264` (must match the API's http
   launch profile). `vite.config.ts` pins the dev server to port `5180` with `strictPort: true` — this exact port
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.
@@ -549,9 +552,16 @@ specifically.
   `dotnet test tests/AltitudELog.Application.UnitTests`.
 - CI: `.github/workflows/ci.yml` runs two jobs on push/PR — `backend` (`dotnet test`) and `frontend`
   (`npm run build`, `npm run lint`, `npm test`).
-- The previously-flagged NU1903 advisory (`Microsoft.OpenApi` 2.0.0, transitive via `Microsoft.AspNetCore.OpenApi`)
-  no longer applies — `AltitudELog.API` now pins `Microsoft.OpenApi` 2.11.0 directly. Re-check with
-  `dotnet list package --vulnerable` if package versions move again rather than assuming this stays fixed.
+- **Three top-level `PackageReference`s exist only to raise a vulnerable transitive dependency, and none of
+  them is imported by any `.cs` file** — deleting one because "nothing uses it" silently reintroduces a high
+  severity advisory:
+  - `AltitudELog.API` → `Microsoft.OpenApi` 2.11.0, over `Microsoft.AspNetCore.OpenApi`'s 2.0.0.
+  - `AltitudELog.Application` → `Newtonsoft.Json` 13.0.3, over `Hangfire.Core`'s 11.0.1 (GHSA-5crp-9r3c-p9vr).
+  - `AltitudELog.IntegrationTests` → `SSH.NET` 2026.0.0, over Testcontainers → `Docker.DotNet.Enhanced`'s
+    2025.1.0 (GHSA-q939-rpr3-3284).
+
+  `dotnet list AltitudELog.slnx package --vulnerable --include-transitive` should report all six projects
+  clean; re-run it when package versions move rather than assuming this stays fixed.
 
 ## Architecture notes
 
@@ -599,5 +609,4 @@ specifically.
 - **No Conversational Filler**: Respond directly, omitting greetings, apologetic language, or verbose explanations.
 - **Surgical File Access**: Do NOT read entire directories. Ask for explicit file targets or use exact `@filename` references to minimize context bloat.
 - **Plan Mode First**: Always enter `Plan Mode` for any task requiring >2 steps. Propose changes, list specific files to modify, and wait for confirmation before writing code.
-- **Applied Learning (<15 words)**: On any correction, append the lesson to `tasks/lessons.md` using a single line (max 15 words) to avoid repeating mistakes.
 - **Quiet Verification**: Before declaring a task complete, verify with `dotnet build AltitudELog.slnx` using minimal logs.

@@ -60,11 +60,6 @@ describe('LoginPage', () => {
   it('renders the form on an opaque panel over the auth backdrop clip', () => {
     renderLoginPage()
 
-    // The clip is decorative; the guarantee that matters is that the fields sit on
-    // a solid surface rather than on moving footage, so their labels and errors
-    // never depend on which frame is playing. `.air-surface` is that panel — see
-    // the note in AuthSplitLayout on why it is the one element allowed to cover
-    // the footage.
     expect(document.querySelector('video')).toHaveAttribute('src', '/videos/air-auth.mp4')
     expect(screen.getByLabelText('Kullanıcı Adı').closest('.air-surface')).not.toBeNull()
   })

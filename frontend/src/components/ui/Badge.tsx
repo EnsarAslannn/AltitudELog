@@ -10,10 +10,6 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 const toneClasses: Record<NonNullable<BadgeProps['tone']>, string> = {
   neutral: 'border-outline-variant bg-surface-container-low text-on-surface-variant',
   solid: 'border-primary bg-primary text-on-primary',
-  // Semi-transparent rather than a solid container fill, so "Yakında Doluyor"
-  // and severity `Medium` keep the ethereal feel of the glass cards they sit on
-  // instead of stamping an opaque chip onto them. `text-yellow-800` measures
-  // ~5.8:1 against the composited ground.
   warning: 'border-yellow-600/25 bg-yellow-500/20 text-yellow-800',
   red: 'border-error/30 bg-error-container text-on-error-container',
   green: 'border-success/30 bg-success-container text-on-success-container',

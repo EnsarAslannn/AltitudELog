@@ -143,7 +143,6 @@ export function FlightDetailPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {}
       <section className="rise">
         <div className="flex flex-col justify-center gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -211,7 +210,6 @@ export function FlightDetailPage() {
         </p>
       )}
 
-      {}
       <div className="inline-flex w-fit gap-1 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-1 shadow-sm">
         <TabButton active={tab === 'crew'} onClick={() => setTab('crew')} icon={Users}>
           Mürettebat

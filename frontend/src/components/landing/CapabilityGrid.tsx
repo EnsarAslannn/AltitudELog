@@ -54,14 +54,6 @@ export function CapabilityGrid() {
           </h2>
         </Reveal>
 
-        {/*
-          Rule-topped cells, not filled cards. The previous version drew a 1px
-          lattice by letting a background colour show through a `gap-px` grid —
-          which only works when the cells themselves are filled, and filling six
-          cells would tint six patches of a sky that has to read at one strength
-          everywhere. A top hairline gives the same grid discipline and paints
-          nothing.
-        */}
         <ul className="mt-12 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
           {capabilities.map(({ icon: Icon, title, body }, index) => (
             <Reveal

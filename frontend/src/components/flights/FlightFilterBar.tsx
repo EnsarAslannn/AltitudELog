@@ -179,7 +179,6 @@ export function FlightFilterBar({
         </div>
       )}
 
-      {}
       <p aria-live="polite" className="text-xs text-on-surface-variant">
         {isLoading
           ? 'Uçuşlar filtreleniyor…'
