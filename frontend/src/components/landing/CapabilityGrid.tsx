@@ -6,9 +6,7 @@ import {
   Users,
   CalendarClock,
 } from 'lucide-react'
-import { cn } from '../../lib/cn'
 import { Reveal } from './Reveal'
-import { toneClass, type SectionTone } from './tones'
 
 const capabilities = [
   {
@@ -43,13 +41,9 @@ const capabilities = [
   },
 ]
 
-export function CapabilityGrid({ tone }: { tone: SectionTone }) {
+export function CapabilityGrid() {
   return (
-    <section
-      id="yetenekler"
-      data-nav-tone={tone}
-      className={cn(toneClass[tone], 'air-ground scroll-mt-24 py-20 sm:py-28')}
-    >
+    <section id="yetenekler" className="scroll-mt-24 py-20 sm:py-28">
       <div className="relative z-30 mx-auto max-w-[1150px] px-5 sm:px-8">
         <Reveal className="max-w-2xl">
           <p className="eyebrow mb-5 text-xs font-medium text-[color:var(--air-accent)]">
@@ -61,17 +55,20 @@ export function CapabilityGrid({ tone }: { tone: SectionTone }) {
         </Reveal>
 
         {/*
-          Hairline-divided cells rather than six filled cards: the ground is already
-          a light tone, so panels only a shade lighter would read as noise. The grid
-          gap is the rule — one 1px lattice, no borders doubling up at the seams.
+          Rule-topped cells, not filled cards. The previous version drew a 1px
+          lattice by letting a background colour show through a `gap-px` grid —
+          which only works when the cells themselves are filled, and filling six
+          cells would tint six patches of a sky that has to read at one strength
+          everywhere. A top hairline gives the same grid discipline and paints
+          nothing.
         */}
-        <ul className="mt-14 grid gap-px overflow-hidden rounded-xl border border-[color:var(--air-rule)] bg-[color:var(--air-rule)] sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-12 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
           {capabilities.map(({ icon: Icon, title, body }, index) => (
             <Reveal
               as="li"
               key={title}
               delay={index * 0.05}
-              className="bg-[color:var(--air-bg)] p-6 sm:p-7"
+              className="border-t border-[color:var(--air-rule)] pb-9 pt-6"
             >
               <Icon className="h-5 w-5 text-[color:var(--air-accent)]" strokeWidth={1.75} aria-hidden="true" />
               <h3 className="mt-5 text-lg font-medium text-[color:var(--air-fg)]">{title}</h3>

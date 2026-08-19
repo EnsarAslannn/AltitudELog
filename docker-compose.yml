@@ -1,36 +1,65 @@
-version: "3.8"
+# Local development dependencies for AltitudELog.
+#
+# Both services are dedicated to this project and bind to non-default host ports
+# on purpose: 5432 belongs to the machine's native `postgresql-x64-17` Windows
+# service, and the defaults are exactly what neighbouring projects' compose files
+# also claim. Odd ports are the price of `docker compose up -d` in this repo never
+# depending on what else happens to be running — or not running — on this machine.
+#
+# The connection strings in src/AltitudELog.API/appsettings.Development.json point
+# at these ports and must move with them.
+#
+# Usage:
+#   docker compose up -d          # start
+#   docker compose ps             # health
+#   docker compose down           # stop, keeping data
+#   docker compose down -v        # stop and DELETE the database volume
 
 services:
-  # 🐘 PostgreSQL Veritabanı Servisi
-  altitudelog-db:
-    image: postgres:17
+  postgres:
+    image: postgres:17-alpine
     container_name: altitudelog-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: AltitudELogDb
+      POSTGRES_USER: altitudelog
+      POSTGRES_PASSWORD: altitudelog_dev
+      POSTGRES_DB: altitudelog
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - altitudelog-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Both -U and -d are required: without them pg_isready probes a database
+      # named after the default `postgres` role, which this image never creates.
+      test: ["CMD-SHELL", "pg_isready -U altitudelog -d altitudelog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
-      - altitudelog-network
+      - altitudelog
 
-  # 🔴 Redis Önbellek Servisi
-  altitudelog-cache:
-    image: redis:alpine
+  redis:
+    image: redis:7-alpine
     container_name: altitudelog-redis
+    restart: unless-stopped
+    # Cached query results only — every value is rebuildable from Postgres, and
+    # CachingBehavior is fail-open, so persistence here would buy nothing but a
+    # slower shutdown and a stale dump to reason about.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
-      - altitudelog-network
+      - altitudelog
 
 volumes:
-  postgres_data:
-  redis_data:
+  altitudelog-postgres-data:
 
 networks:
-  altitudelog-network:
+  altitudelog:
     driver: bridge

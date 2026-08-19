@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
 import { PlaneTakeoff } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { cn } from '../../lib/cn'
-import { toneClass, type SectionTone } from './tones'
 
-export function LandingFooter({ tone }: { tone: SectionTone }) {
+export function LandingFooter() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const linkClass =
@@ -14,7 +12,7 @@ export function LandingFooter({ tone }: { tone: SectionTone }) {
     'w-fit text-sm font-medium text-[color:var(--air-fg-muted)] transition-colors hover:text-[color:var(--air-fg)]'
 
   return (
-    <footer data-nav-tone={tone} className={cn(toneClass[tone], 'air-ground py-14')}>
+    <footer className="border-t border-[color:var(--air-rule)] py-14">
       <div className="relative z-30 mx-auto flex max-w-[1150px] flex-col gap-10 px-5 sm:px-8 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="flex items-center gap-2.5">
@@ -23,7 +21,7 @@ export function LandingFooter({ tone }: { tone: SectionTone }) {
             </span>
             <span className="text-lg font-medium tracking-tight text-[color:var(--air-fg)]">AltitudELog</span>
           </div>
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-[color:var(--air-fg-soft)]">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-[color:var(--air-fg-muted)]">
             Uçuş, mürettebat ve CRM kayıtları için tek operasyon defteri.
           </p>
         </div>
@@ -31,7 +29,7 @@ export function LandingFooter({ tone }: { tone: SectionTone }) {
         {/* Auth-aware, like every other call to action on the page: offering
             "Hesap Oluştur" to someone already signed in is a dead end. */}
         <nav className="flex flex-col gap-3" aria-label="Alt menü">
-          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-soft)]">Hesap</span>
+          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">Hesap</span>
           {isAuthenticated ? (
             <Link to="/dashboard" className={linkClass}>
               Panele Git
@@ -52,7 +50,7 @@ export function LandingFooter({ tone }: { tone: SectionTone }) {
         </nav>
 
         <nav className="flex flex-col gap-3" aria-label="Bölümler">
-          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-soft)]">Bölümler</span>
+          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">Bölümler</span>
           <a href="#ucus-kaydi" className={sectionLinkClass}>
             Uçuş Kaydı
           </a>
@@ -66,7 +64,7 @@ export function LandingFooter({ tone }: { tone: SectionTone }) {
       </div>
 
       <div className="relative z-30 mx-auto mt-12 max-w-[1150px] border-t border-[color:var(--air-rule)] px-5 pt-6 sm:px-8">
-        <p className="text-xs text-[color:var(--air-fg-soft)]">
+        <p className="text-xs text-[color:var(--air-fg-muted)]">
           © {new Date().getFullYear()} AltitudELog — Flight &amp; CRM Logbook.
         </p>
       </div>

@@ -222,11 +222,12 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
 - `Persistence/ApplicationDbContext.cs`: implements `IApplicationDbContext`, applies all configurations via
   `ApplyConfigurationsFromAssembly`.
 - `Persistence/Migrations/`: EF Core migrations live here (in Infrastructure, next to the `DbContext`), not in
-  API. Eight so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
+  API. Ten so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
   `AddPilotAuthFields` (`Pilots.Username` unique, `Pilots.PasswordHash`), `FormalizeNonClusteredIndexes` — this
   one has an **empty `Up()`/`Down()`**, it's a no-op that just records index state already reflected in the
   model snapshot; don't expect a schema diff from it — `AddPilotCertificateExpiry`, `AddFlightCancellation`,
-  `AddPilotPasswordReset`, `AddFlightConcurrencyToken`, `AddPilotRefreshToken` (self-describing; back the
+  `AddPilotPasswordReset`, `AddFlightConcurrencyToken`, `AddPilotRefreshToken`,
+  `AddAuthLookupIndexesAndNormalizeCredentials`, `AddRefreshTokenSessionTracking` (self-describing; back the
   features documented elsewhere in this file). Don't hardcode this count/list in future edits to this doc —
   check `Persistence/Migrations/` directly, since new migrations land here regularly as features ship. Hangfire
   manages its own Postgres schema independently — no EF migration needed or expected for it.
@@ -251,20 +252,46 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   and Hangfire (Postgres storage) + `AddHangfireServer()`. Called from `Program.cs` as
   `AddInfrastructureServices(builder.Configuration)`.
 
-**Connection string / secrets convention:** `appsettings.json`'s `ConnectionStrings:DefaultConnection` holds a
-literal placeholder password (`KENDI_SIFRENIZI_BURAYA_YAZIN`) — it is **not** meant to be a real credential in a
-committed file. The real local password lives in .NET User Secrets for the API project (`UserSecretsId` set via
-`dotnet user-secrets init`), which overrides the same config key at runtime. `ConnectionStrings:Redis`
-(`localhost:6379`) is committed as a real (non-secret) default since it's just a local dev endpoint, not a
-credential. To point a fresh dev machine at a different local Postgres password, run:
+**Local dependencies — dedicated containers.** `docker-compose.yml` in the repo root defines the Postgres and
+Redis this project runs against, and they belong to this project alone:
 
 ```
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=altitudelog;Username=postgres;Password=<real password>" --project src/AltitudELog.API
+docker compose up -d      # start both, then run the API
+docker compose ps         # both should report (healthy)
+docker compose down       # stop, keeping the database volume
+docker compose down -v    # stop and DELETE the database
 ```
 
-`dotnet ef` commands (migrations, `database update`) read the same configuration, so they also need this secret
-set to reach the real database — `migrations add` itself doesn't need a live connection (it only diffs the
-model), but `database update` does.
+**Host ports are deliberately not the defaults** — Postgres is on **5434** and Redis on **6380**. 5432 belongs
+to the dev machine's native `postgresql-x64-17` Windows service, and 5432/6379 are also what neighbouring
+projects' compose files claim; the app once silently ran against another project's Redis container because
+both pointed at 6379. Changing these ports means changing `appsettings.Development.json` in the same commit.
+The compose Postgres is **not** the same database as the native service on 5432 — that copy still exists and
+is left alone as a fallback, so if a query returns unexpectedly stale or missing rows, check which port the
+startup log reports (`Migrating using database 'altitudelog' on server 'tcp://localhost:5434'`).
+
+**Connection string / secrets convention:** `appsettings.json` holds literal placeholders
+(`KENDI_SIFRENIZI_BURAYA_YAZIN`) — it is **not** meant to carry real credentials in a committed file.
+`appsettings.Development.json` then overrides `ConnectionStrings:DefaultConnection` and `ConnectionStrings:Redis`
+with the compose containers' values. Those are committed on purpose: a container credential that is already
+written in `docker-compose.yml` and only works against a container on your own machine is not a secret, and
+requiring per-machine setup for it just makes a fresh clone fail to run.
+
+**Do not set `ConnectionStrings:DefaultConnection` in User Secrets.** User Secrets sits *above*
+`appsettings.Development.json` in the configuration chain, so a leftover entry there silently wins and the app
+talks to whatever it names — which is exactly how this project ended up running against the native 5432
+database while its config file said otherwise. Clear it with:
+
+```
+dotnet user-secrets remove "ConnectionStrings:DefaultConnection" --project src/AltitudELog.API
+```
+
+Real secrets — `Jwt:Key`, the Hangfire dashboard credentials, the SMTP settings — do still live in User
+Secrets (`UserSecretsId` set via `dotnet user-secrets init`); see below.
+
+`dotnet ef` commands (migrations, `database update`) read the same configuration and pick up the Development
+environment from `launchSettings.json`, so the containers must be up for `database update` to reach the
+database — `migrations add` itself doesn't need a live connection (it only diffs the model).
 
 The same convention applies to the JWT signing key: `appsettings.json`'s `Jwt:Key` holds a literal placeholder
 (`KENDI_JWT_ANAHTARINIZI_BURAYA_YAZIN_EN_AZ_32_KARAKTER`), and the real key lives in User Secrets:
@@ -411,7 +438,8 @@ Both caching pipeline behaviors are **fail-open**: if Redis is unreachable, the 
 from/written straight to Postgres, cache step skipped with a logged warning) rather than the API returning a
 `500`. This is deliberate — verify it still holds if you touch `CachingBehavior`/`CacheInvalidationBehavior`.
 
-For local dev, both Postgres and Redis need to actually be running for the full feature set (and for
+For local dev, both Postgres and Redis need to actually be running (`docker compose up -d` — see "Local
+dependencies — dedicated containers" above) for the full feature set (and for
 `dotnet test` at the solution level, since `AltitudELog.IntegrationTests` spins up its own Postgres 17 + Redis
 Alpine via Testcontainers, which requires Docker to be running). Missing Redis degrades gracefully (see above);
 missing Postgres does not (Postgres is not optional — EF Core, Hangfire storage, and health checks all depend on
@@ -422,8 +450,9 @@ it being reachable).
 React 19 + TypeScript + Vite 8 + Tailwind CSS 4 SPA, talking to the API over `axios`. Not part of the .NET
 solution/build — it's a separate `npm` project.
 
-- `src/pages/`: `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `DashboardPage` (flight
-  list), `FlightDetailPage` (crew + CRM report tabs), `CreateFlightPage`/`EditFlightPage` (Captain-only),
+- `src/pages/`: `LandingPage` (public marketing page at `/`), `LoginPage`, `RegisterPage`,
+  `ForgotPasswordPage`, `ResetPasswordPage`, `DashboardPage` (flight list, at `/dashboard`),
+  `FlightDetailPage` (crew + CRM report tabs), `CreateFlightPage`/`EditFlightPage` (Captain-only),
   `PilotProfilePage`, `AdminStatsPage`, `UnauthorizedPage`, `NotFoundPage`.
 - `src/routes/`: `ProtectedRoute` (redirects to `/login` if not authenticated), `CaptainRoute` (redirects to
   `/unauthorized` unless `rank === 'Captain'`), `CommandRoute` (same, but for `rank === 'Captain' ||
@@ -440,20 +469,55 @@ solution/build — it's a separate `npm` project.
   shape matching the API's `ProblemDetails`/`ValidationProblemDetails` output.
 - `src/services/`: one thin service module per backend resource (`authService`, `flightService`, `crewService`,
   `crmReportService`, `pilotService`), all going through `apiClient`.
+
+### Frontend — the video ground
+
+**Every route in the app runs on one fixed background clip**, `public/videos/air-backdrop.mp4` ("Air 1"), via
+`src/components/common/VideoBackdrop.tsx`. It is mounted once per document — by `LandingPage`, by `AppLayout`
+(covering every signed-in page), and by `AuthCardLayout` and `NotFoundPage`. Login and Register are the one
+exception: they run `air-auth.mp4` ("Air 2") instead, as the left three quarters of a split layout.
+
+**The clip is shown exactly as shot — no wash, no scrim, no grade — and this is load-bearing, not taste.** The
+landing page previously layered a `bg-black-void/35` wash, dark gradient scrims on two sections and three
+80%-opaque section grounds over it, which made the page read as dark at the top and washed the footage out
+progressively on the way down. All of that is deleted. Anything that tints a *stretch of page* makes the clip
+read at a different strength in that stretch, which is the specific defect this replaced. Do not re-introduce
+one without an explicit go-ahead.
+
+Legibility therefore comes from the clip being uniformly bright — a golden-hour sky running roughly `#a8c8e0`
+to `#f7f0e8` — carrying dark type at 9:1 or better on every frame. The landing palette lives in the
+`.air-page` block in `src/index.css` (`--air-fg`, `--air-fg-muted`, `--air-rule`, `--air-accent`), and every
+one of those four values was derived against the clip's *worst* band rather than its average; the comment there
+records the ratios. `--air-accent` is a deepened Signal Blue because DESIGN.md's `#2b7fff` measures 2.86:1 on
+that band. If the clip is ever swapped for a darker one, those four values are what has to be re-derived —
+a scrim is not the answer.
+
+Two surface treatments are allowed to cover the footage, both in `index.css`: `.air-nav` (the landing bar,
+transparent over the hero, a light veil once scrolled) and `.air-surface` (near-opaque, for auth forms and the
+404 — small dense text is the one thing no scrim can make safe over moving footage). Inside the application,
+`Card` is 90% opaque and the `Navbar`/`Footer` are 72% with a blur, so the sky reads in the gutters and
+between panels. `src/pages/LandingPage.test.tsx` guards the one-ground rule.
+
+- `src/components/landing/`: `LandingNav`, `HeroSection`, `FeatureBlock`, `CapabilityGrid`, `LandingFooter`,
+  `Reveal` (framer-motion `whileInView`), `ctas.ts` (the two shared button treatments), plus the 3D layer.
+  **`SculptureLayer` + `AirbusModel` are mounted only by `LandingPage`** — no other route renders a WebGL
+  canvas, and the ~600kB of three/R3F plus the 2.5MB GLB are lazy-imported so the signed-in app never pays for
+  them. `AirbusModel` is gated on WebGL support and `min-width: 768px`, wrapped in an error boundary (a model
+  failure must cost only the model), tints the near-white airframe toward a cool steel so it does not vanish
+  against cloud, and drives its flight path from a *damped* scroll value rather than from `window.scrollY`
+  directly — see `SCROLL_FOLLOW`. Its Suspense boundary must stay **inside** `<Canvas>`; moving it out unmounts
+  the renderer mid-load and leaves a dead context.
+- `src/components/layout/`: `AppLayout` (signed-in shell), `AuthSplitLayout` (Login/Register — Air 2 on the left
+  three quarters, form panel on the right quarter with a 380px floor so the fields stay usable below ~1520px),
+  `AuthCardLayout` (forgot/reset — same clip, centred card), `Navbar`, `Footer`.
 - `src/components/ui/`: shared primitives (`Button`, `Card`, `Input`, `Select`, `Combobox`, `Badge`, `Skeleton`,
-  `Spinner`, `Eyebrow`, `StatTile`, `RouteRibbon`, `Pagination`, `CrmTrendChart`).
-  Visual language is **"Night Ops"** — a dark ATC-radar-scope / black-box-flight-recorder aesthetic: near-black
-  green-tinted backgrounds (`void-*` tokens), phosphor-green (`phosphor-*`) as the primary interactive/accent
-  color, amber (`command-*`) reserved specifically for Captain/PIC "command" significance (badges, the `command`
-  `Button` variant, brand accent) exactly as amber was used before the redesign, and alert-red (`alert-*`) for
-  errors/cancelled state. Sharp/near-square panel corners (`rounded-sm`, not the old soft `rounded-2xl`/`3xl`),
-  hairline glow borders instead of soft ambient shadows (`--shadow-panel`/`--shadow-panel-hover`), a
-  `Oxanium` display font + `IBM Plex Sans` body + `IBM Plex Mono` (unchanged) for data/eyebrow labels. Utility
-  classes in `src/index.css` carry the signature flourishes and are reused as-is across pages: `.data`/`.eyebrow`
-  (mono), `.glass`/`.hero-scrim` (photo overlays), `.hero-photo` (grayscale+green duotone filter for the stock
-  hero photography in `public/images/`), `.scanlines` (CRT texture), `.hud-corners` (glowing corner-bracket
-  framing on hero panels), `.rise` (now a CRT "power-on flicker" instead of the old fade-up). Keep new UI
-  consistent with these primitives/tokens rather than one-off styling in pages.
+  `Spinner`, `Eyebrow`, `StatTile`, `RouteRibbon`, `Pagination`, `CrmTrendChart`), plus `AuthField`/`AuthSelect`
+  — deliberately separate from `Input`/`Select`, which stay boxed for dense operational forms while the auth
+  controls use a soft fill and a hairline that appears on focus. The application's own palette is navy ink on
+  cool light surfaces (the `--color-*` tokens at the top of `index.css`); the `--color-whiteout`/`haze`/`ink`/
+  `black-void`/`twilight-blue`/`signal-blue` "Air" tokens below them serve the landing page. Radii are pinned
+  by DESIGN.md's `roundness: 8`; hairlines rather than shadows. Keep new UI on these primitives and tokens
+  rather than one-off styling in pages.
 - Config: `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:5264` (must match the API's http
   launch profile). `vite.config.ts` pins the dev server to port `5180` with `strictPort: true` — this exact port
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.

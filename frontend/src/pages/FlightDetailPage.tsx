@@ -144,15 +144,8 @@ export function FlightDetailPage() {
   return (
     <div className="flex flex-col gap-8">
       {}
-      <section className="relative min-h-[280px] overflow-hidden rounded-lg bg-surface rise sm:min-h-[340px]">
-        <img
-          src="/images/clouds.jpg"
-          alt=""
-          className="photo-rich absolute inset-0 h-full w-full object-cover"
-          loading="eager"
-        />
-        <div className="absolute inset-0 hero-scrim" />
-        <div className="relative flex h-full flex-col justify-center gap-6 p-8 sm:p-10">
+      <section className="rise">
+        <div className="flex flex-col justify-center gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Eyebrow tone="soft" rule={false}>
               Flight Record
