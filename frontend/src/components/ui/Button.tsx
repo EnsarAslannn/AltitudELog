@@ -3,7 +3,12 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost'
+  /**
+   * `primary` is the Signal Blue action used throughout the signed-in pages.
+   * `brand` is the deep navy it replaced, kept for the authentication pages,
+   * whose design is settled and deliberately out of scope of the glass pass.
+   */
+  variant?: 'primary' | 'brand' | 'secondary' | 'ghost'
   icon?: LucideIcon
 }
 
@@ -20,9 +25,11 @@ export function Button({
       type={type}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-sm font-semibold tracking-tight transition-all',
-        'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30',
+        'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-signal-blue/35',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'primary' &&
+          'bg-action text-on-action shadow-[var(--shadow-panel)] hover:bg-action-hover hover:shadow-[var(--shadow-panel-hover)] active:translate-y-px',
+        variant === 'brand' &&
           'bg-primary text-on-primary shadow-[var(--shadow-panel)] hover:bg-primary-container hover:shadow-[var(--shadow-panel-hover)] active:translate-y-px',
         variant === 'secondary' &&
           'border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary/50 hover:bg-surface-container-low active:translate-y-px',

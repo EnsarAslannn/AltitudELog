@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { BarChart3, Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { authService } from '../../services/authService'
@@ -49,17 +49,22 @@ export function Navbar() {
   ].filter((d) => d.show)
 
   return (
-    <header className="sticky top-0 z-20 border-b border-outline-variant/30 bg-surface-container-lowest/80 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-white/20 bg-white/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-5">
         <div className="flex items-center gap-10">
-          <div className="flex items-center gap-2.5">
+          {/* The lockup is the only route back to the public landing page once
+              signed in — the rest of this bar goes to application routes. */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-blue"
+          >
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
               <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} />
             </span>
             <span className="display text-xl text-on-surface">
               Altitud<span className="text-on-surface">E</span>Log
             </span>
-          </div>
+          </Link>
           <nav className="hidden items-center gap-7 sm:flex" aria-label="Ana menü">
             {destinations.map(({ to, label, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end} className={linkClass}>

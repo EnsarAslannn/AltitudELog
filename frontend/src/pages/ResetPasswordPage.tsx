@@ -2,10 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { KeyRound, Lock } from 'lucide-react'
 import { authService } from '../services/authService'
-import { AuthHero } from '../components/layout/AuthHero'
+import { AuthCardLayout } from '../components/layout/AuthCardLayout'
+import { AuthField } from '../components/ui/AuthField'
 import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
-import { Input } from '../components/ui/Input'
 import type { ApiError } from '../types/problemDetails'
 
 export function ResetPasswordPage() {
@@ -44,75 +43,66 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <AuthHero
-        image="/images/hero-approach.jpg"
-        eyebrow="Account Recovery"
-        title={
-          <>
-            Yeni şifrenizi
-            <br />
-            belirleyin.
-          </>
-        }
-        subtitle="Güçlü bir şifre seçin ve hesabınıza tekrar erişim sağlayın."
-        stat={{ value: '8+', label: 'Minimum karakter uzunluğu' }}
-      />
-      <div className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
-        <div className="w-full max-w-sm rise">
-          <h1 className="display mb-1 text-3xl text-on-surface sm:text-4xl">Şifre Sıfırla</h1>
-          <p className="mb-6 text-sm text-on-surface-variant">Yeni şifrenizi girin.</p>
-          <Card>
-            {token === '' ? (
-              <p role="alert" className="text-sm text-error">
-                Bağlantı geçersiz. Sıfırlama e-postasındaki bağlantıyı olduğu gibi kullanın veya{' '}
-                <Link to="/forgot-password" className="font-medium underline underline-offset-4">
-                  yeni bir istek gönderin
-                </Link>
-                .
-              </p>
-            ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input
-                label="Yeni Şifre"
-                name="newPassword"
-                type="password"
-                icon={Lock}
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                required
-              />
-              <Input
-                label="Yeni Şifre (Tekrar)"
-                name="confirmPassword"
-                type="password"
-                icon={Lock}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={8}
-                required
-              />
-              {error && (
-                <p role="alert" className="text-sm text-error">
-                  {error}
-                </p>
-              )}
-              <Button type="submit" icon={KeyRound} disabled={isSubmitting}>
-                {isSubmitting ? 'Kaydediliyor…' : 'Şifreyi Sıfırla'}
-              </Button>
-            </form>
-            )}
-          </Card>
-          <p className="mt-4 text-sm text-on-surface-variant">
-            <Link to="/login" className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface">
-              Girişe dön
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+    <AuthCardLayout
+      title="Şifre Sıfırla"
+      subtitle="Yeni şifrenizi girin. En az sekiz karakter olmalıdır."
+      footer={
+        <Link
+          to="/login"
+          className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface"
+        >
+          Girişe dön
+        </Link>
+      }
+    >
+      {token === '' ? (
+        <p role="alert" className="text-sm text-error">
+          Bağlantı geçersiz. Sıfırlama e-postasındaki bağlantıyı olduğu gibi kullanın veya{' '}
+          <Link to="/forgot-password" className="font-medium underline underline-offset-4">
+            yeni bir istek gönderin
+          </Link>
+          .
+        </p>
+      ) : (
+        <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-5">
+          <AuthField
+            label="Yeni Şifre"
+            name="newPassword"
+            type="password"
+            icon={Lock}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            minLength={8}
+            required
+          />
+          <AuthField
+            label="Yeni Şifre (Tekrar)"
+            name="confirmPassword"
+            type="password"
+            icon={Lock}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={8}
+            required
+          />
+          {error && (
+            <p role="alert" className="text-sm text-error">
+              {error}
+            </p>
+          )}
+          <Button
+            type="submit"
+            variant="brand"
+            icon={KeyRound}
+            disabled={isSubmitting}
+            className="mt-1 h-12 w-full rounded-[10px]"
+          >
+            {isSubmitting ? 'Kaydediliyor…' : 'Şifreyi Sıfırla'}
+          </Button>
+        </form>
+      )}
+    </AuthCardLayout>
   )
 }

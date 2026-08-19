@@ -66,9 +66,9 @@ describe('LandingPage', () => {
   })
 
   it('runs one page-wide backdrop clip rather than a video per section', () => {
-    // The hero and the display interlude used to own a <video> each. They are now
-    // windows onto a single fixed backdrop, so a second element here would mean a
-    // second decode for footage the reader experiences as one continuous sky.
+    // The hero and the display interlude used to own a <video> each. Every section
+    // is now simply a stretch of one fixed backdrop, so a second element here would
+    // mean a second decode for footage the reader experiences as one continuous sky.
     renderLandingPage()
 
     const videos = document.querySelectorAll('video')
@@ -87,18 +87,17 @@ describe('LandingPage', () => {
     }
   })
 
-  it('marks each section with the tone the navigation recolours itself from', () => {
-    renderLandingPage()
+  it('declares its ground once, on the root, and nowhere per section', () => {
+    // The page used to alternate three translucent grounds and bridge them with
+    // gradient seams, which made the backdrop clip read at a different strength in
+    // every stretch of page. The rule now is that the clip is the only ground: the
+    // root carries the palette, and no section paints one of its own. Anything
+    // re-introducing a per-section tone or a seam trips this.
+    const { container } = renderLandingPage()
 
-    const tones = [...document.querySelectorAll('[data-nav-tone]')].map((el) =>
-      el.getAttribute('data-nav-tone'),
-    )
-
-    // The hero must be first and dark — it is the tone the bar starts on before
-    // the observer has reported anything.
-    expect(tones[0]).toBe('dark')
-    expect(new Set(tones)).toEqual(new Set(['dark', 'blue', 'cream']))
-    expect(document.querySelector('#crm')).toHaveAttribute('data-nav-tone', 'cream')
-    expect(document.querySelector('#logbook')).toHaveAttribute('data-nav-tone', 'blue')
+    expect(container.querySelector('.air-page')).toBe(container.firstElementChild)
+    expect(container.querySelectorAll('.air-page')).toHaveLength(1)
+    expect(container.querySelector('[data-nav-tone]')).toBeNull()
+    expect(container.querySelector('.air-ground, .air-seam')).toBeNull()
   })
 })

@@ -2,16 +2,14 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { cn } from '../lib/cn'
+import { VideoBackdrop } from '../components/common/VideoBackdrop'
 import { LandingNav } from '../components/landing/LandingNav'
-import { PageBackdrop } from '../components/landing/PageBackdrop'
 import { SculptureLayer } from '../components/landing/SculptureLayer'
 import { HeroSection } from '../components/landing/HeroSection'
 import { FeatureBlock } from '../components/landing/FeatureBlock'
-import { toneClass } from '../components/landing/tones'
-import { DisplayInterlude } from '../components/landing/DisplayInterlude'
 import { CapabilityGrid } from '../components/landing/CapabilityGrid'
 import { LandingFooter } from '../components/landing/LandingFooter'
-import { SectionSeam } from '../components/landing/SectionSeam'
+import { ghostCta, solidCta } from '../components/landing/ctas'
 import { Reveal } from '../components/landing/Reveal'
 
 const marks = [
@@ -25,11 +23,15 @@ const marks = [
  * Layering. Everything on this page lives in one stacking context, and the order
  * is what lets the aircraft fly through the page without ever sitting on a word:
  *
- *   z-0   PageBackdrop  — the fixed video, behind everything
- *   z-10  section grounds and seams — translucent tints over that video
- *   z-20  SculptureLayer — the aircraft, above the tints so it stays crisp
+ *   z-0   VideoBackdrop  — the fixed clip, behind everything, shown as shot
+ *   z-20  SculptureLayer — the aircraft
  *   z-30  section content — every heading, paragraph and control
  *   z-50  LandingNav
+ *
+ * There is no longer a layer between the clip and the content: the tinted section
+ * grounds and the gradient seams that used to bridge them are gone, because each
+ * of them made the footage read at a different strength in its own stretch of
+ * page.
  *
  * Nothing between the page root and a content wrapper may create a stacking
  * context (no transform, filter or opacity on a wrapper), or its z-30 would be
@@ -38,44 +40,30 @@ const marks = [
 export function LandingPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
-  // The application runs on a light surface, so `body` is light. This page runs
-  // on video, and its first screen is dark; without painting the body to match,
-  // overscroll on macOS/iOS rubber-bands a strip of #f7f9fd in above it.
+  // The application runs on an opaque light surface, so `body` is light. This page
+  // runs on the clip; painting the body to the sky's own blue means an overscroll
+  // rubber-band on macOS/iOS shows more sky rather than a strip of #f7f9fd.
   useEffect(() => {
     const previous = document.body.style.backgroundColor
-    document.body.style.backgroundColor = '#000000'
+    document.body.style.backgroundColor = '#dce8f2'
     return () => {
       document.body.style.backgroundColor = previous
     }
   }, [])
 
-  const solidCta =
-    'inline-flex min-h-12 items-center justify-center rounded-lg border border-ink bg-haze px-6 text-sm font-medium text-ink transition-colors hover:bg-whiteout focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue'
-
-  const ghostCta =
-    'inline-flex min-h-12 items-center justify-center rounded-lg border border-current px-6 text-sm font-medium text-[color:var(--air-fg)] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-blue'
-
   return (
-    <div className="relative min-h-screen bg-black-void">
-      <PageBackdrop />
+    <div className="air-page relative min-h-screen">
+      <VideoBackdrop />
       <SculptureLayer />
       <LandingNav />
 
       <main className="relative">
         <HeroSection />
 
-        {/* The hero shows the backdrop unscreened; this is where the tinted panes
-            begin, so it is the longest seam on the page. */}
-        <SectionSeam from="dark" to="blue" height="lg" />
-
-        <section
-          aria-label="Öne çıkanlar"
-          data-nav-tone="blue"
-          className={cn(toneClass.blue, 'air-ground')}
-        >
-          <ul className="relative z-30 mx-auto grid max-w-[1150px] grid-cols-2 gap-px bg-[color:var(--air-rule)] sm:grid-cols-4">
+        <section aria-label="Öne çıkanlar" className="relative z-30">
+          <ul className="mx-auto grid max-w-[1150px] grid-cols-2 px-5 sm:grid-cols-4 sm:px-8">
             {marks.map(({ value, label }) => (
-              <li key={value} className="bg-[color:var(--air-bg)] px-5 py-8 sm:px-8">
+              <li key={value} className="border-t border-[color:var(--air-rule)] py-8 pr-5 sm:pr-8">
                 <p className="data text-xl font-medium tracking-tight text-[color:var(--air-fg)] sm:text-2xl">
                   {value}
                 </p>
@@ -87,7 +75,6 @@ export function LandingPage() {
 
         <FeatureBlock
           id="ucus-kaydi"
-          tone="blue"
           eyebrow="Uçuş kaydı"
           title={
             <>
@@ -108,11 +95,8 @@ export function LandingPage() {
           imageAlt="Havalimanı terminalinde, apronda bekleyen uçağın önünde asılı duran rota ve uçuş verisi panelleri"
         />
 
-        <SectionSeam from="blue" to="cream" />
-
         <FeatureBlock
           id="crm"
-          tone="cream"
           eyebrow="CRM raporları"
           title={
             <>
@@ -134,11 +118,8 @@ export function LandingPage() {
           reverse
         />
 
-        <SectionSeam from="cream" to="blue" />
-
         <FeatureBlock
           id="logbook"
-          tone="blue"
           eyebrow="Pilot logbook"
           title={
             <>
@@ -148,7 +129,7 @@ export function LandingPage() {
               elinizin altında.
             </>
           }
-          body="Profiliniz uçuş saatlerinizi, son uçuşlarınızı ve sertifika geçerlilik tarihlerinizi bir arada tutar. Logbook'u CSV veya PDF olarak dışa aktarabilirsiniz."
+          body="Profiliniz uçuş saatlerinizi, son uçuşlarınızı ve sertifika geçerlilik tarihlerinizi bir arada tutar. Logbook çıktısını CSV veya PDF olarak alabilirsiniz."
           points={[
             'Atandığınız uçuşlardan türeyen toplam saat ve güncellik',
             'Lisans ve sağlık sertifikası son geçerlilik takibi',
@@ -159,17 +140,9 @@ export function LandingPage() {
           imageAlt="Kokpitte, bulutların üzerinde uçarken elindeki tablette uçuş verilerini inceleyen pilot"
         />
 
-        <SectionSeam from="blue" to="dark" height="lg" />
+        <CapabilityGrid />
 
-        <DisplayInterlude />
-
-        <SectionSeam from="dark" to="blue" height="lg" />
-
-        <CapabilityGrid tone="blue" />
-
-        <SectionSeam from="blue" to="cream" />
-
-        <section data-nav-tone="cream" className={cn(toneClass.cream, 'air-ground py-24 sm:py-32')}>
+        <section className="py-24 sm:py-32">
           <Reveal className="relative z-30 mx-auto max-w-[1150px] px-5 text-center sm:px-8">
             <h2 className="mx-auto max-w-3xl text-[clamp(2rem,5vw,4rem)] font-medium leading-[1.05] tracking-[-0.025em] text-[color:var(--air-fg)]">
               Bir sonraki uçuşunuz
@@ -183,15 +156,15 @@ export function LandingPage() {
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               {isAuthenticated ? (
-                <Link to="/dashboard" className={solidCta}>
+                <Link to="/dashboard" className={cn('inline-flex', solidCta)}>
                   Panele Git
                 </Link>
               ) : (
                 <>
-                  <Link to="/register" className={solidCta}>
+                  <Link to="/register" className={cn('inline-flex', solidCta)}>
                     Hesap Oluştur
                   </Link>
-                  <Link to="/login" className={ghostCta}>
+                  <Link to="/login" className={cn('inline-flex', ghostCta)}>
                     Giriş Yap
                   </Link>
                 </>
@@ -199,11 +172,9 @@ export function LandingPage() {
             </div>
           </Reveal>
         </section>
-
-        <SectionSeam from="cream" to="blue" />
       </main>
 
-      <LandingFooter tone="blue" />
+      <LandingFooter />
     </div>
   )
 }

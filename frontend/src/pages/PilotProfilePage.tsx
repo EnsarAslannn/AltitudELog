@@ -158,17 +158,16 @@ export function PilotProfilePage() {
   return (
     <div className="flex flex-col gap-8">
       {}
-      <section className="relative min-h-[220px] overflow-hidden rounded-lg bg-surface rise">
-        <img
-          src="/images/terminal.jpg"
-          alt=""
-          className="photo-rich absolute inset-0 h-full w-full object-cover object-[center_72%]"
-          loading="eager"
-        />
-        <div className="absolute inset-0 hero-scrim" />
-        <div className="relative flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+      {/*
+        The identity header is the one block on this page with nothing behind it —
+        a name, a handle and a row of badges landing straight on moving footage.
+        Wrapping it in the same glass the cards use gives it a surface to sit on
+        without reintroducing the opaque photo hero this replaced.
+      */}
+      <section className="rise rounded-lg border border-white/30 bg-white/40 p-6 shadow-lg backdrop-blur-md sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-xl font-bold text-on-surface">
+            <span className="data flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-twilight-blue/12 text-xl font-bold text-twilight-blue">
               {initials(profile.name)}
             </span>
             <div>
@@ -237,7 +236,7 @@ export function PilotProfilePage() {
             {profile.hoursByAircraftType.map((entry) => (
               <Card key={entry.aircraftType} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-twilight-blue/12 text-twilight-blue">
                     <AircraftSilhouette code={entry.aircraftType} className="h-5 w-5" />
                   </span>
                   <div>
@@ -271,7 +270,7 @@ export function PilotProfilePage() {
             return (
               <Card key={cert.key} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-on-surface">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-twilight-blue/12 text-twilight-blue">
                     <cert.icon className="h-4 w-4" />
                   </span>
                   <div>
@@ -327,7 +326,7 @@ export function PilotProfilePage() {
         <Eyebrow>Son Uçuşlar</Eyebrow>
         {profile.recentFlights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-twilight-blue/12 text-twilight-blue">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
             <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
