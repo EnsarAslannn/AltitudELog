@@ -1,115 +1,117 @@
-# AltitudELog
+# ✈️ AltitudELog
 
 [![CI](https://github.com/EnsarAslannn/AltitudELog/actions/workflows/ci.yml/badge.svg)](https://github.com/EnsarAslannn/AltitudELog/actions/workflows/ci.yml)
 
-AltitudELog is an aviation flight and CRM (Crew Resource Management) logging system. It lets pilots register
-with a rank, log flights, assign crew to those flights with per-flight duty roles, and file CRM safety reports
-(optionally anonymous) tied to a specific flight. Flight weather is enriched automatically after creation via a
-background job that fetches the METAR report for the flight's departure airport.
+.NET tabanlı, pilotların uçuş kaydı tuttuğu, mürettebat atadığı ve CRM (Crew Resource
+Management) güvenlik raporu doldurabildiği modern bir uçuş günlükleme sistemi
 
-**Live demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) (frontend) — backed by a .NET API on
-Railway. Register with any rank, including **Captain**, to unlock flight-creation.
+**🔗 Canlı demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) — herhangi bir
+rütbeyle (Kaptan dahil) kayıt olup uçuş oluşturma özelliklerini deneyebilirsiniz.
 
-## Tech stack
+## 📌 Proje Hakkında
+
+AltitudELog, pilotların rütbeleriyle sisteme kayıt olabildiği, uçuş kaydı oluşturabildiği,
+her uçuşa mürettebat üyelerini görev rolleriyle atayabildiği ve isteğe bağlı olarak anonim
+CRM güvenlik raporu doldurabildiği bir uçuş & mürettebat yönetim platformudur.
+
+Bir uçuş oluşturulduğunda, kalkış havalimanına ait METAR hava durumu raporu arka planda
+otomatik olarak çekilir ve uçuşa eklenir.
+
+Amaç yalnızca basit bir kayıt ekranı değil; rol tabanlı yetkilendirme, arka plan işleri,
+cache mekanizması ve gerçek bir CI/CD & deployment sürecini bir araya getiren uçtan uca
+bir uygulama ortaya koymaktır.
+
+## ⚙️ Öne Çıkan Özellikler
+
+### ✈️ Uçuş Kaydı Yönetimi
+- Kalkış ve varış havalimanı bilgisiyle uçuş oluşturma
+- Uçuş listeleme ve detay görüntüleme
+- Uçuş oluşturma yetkisi komuta rütbeleriyle sınırlı (Kaptan, Filo Amiri)
+
+### 👥 Mürettebat & Görev Atama
+- Her uçuşa birden fazla mürettebat üyesi atanabilir
+- Mürettebat üyeleri uçuş bazında görev rolü alır
+- Pilotun rütbesi aynı zamanda sistemdeki yetki seviyesini belirler
+
+### 📝 CRM Güvenlik Raporlama
+- Belirli bir uçuşa bağlı CRM (Crew Resource Management) güvenlik raporu doldurma
+- Raporlar isteğe bağlı olarak anonim gönderilebilir
+- Güvenlik kültürünü destekleyen, cezalandırmayan bir raporlama akışı
+
+### 🌦️ Otomatik Hava Durumu Zenginleştirme
+- Uçuş oluşturulduğunda arka planda tetiklenen bir iş kuyruğu (Hangfire) devreye girer
+- Kalkış havalimanının METAR raporu dış servisten çekilir ve uçuşa işlenir
+- Dış API çağrısı yazma işleminden ayrıştırılır, kullanıcı beklemeden devam eder
+
+### 🔐 Rol Tabanlı Yetkilendirme
+- Pilotun rütbesi JWT üzerinde rol bilgisi olarak taşınır
+- Uçuş/mürettebat oluşturma gibi yazma işlemleri komuta rütbeleriyle sınırlıdır
+- Aynı kurallar arayüzde route koruması olarak da uygulanır
+
+### ⚡ Cache & Arka Plan İşleri
+- Sık sorgulanan veriler Redis üzerinde cache’lenir
+- Cache güncelliğini kaybettiğinde ilgili kayıtlar otomatik geçersiz kılınır
+- Cache servisi çökse dahi sistem çalışmaya devam eder (fail-open yaklaşım)
+
+### 🩺 Operasyonel Uç Noktalar
+- `/health` — veritabanı ve cache servislerinin canlılık durumu
+- `/hangfire` — parola korumalı arka plan iş kuyruğu paneli
+- Scalar üzerinden gezilebilir API dokümantasyonu
+
+## 🏗️ Proje Mimarisi
+
+Proje, Temiz Mimari (Clean Architecture) prensipleriyle katmanlı olarak geliştirilmiştir:
+
+```
+Domain          → Pilot, Flight, Crew, CRMReport gibi çekirdek varlıklar (dış bağımlılık yok)
+Application     → CQRS komut/sorguları, doğrulama kuralları, cache soyutlamaları
+Infrastructure  → Veritabanı erişimi, JWT üretimi, Redis, Hangfire, METAR servisi
+API             → Controller’lar, uygulama giriş noktası
+```
+
+Frontend, backend’den bağımsız ayrı bir React + TypeScript projesi olarak geliştirilmiştir.
+
+Bu mimari sayesinde proje daha okunabilir, test edilebilir ve genişletilebilir hale
+getirilmiştir.
+
+## 🛠️ Kullanılan Teknolojiler
 
 **Backend**
 - .NET 10, ASP.NET Core Web API
-- Clean Architecture (Domain / Application / Infrastructure / API) + CQRS via MediatR
-- PostgreSQL (EF Core, Npgsql provider)
-- Redis (distributed query caching)
-- Hangfire (Postgres-backed background jobs)
-- FluentValidation, Serilog, JWT bearer auth, health checks
+- PostgreSQL (Entity Framework Core)
+- Redis
+- Hangfire
+- FluentValidation, Serilog, JWT tabanlı kimlik doğrulama
 
 **Frontend**
 - React 19 + TypeScript
-- Vite 8
-- Tailwind CSS 4
-- Zustand (state), Axios (API client), React Router
+- Vite
+- Tailwind CSS
+- Zustand, Axios, React Router
 
-## Engineering highlights
+**Test**
+- xUnit, NSubstitute
+- Testcontainers (Postgres & Redis ile gerçek entegrasyon testleri)
 
-- **CQRS pipeline**: every command/query flows through an ordered MediatR pipeline —
-  `ValidationBehavior` (FluentValidation, short-circuits on invalid input) → `CachingBehavior` →
-  `CacheInvalidationBehavior` (Redis, fail-open: a down cache degrades gracefully instead of 500ing).
-- **Role-based authorization**: a pilot's `Rank` doubles as their JWT role claim — flight/crew *writes* are
-  gated to command ranks (`[Authorize(Roles = "Captain,ChiefPilot")]`), mirrored on the frontend with route
-  guards.
-- **Async background processing**: creating a flight publishes a domain event that enqueues a Hangfire job to
-  fetch and attach the METAR weather report for the flight's airport, decoupling the write path from an
-  external API call.
-- **Testcontainers-backed integration tests**: the integration test suite spins up real Postgres 17 and Redis
-  containers per run rather than mocking the persistence layer.
-- **Global exception handling**: a `ProblemDetails`-based pipeline maps validation failures to `400`,
-  unauthorized access to `401`, missing resources to `404`, and conflicts to `409`, giving the frontend a
-  single consistent error shape.
-- **Containerized deployment**: a multi-stage `Dockerfile` (SDK build stage → ASP.NET runtime stage) ships the
-  API to Railway; the frontend deploys separately to Vercel.
-- **Operational endpoints**: `/health` reports Postgres and Redis liveness with per-check timings, `/hangfire`
-  exposes the Basic-auth-protected job dashboard, and the OpenAPI document is browsable through Scalar.
+**Dağıtım**
+- API: Docker ile Railway üzerinde
+- Frontend: Vercel üzerinde
 
-## Demo notes
+## 🚀 Kurulum
 
-- **Self-selectable rank at registration is a deliberate demo choice, not an oversight.** In a real production
-  system, rank (and therefore the `Captain`-only write permissions it grants) would be assigned through an
-  admin/approval workflow, not chosen freely by the registrant. It's left open here so anyone trying the live
-  demo can register as Captain and immediately exercise the flight/crew-creation features without needing a
-  separate approval step. This is called out in the UI at registration time as well.
-- **The JWT and refresh token are stored in the browser's `localStorage`, not an httpOnly cookie.** This is a
-  simplicity trade-off for a demo deployment, not an oversight: it keeps the frontend a plain SPA talking to a
-  stateless API with no cookie/CORS-credentials plumbing. A production-hardened build would keep the refresh
-  token in an httpOnly+Secure cookie instead, so it can't be read by an XSS payload.
-
-## Solution structure
-
-```
-AltitudELog.slnx                        # .NET 10 SDK's XML-based solution format
-src/
-  AltitudELog.API/            # ASP.NET Core host: controllers, Program.cs, appsettings
-  AltitudELog.Domain/         # Entities (Pilot, Flight, Crew, CRMReport) — no external dependencies
-  AltitudELog.Application/    # CQRS commands/queries, validators, caching abstractions
-  AltitudELog.Infrastructure/ # EF Core persistence, JWT issuance, Redis, Hangfire, METAR client
-tests/
-  AltitudELog.Application.UnitTests/  # Handler/validator unit tests (xUnit + NSubstitute, EF Core InMemory)
-  AltitudELog.IntegrationTests/       # WebApplicationFactory + Testcontainers (Postgres, Redis)
-frontend/                     # React + TypeScript + Vite SPA (separate npm project)
-```
-
-Dependency direction: `API → Application, Infrastructure` · `Infrastructure → Application` ·
-`Application → Domain` · `Domain → (nothing)`.
-
-## Getting started
-
-### Prerequisites
-
+### Gereksinimler
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) 22+ and npm
-- Docker — runs the Postgres and Redis the app talks to, and the Testcontainers integration suite
-- [`dotnet-ef`](https://learn.microsoft.com/ef/core/cli/dotnet) global tool for migrations:
-  `dotnet tool install --global dotnet-ef`
+- [Node.js](https://nodejs.org/) 22+
+- Docker (Postgres ve Redis servisleri için)
 
-### Backend setup
-
-Start the database and cache. `docker-compose.yml` in the repo root defines both, on ports **5434** and
-**6380** rather than the defaults, so they never collide with a Postgres or Redis already running on the
-machine:
+### Backend
 
 ```bash
 docker compose up -d
-docker compose ps            # both should report (healthy)
-```
 
-`appsettings.Development.json` already points at those two ports, so no connection-string configuration is
-needed. The JWT signing key is a real secret and is the one value you must supply — `appsettings.json` holds
-a placeholder, and the app refuses to start if the key is missing or shorter than 32 characters:
-
-```bash
-dotnet user-secrets set "Jwt:Key" "<a real key, at least 32 characters>" \
+dotnet user-secrets set "Jwt:Key" "<en az 32 karakterlik bir anahtar>" \
   --project src/AltitudELog.API
-```
 
-Then, from the repo root:
-
-```bash
 dotnet restore
 dotnet build AltitudELog.slnx
 
@@ -118,36 +120,55 @@ dotnet ef database update --project src/AltitudELog.Infrastructure --startup-pro
 dotnet run --project src/AltitudELog.API --launch-profile http   # http://localhost:5264
 ```
 
-`docker compose down` stops both containers and keeps the data; `docker compose down -v` also deletes the
-database volume.
-
-### Frontend setup
+### Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev      # http://localhost:5180
-npm run build    # tsc -b && vite build
-npm run lint      # oxlint
 ```
 
-`frontend/.env.development` already points `VITE_API_BASE_URL` at `http://localhost:5264` to match the API's
-default `http` launch profile.
-
-## Running tests
+### Testler
 
 ```bash
 dotnet test AltitudELog.slnx
 ```
 
-This runs both the fast unit test project and the Testcontainers-backed integration test project. **Docker must
-be running** for the integration tests — without it they fail with a `DockerUnavailableException` rather than a
-real assertion failure. To run only the fast unit tests:
+> Entegrasyon testleri için Docker’ın çalışıyor olması gerekir.
 
-```bash
-dotnet test tests/AltitudELog.Application.UnitTests
-```
+## 📸 Proje Görselleri
 
-## License
+**Anasayfa**
 
-MIT — see [LICENSE](./LICENSE).
+<p align="center">
+<img src="frontend/public/screenshots/homePage.png" width="800"/>
+<img src="frontend/public/screenshots/homePage2.png" width="800"/>
+</p>
+
+**Dashboard**
+
+<p align="center">
+<img src="frontend/public/screenshots/dashboard.png" width="800"/>
+</p>
+
+**Yeni Uçuş Oluşturma**
+
+<p align="center">
+<img src="frontend/public/screenshots/newFlight.png" width="800"/>
+</p>
+
+**Profil**
+
+<p align="center">
+<img src="frontend/public/screenshots/profile.png" width="800"/>
+</p>
+
+**İstatistikler**
+
+<p align="center">
+<img src="frontend/public/screenshots/statistics.png" width="800"/>
+</p>
+
+## 📄 Lisans
+
+MIT — bkz. [LICENSE](./LICENSE).
