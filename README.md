@@ -1,5 +1,7 @@
 # ✈️ AltitudELog
 
+[🇹🇷 Türkçe](README.md) | [🇬🇧 English](README.en.md)
+
 [![CI](https://github.com/EnsarAslannn/AltitudELog/actions/workflows/ci.yml/badge.svg)](https://github.com/EnsarAslannn/AltitudELog/actions/workflows/ci.yml)
 
 .NET tabanlı, pilotların uçuş kaydı tuttuğu, mürettebat atadığı ve CRM (Crew Resource
@@ -24,36 +26,43 @@ bir uygulama ortaya koymaktır.
 ## ⚙️ Öne Çıkan Özellikler
 
 ### ✈️ Uçuş Kaydı Yönetimi
+
 - Kalkış ve varış havalimanı bilgisiyle uçuş oluşturma
 - Uçuş listeleme ve detay görüntüleme
 - Uçuş oluşturma yetkisi komuta rütbeleriyle sınırlı (Kaptan, Filo Amiri)
 
 ### 👥 Mürettebat & Görev Atama
+
 - Her uçuşa birden fazla mürettebat üyesi atanabilir
 - Mürettebat üyeleri uçuş bazında görev rolü alır
 - Pilotun rütbesi aynı zamanda sistemdeki yetki seviyesini belirler
 
 ### 📝 CRM Güvenlik Raporlama
+
 - Belirli bir uçuşa bağlı CRM (Crew Resource Management) güvenlik raporu doldurma
 - Raporlar isteğe bağlı olarak anonim gönderilebilir
 - Güvenlik kültürünü destekleyen, cezalandırmayan bir raporlama akışı
 
 ### 🌦️ Otomatik Hava Durumu Zenginleştirme
+
 - Uçuş oluşturulduğunda arka planda tetiklenen bir iş kuyruğu (Hangfire) devreye girer
 - Kalkış havalimanının METAR raporu dış servisten çekilir ve uçuşa işlenir
 - Dış API çağrısı yazma işleminden ayrıştırılır, kullanıcı beklemeden devam eder
 
 ### 🔐 Rol Tabanlı Yetkilendirme
+
 - Pilotun rütbesi JWT üzerinde rol bilgisi olarak taşınır
 - Uçuş/mürettebat oluşturma gibi yazma işlemleri komuta rütbeleriyle sınırlıdır
 - Aynı kurallar arayüzde route koruması olarak da uygulanır
 
 ### ⚡ Cache & Arka Plan İşleri
+
 - Sık sorgulanan veriler Redis üzerinde cache’lenir
 - Cache güncelliğini kaybettiğinde ilgili kayıtlar otomatik geçersiz kılınır
 - Cache servisi çökse dahi sistem çalışmaya devam eder (fail-open yaklaşım)
 
 ### 🩺 Operasyonel Uç Noktalar
+
 - `/health` — veritabanı ve cache servislerinin canlılık durumu
 - `/hangfire` — parola korumalı arka plan iş kuyruğu paneli
 - Scalar üzerinden gezilebilir API dokümantasyonu
@@ -77,6 +86,7 @@ getirilmiştir.
 ## 🛠️ Kullanılan Teknolojiler
 
 **Backend**
+
 - .NET 10, ASP.NET Core Web API
 - PostgreSQL (Entity Framework Core)
 - Redis
@@ -84,22 +94,26 @@ getirilmiştir.
 - FluentValidation, Serilog, JWT tabanlı kimlik doğrulama
 
 **Frontend**
+
 - React 19 + TypeScript
 - Vite
 - Tailwind CSS
 - Zustand, Axios, React Router
 
 **Test**
+
 - xUnit, NSubstitute
 - Testcontainers (Postgres & Redis ile gerçek entegrasyon testleri)
 
 **Dağıtım**
+
 - API: Docker ile Railway üzerinde
 - Frontend: Vercel üzerinde
 
 ## 🚀 Kurulum
 
 ### Gereksinimler
+
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Node.js](https://nodejs.org/) 22+
 - Docker (Postgres ve Redis servisleri için)
