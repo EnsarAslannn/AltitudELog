@@ -27,7 +27,7 @@ public class CacheInvalidationBehaviorTests
 
         var result = await behavior.Handle(
             new InvalidatingTestCommand(["key:one", "key:two"]),
-            () => Task.FromResult("handled"),
+            _ => Task.FromResult("handled"),
             CancellationToken.None);
 
         result.Should().Be("handled");
@@ -43,7 +43,7 @@ public class CacheInvalidationBehaviorTests
             cache, Substitute.For<ILogger<CacheInvalidationBehavior<PlainTestCommand, string>>>());
 
         var result = await behavior.Handle(
-            new PlainTestCommand(), () => Task.FromResult("handled"), CancellationToken.None);
+            new PlainTestCommand(), _ => Task.FromResult("handled"), CancellationToken.None);
 
         result.Should().Be("handled");
         await cache.DidNotReceiveWithAnyArgs().RemoveAsync(default!, default);
@@ -59,7 +59,7 @@ public class CacheInvalidationBehaviorTests
             cache, Substitute.For<ILogger<CacheInvalidationBehavior<InvalidatingTestCommand, string>>>());
 
         var act = () => behavior.Handle(
-            new InvalidatingTestCommand(["key:one"]), () => Task.FromResult("handled"), CancellationToken.None);
+            new InvalidatingTestCommand(["key:one"]), _ => Task.FromResult("handled"), CancellationToken.None);
 
         await act.Should().NotThrowAsync();
     }

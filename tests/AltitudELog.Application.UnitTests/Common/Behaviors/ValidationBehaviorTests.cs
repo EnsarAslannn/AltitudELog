@@ -20,7 +20,7 @@ public class ValidationBehaviorTests
 
         var behavior = new ValidationBehavior<TestCommand, string>([validator]);
 
-        var act = () => behavior.Handle(new TestCommand(""), () => Task.FromResult("handled"), CancellationToken.None);
+        var act = () => behavior.Handle(new TestCommand(""), _ => Task.FromResult("handled"), CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -35,7 +35,7 @@ public class ValidationBehaviorTests
         var behavior = new ValidationBehavior<TestCommand, string>([validator]);
 
         var result = await behavior.Handle(
-            new TestCommand("valid"), () => Task.FromResult("handled"), CancellationToken.None);
+            new TestCommand("valid"), _ => Task.FromResult("handled"), CancellationToken.None);
 
         result.Should().Be("handled");
     }
@@ -46,7 +46,7 @@ public class ValidationBehaviorTests
         var behavior = new ValidationBehavior<TestCommand, string>([]);
 
         var result = await behavior.Handle(
-            new TestCommand("anything"), () => Task.FromResult("handled"), CancellationToken.None);
+            new TestCommand("anything"), _ => Task.FromResult("handled"), CancellationToken.None);
 
         result.Should().Be("handled");
     }
