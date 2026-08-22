@@ -15,6 +15,7 @@ public class DomainExceptionHandler : IExceptionHandler
         var (statusCode, title) = exception switch
         {
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            ForbiddenAccessException => (StatusCodes.Status403Forbidden, "Forbidden"),
             NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "Conflict"),
             InvalidOperationException => (StatusCodes.Status409Conflict, "Conflict"),

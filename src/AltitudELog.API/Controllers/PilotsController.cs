@@ -46,12 +46,17 @@ public class PilotsController : ControllerBase
         return profile is null ? NotFound() : Ok(profile);
     }
 
-    /// <summary>Downloads a pilot's logbook as CSV or PDF.</summary>
+    /// <summary>
+    /// Downloads a pilot's logbook as CSV or PDF. Restricted to the pilot it belongs to, or to a
+    /// Captain or Chief Pilot — unlike the profile above, this is the pilot's full personal flight
+    /// record rather than the currency figures flight ops need to see.
+    /// </summary>
     [HttpGet("{id:guid}/logbook")]
     [Authorize]
     [Produces("text/csv", "application/pdf")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ExportLogbook(Guid id, [FromQuery] string format, CancellationToken cancellationToken)
     {

@@ -60,12 +60,17 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     validated with `Enum.IsDefined`) — a deliberate demo choice so visitors to the public deployment can pick
     Captain and try the Captain-only write features. This intentionally trades away the earlier "force Trainee"
     privilege-escalation guard; do not re-add that guard without a go-ahead.
-    `Username` and `Email` are stored **normalised** (trimmed, `ToLowerInvariant`) via
+    `Username`, `Email` and `LicenseNumber` are stored **normalised** via
     `Application/Common/Security/CredentialNormalizer.cs`, because Postgres's default collation is
-    case-sensitive and both columns carry unique indexes — otherwise "Ensar" and "ensar" are two accounts and
-    forgot-password silently no-ops for a differently-cased address. Every write *and* every lookup
+    case-sensitive and all three columns carry unique indexes — otherwise "Ensar" and "ensar" are two accounts,
+    forgot-password silently no-ops for a differently-cased address, and `TR-1234` / `tr-1234` / `" TR-1234 "`
+    are three separate licences. Every write *and* every lookup
     (`RegisterCommandHandler`, `LoginCommandHandler`, `ForgotPasswordCommandHandler`) must go through the
-    normalizer; a normalised write with an unnormalised lookup is worse than neither.
+    normalizer; a normalised write with an unnormalised lookup is worse than neither. `Username`/`Email`
+    lower-case, `LicenseNumber` **upper**-cases — the direction is irrelevant to uniqueness, but a licence
+    number is rendered verbatim on the profile, the pilot list and the logbook PDF, where `tr-1234` reads as a
+    bug. `Pilot` also maps `xmin` as an EF Core concurrency token, for the same reason `Flight` does — see
+    "Refresh-token sessions" below.
   - `Crew` is an explicit join entity between `Flight` and `Pilot` (not an EF Core implicit skip-navigation) — it
     carries a flight-specific `DutyRole`, separate from `Pilot.Rank` (a pilot's general rank vs. their role on one
     particular flight can differ). A unique composite index on `(FlightId, PilotId)` plus a handler-level check
@@ -162,7 +167,18 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   - `Auth/Commands/RefreshToken/` + `Auth/Commands/Logout/`: opaque refresh tokens (same
     generate-random/hash-at-rest pattern), stored on `Pilot.RefreshTokenHash`/`RefreshTokenExpiresAtUtc`,
     rotated on every successful refresh. `Logout` resolves the caller via `ICurrentUserService` and clears
-    their stored refresh token.
+    their stored refresh token. **Rotation is guarded by `Pilot`'s `xmin` concurrency token.** Without it,
+    two concurrent refreshes presenting the same valid token both pass the reuse check and both rotate, and
+    the second write leaves `PreviousRefreshTokenHash` pointing at a token that is still live — so the *next*
+    legitimate refresh looks like a replay and revokes a healthy session. With the token in place the loser's
+    `SaveChangesAsync` throws `DbUpdateConcurrencyException`, which this handler catches and answers as `401`
+    rather than letting it reach the global `409` mapping: for the loser of a refresh race the honest answer is
+    "that token is no longer valid". `tests/AltitudELog.IntegrationTests/Auth/RefreshTokenConcurrencyTests.cs`
+    guards both halves against a real Postgres — InMemory ignores concurrency tokens, so a unit test cannot.
+    Note this covers *interleaved* rotation only. Two refreshes that fully **serialise** still trip reuse
+    detection and revoke the session by design, which is reachable from two browser tabs sharing one
+    `localStorage` token; closing that needs a bounded grace window on the previous token, which deliberately
+    weakens reuse detection and has not been done.
   - `Flights/Commands/CreateFlight/` (+ `CreateFlightCommandValidator`; does **not** accept a client-supplied
     `METARInfo` — that field is only ever set by `UpdateFlightMetarJob`, see "Background jobs & caching"),
     `Flights/Commands/UpdateFlight/` and `Flights/Commands/CancelFlight/` (both guard against mutating an
@@ -223,15 +239,26 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
 - `Persistence/ApplicationDbContext.cs`: implements `IApplicationDbContext`, applies all configurations via
   `ApplyConfigurationsFromAssembly`.
 - `Persistence/Migrations/`: EF Core migrations live here (in Infrastructure, next to the `DbContext`), not in
-  API. Ten so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
+  API. Eleven so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
   `AddPilotAuthFields` (`Pilots.Username` unique, `Pilots.PasswordHash`), `FormalizeNonClusteredIndexes` — this
   one has an **empty `Up()`/`Down()`**, it's a no-op that just records index state already reflected in the
   model snapshot; don't expect a schema diff from it — `AddPilotCertificateExpiry`, `AddFlightCancellation`,
   `AddPilotPasswordReset`, `AddFlightConcurrencyToken`, `AddPilotRefreshToken`,
   `AddAuthLookupIndexesAndNormalizeCredentials`, `AddRefreshTokenSessionTracking` (self-describing; back the
-  features documented elsewhere in this file). Don't hardcode this count/list in future edits to this doc —
+  features documented elsewhere in this file), `AddPilotConcurrencyTokenAndNormalizeLicenseNumber`. Don't
+  hardcode this count/list in future edits to this doc —
   check `Persistence/Migrations/` directly, since new migrations land here regularly as features ship. Hangfire
   manages its own Postgres schema independently — no EF migration needed or expected for it.
+
+  **A migration that maps `xmin` must have its generated `Up()`/`Down()` emptied by hand.** `xmin` is a Postgres
+  *system* column that already exists on every table, but EF cannot know that and scaffolds an
+  `AddColumn<uint>(name: "xmin", ...)`, which Postgres rejects outright (`column name "xmin" conflicts with a
+  system column name`). Left in, it fails the startup migration and takes the whole deploy down. This is why
+  `AddFlightConcurrencyToken` is empty, and why `AddPilotConcurrencyTokenAndNormalizeLicenseNumber` keeps only
+  its licence-number `Sql(...)` — the concurrency-token half is a model-snapshot change and nothing more. That
+  `Sql(...)` guards itself with a `DO $$ ... RAISE EXCEPTION` block first: `LicenseNumber` is uniquely indexed,
+  so upper-casing two rows that differ only by case would otherwise fail on the constraint with a raw Postgres
+  error instead of a sentence explaining what to fix.
 - `Identity/JwtTokenGenerator.cs`: implements `IJwtTokenGenerator` — HMAC-SHA256 signed token, claims are
   `NameIdentifier` (Pilot Id), `Name` (Username), `Role` (`Pilot.Rank.ToString()`, e.g. `"Captain"`). Reads
   `Jwt:Key`/`Jwt:Issuer`/`Jwt:Audience`/`Jwt:ExpiryMinutes` from `IConfiguration` directly (same pattern as the
@@ -344,12 +371,15 @@ exact-match list, not a rank hierarchy, so a Captain-only gate locks out `ChiefP
 - `Controllers/CRMReportsController.cs`: class-level `[Authorize]`, no extra role restriction. `POST /CRMReports`
   (→ `CreateCRMReportCommand`), `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) — any
   authenticated pilot can create/read CRM reports.
-- `Controllers/PilotsController.cs`, class-level **`[Authorize]`**, no ownership/role restriction beyond that
-  (any authenticated pilot, including a self-registered `Trainee`, can view another pilot's profile/logbook —
-  consistent with the app's existing "any authenticated pilot can read" pattern elsewhere, not currently
-  gated further): `GET /Pilots` (→ `GetPilotsQuery`, used by the frontend's crew-assignment picker),
-  `GET /Pilots/{id}` (→ `GetPilotProfileQuery`), `GET /Pilots/{id}/logbook?format=csv|pdf` (→
-  `GetPilotLogbookQuery`, streamed via `CsvLogbookWriter`/`PdfLogbookWriter`), `PUT /Pilots/me/certificates`
+- `Controllers/PilotsController.cs`, class-level **`[Authorize]`**. Reads split deliberately at the personal-data
+  line: `GET /Pilots` (→ `GetPilotsQuery`, used by the frontend's crew-assignment picker) and
+  `GET /Pilots/{id}` (→ `GetPilotProfileQuery`) stay open to any authenticated pilot, because currency and
+  certificate status are what flight ops need to see about a crewmate. `GET /Pilots/{id}/logbook?format=csv|pdf`
+  (→ `GetPilotLogbookQuery`, streamed via `CsvLogbookWriter`/`PdfLogbookWriter`) does **not** — it is the pilot's
+  full personal flight record, so it is restricted to the owning pilot or a command rank. **That check lives in
+  `GetPilotLogbookQueryHandler`, not the controller**, via `ICurrentUserService.PilotId`/`.Rank` and
+  `PilotRankPolicy.IsCommandRank`, and throws `ForbiddenAccessException` → `403`. It runs *before* the pilot
+  lookup, so a 403 never doubles as an existence oracle. `PUT /Pilots/me/certificates`
   (→ `UpdatePilotCertificatesCommand`, scoped to the caller via `ICurrentUserService` — the command has no
   pilot-id field a client could tamper with).
 - `Controllers/StatsController.cs`: `GET /Stats` (→ `GetStatsQuery`, **`[Authorize(Roles = "Captain,ChiefPilot")]`**)
@@ -371,6 +401,8 @@ live deployment — it is the API's contract to anyone reading it, so keep new e
 `AddExceptionHandler<T>()` (in that order: Validation, then Domain) + `AddProblemDetails()`, activated by
 `app.UseExceptionHandler()`. Mapping: `FluentValidation.ValidationException` → `400` with a
 `ValidationProblemDetails` per-field error shape, `UnauthorizedAccessException` → `401`,
+`AltitudELog.Application.Common.Exceptions.ForbiddenAccessException` → `403` (authenticated, but not allowed
+*this* resource — re-authenticating would not help, which is what separates it from the 401 above),
 `AltitudELog.Application.Common.Exceptions.NotFoundException` → `404`, `InvalidOperationException` → `409`
 (reserved for genuine conflicts — duplicate crew assignment, duplicate username, mutating an already-cancelled
 flight; "does not exist" cases should throw `NotFoundException` instead, not `InvalidOperationException`),
@@ -550,8 +582,21 @@ specifically.
   Testcontainers — **Docker must be running**, or those tests fail with a `DockerUnavailableException` rather
   than a real test failure). To run only the fast unit tests:
   `dotnet test tests/AltitudELog.Application.UnitTests`.
-- CI: `.github/workflows/ci.yml` runs two jobs on push/PR — `backend` (`dotnet test`) and `frontend`
-  (`npm run build`, `npm run lint`, `npm test`).
+- CI: `.github/workflows/ci.yml` runs two jobs on push/PR — `backend` (build → **dependency audit** → `dotnet test`
+  with `--collect:"XPlat Code Coverage"`, uploaded as a `coverage` artifact) and `frontend`
+  (`npm run build`, `npm run lint`, `npm test`). The audit step pins `DOTNET_CLI_UI_LANGUAGE: en` on purpose: it
+  decides pass/fail by grepping `dotnet list package --vulnerable` output, and that string is localised, so a
+  runner in another locale would silently always pass. `.github/dependabot.yml` opens weekly NuGet/npm and
+  monthly actions update PRs.
+- **Style is enforced by the build, not by a formatter.** `.editorconfig` + `Directory.Build.props`
+  (`EnforceCodeStyleInBuild` + `TreatWarningsAsErrors`) means an IDE0xxx violation fails `dotnet build`. Two
+  carve-outs, both deliberate: EF Core writes migrations from its own template (block-scoped namespaces and
+  all), so `src/AltitudELog.Infrastructure/Persistence/Migrations/**.cs` is marked `generated_code = true` —
+  otherwise every new migration would fail the build; and `WarningsNotAsErrors` exempts `NU1901`-`NU1904`,
+  because a newly published advisory against an existing transitive would otherwise turn a green commit red
+  with nothing changed here. The CI audit step is the deliberate gate for those instead. A `csharpier` tool
+  manifest used to sit at the repo root; it was never wired into CI and 133 of 186 files did not satisfy it, and
+  its output was not more readable than the hand formatting — it was removed rather than adopted.
 - **Three top-level `PackageReference`s exist only to raise a vulnerable transitive dependency, and none of
   them is imported by any `.cs` file** — deleting one because "nothing uses it" silently reintroduces a high
   severity advisory:
@@ -571,8 +616,12 @@ specifically.
   storage) → `AddOpenApi()` → `AddApplicationServices()` + `AddInfrastructureServices()` → `AddHttpContextAccessor()`
   + `AddScoped<ICurrentUserService, CurrentUserService>()` → `AddExceptionHandler<ValidationExceptionHandler>()` +
   `AddExceptionHandler<DomainExceptionHandler>()` + `AddProblemDetails()` → `AddCors("FrontendCorsPolicy")` →
-  `AddAuthentication().AddJwtBearer(...)` + `AddAuthorization()` (plain, no named policies — role checks are all
-  inline `[Authorize(Roles = "...")]`) → `AddRateLimiter(...)` (the `"login"` and `"auth"` fixed-window policies,
+  `AddAuthentication().AddJwtBearer(...)` (with `ClockSkew = TimeSpan.Zero` — the default is a **5-minute**
+  grace, which would keep an expired access token working long past its stated `expiresAtUtc` and undercut the
+  short-lived-access-token half of the refresh design) + `AddAuthorization()` (plain, no named policies — role
+  checks are all inline `[Authorize(Roles = "...")]`) → `AddRateLimiter(...)` (the `"login"` and `"auth"`
+  fixed-window policies, whose `OnRejected` writes a `ProblemDetails` `429` and a `Retry-After` header taken
+  from the lease's `MetadataName.RetryAfter`,
   see "API — Auth endpoints") → `builder.Build()` → **fail-fast Jwt:Key length/presence check** (throws before
   the app starts serving) → apply pending EF Core migrations on startup with a bounded retry loop (10 attempts,
   3s apart — tolerates a managed Postgres, e.g. Railway, being briefly unready right after container start,

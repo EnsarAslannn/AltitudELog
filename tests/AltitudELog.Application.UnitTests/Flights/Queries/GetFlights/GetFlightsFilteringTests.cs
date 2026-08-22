@@ -167,8 +167,14 @@ public class GetFlightsFilteringTests
         });
 
         var durations = result.Items.Select(f => f.FlightTime);
-        if (descending) durations.Should().BeInDescendingOrder();
-        else durations.Should().BeInAscendingOrder();
+        if (descending)
+        {
+            durations.Should().BeInDescendingOrder();
+        }
+        else
+        {
+            durations.Should().BeInAscendingOrder();
+        }
     }
 
     [Theory]
@@ -185,8 +191,14 @@ public class GetFlightsFilteringTests
         });
 
         var origins = result.Items.Select(f => f.OriginICAO);
-        if (descending) origins.Should().BeInDescendingOrder();
-        else origins.Should().BeInAscendingOrder();
+        if (descending)
+        {
+            origins.Should().BeInDescendingOrder();
+        }
+        else
+        {
+            origins.Should().BeInAscendingOrder();
+        }
     }
 
     [Fact]

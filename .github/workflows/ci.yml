@@ -31,8 +31,29 @@ jobs:
       - name: Build
         run: dotnet build AltitudELog.slnx --configuration Release --no-restore
 
+      - name: Audit dependencies for known vulnerabilities
+        env:
+          DOTNET_CLI_UI_LANGUAGE: en
+        run: |
+          dotnet list AltitudELog.slnx package --vulnerable --include-transitive > audit.txt
+          cat audit.txt
+          if grep -q 'has the following vulnerable packages' audit.txt; then
+            echo "::error::Vulnerable packages found. Three top-level PackageReferences exist purely to pin a vulnerable transitive up — see CLAUDE.md before removing any of them."
+            exit 1
+          fi
+
       - name: Run tests
-        run: dotnet test AltitudELog.slnx --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test AltitudELog.slnx --configuration Release --no-build --verbosity normal
+          --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: ./coverage/**/coverage.cobertura.xml
+          if-no-files-found: warn
 
   frontend:
     name: Frontend (build & lint)

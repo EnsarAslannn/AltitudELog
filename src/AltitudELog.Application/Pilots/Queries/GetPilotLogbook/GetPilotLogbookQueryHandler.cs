@@ -1,4 +1,6 @@
+using AltitudELog.Application.Common.Exceptions;
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Common.Security;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,14 +9,22 @@ namespace AltitudELog.Application.Pilots.Queries.GetPilotLogbook;
 public class GetPilotLogbookQueryHandler : IRequestHandler<GetPilotLogbookQuery, PilotLogbookDto?>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetPilotLogbookQueryHandler(IApplicationDbContext context)
+    public GetPilotLogbookQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<PilotLogbookDto?> Handle(GetPilotLogbookQuery request, CancellationToken cancellationToken)
     {
+        if (request.PilotId != _currentUser.PilotId && !PilotRankPolicy.IsCommandRank(_currentUser.Rank))
+        {
+            throw new ForbiddenAccessException(
+                "A logbook can only be exported by the pilot it belongs to, or by a Captain or Chief Pilot.");
+        }
+
         var pilot = await _context.Pilots
             .AsNoTracking()
             .Where(p => p.Id == request.PilotId)

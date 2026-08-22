@@ -65,5 +65,7 @@ public class PilotConfiguration : IEntityTypeConfiguration<Pilot>
         builder.HasIndex(p => p.PasswordResetTokenHash)
             .HasDatabaseName("IX_Pilots_PasswordResetTokenHash")
             .HasFilter("\"PasswordResetTokenHash\" IS NOT NULL");
+
+        builder.Property<uint>("xmin").IsRowVersion();
     }
 }
