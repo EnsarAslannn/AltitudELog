@@ -1,0 +1,21 @@
+# Deploys run from the REPO ROOT (the Vercel project's Root Directory is "frontend"),
+# and the uploader applies only this file / the root .gitignore -- nested .gitignore
+# files are not consulted. frontend/.gitignore's "dist" rule therefore does not apply
+# to the upload, and a previous local build used to be shipped into the build context.
+#
+# That was not cosmetic. Tailwind v4 auto-detects its sources by walking the project,
+# so it scanned the last bundle and harvested class-like tokens out of it -- emitting
+# 14 utilities nothing uses plus their !important variants, +2.5kB, and leaving
+# production CSS unreproducible from a clean checkout. Keep build output out of here.
+frontend/dist
+frontend/node_modules
+frontend/coverage
+
+# The .NET half of the repo is irrelevant to the frontend build and is the larger part
+# of the upload.
+src
+tests
+AltitudELog.slnx
+Directory.Build.props
+Dockerfile
+docker-compose.yml

@@ -553,6 +553,17 @@ between panels. `src/pages/LandingPage.test.tsx` guards the one-ground rule.
   Radii come from the `--radius-*` scale, which centres on `0.5rem`/8px (`--radius`, `-md` and `-lg` are all
   8px); hairlines rather than shadows. Keep new UI on these primitives and tokens rather than one-off styling
   in pages.
+- **Deploys run from the repo root, and `.vercelignore` there is load-bearing.** The Vercel project's Root
+  Directory is `frontend`, so `vercel deploy --prod` is issued from the repo root — and the uploader consults
+  only the root `.gitignore`/`.vercelignore`, **not** nested `.gitignore` files. `frontend/.gitignore`'s `dist`
+  rule therefore does not apply to the upload, and a previous local build used to be shipped into the build
+  context. That was not cosmetic: Tailwind v4 auto-detects its sources by walking the project, so it scanned the
+  last bundle and harvested class-like tokens out of it — `visible`, `contents`, `table`, `shrink`, `shadow`,
+  `ring`, `blur`, `ease-*` and their `!important` variants — emitting 14 utilities nothing uses, +2.5kB, and
+  leaving production CSS unreproducible from a clean checkout. Verified by bisection: same output on Windows and
+  in a Linux container, unchanged with `.git` absent and with the build cache skipped, and back to the
+  reproducible hash the moment `frontend/dist` left the upload. The root `.vercelignore` also drops the .NET
+  half of the repo from the upload — 2612 files to 251.
 - Config: `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:5264` (must match the API's http
   launch profile). `vite.config.ts` pins the dev server to port `5180` with `strictPort: true` — this exact port
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.
