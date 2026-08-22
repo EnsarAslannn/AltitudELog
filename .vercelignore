@@ -11,11 +11,15 @@ frontend/dist
 frontend/node_modules
 frontend/coverage
 
-# The .NET half of the repo is irrelevant to the frontend build and is the larger part
-# of the upload.
-src
-tests
-AltitudELog.slnx
-Directory.Build.props
-Dockerfile
-docker-compose.yml
+# The .NET half of the repo is irrelevant to the frontend build.
+#
+# Every pattern below MUST stay anchored with a leading slash. These follow .gitignore
+# matching, so a bare "src" matches a directory of that name at ANY depth -- it takes
+# frontend/src with it, and the build dies on "TS18003: No inputs were found in config
+# file tsconfig.app.json". Anchored, they match only the repo root.
+/src
+/tests
+/AltitudELog.slnx
+/Directory.Build.props
+/Dockerfile
+/docker-compose.yml
