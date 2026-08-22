@@ -587,7 +587,11 @@ specifically.
   (`npm run build`, `npm run lint`, `npm test`). The audit step pins `DOTNET_CLI_UI_LANGUAGE: en` on purpose: it
   decides pass/fail by grepping `dotnet list package --vulnerable` output, and that string is localised, so a
   runner in another locale would silently always pass. `.github/dependabot.yml` opens weekly NuGet/npm and
-  monthly actions update PRs.
+  monthly actions update PRs, **minor and patch only** — every ecosystem carries an explicit
+  `version-update:semver-major` ignore. That is not tidiness: without it Dependabot proposes each major on its
+  own (grouping only covers the update-types it names), and the first run duly opened
+  "Bump MediatR from 12.4.1 to 14.2.0" — precisely the bump the licence note above forbids. Majors stay a
+  manual, considered change.
 - **Style is enforced by the build, not by a formatter.** `.editorconfig` + `Directory.Build.props`
   (`EnforceCodeStyleInBuild` + `TreatWarningsAsErrors`) means an IDE0xxx violation fails `dotnet build`. Two
   carve-outs, both deliberate: EF Core writes migrations from its own template (block-scoped namespaces and
