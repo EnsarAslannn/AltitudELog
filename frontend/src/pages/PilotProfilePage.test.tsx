@@ -58,6 +58,7 @@ describe('PilotProfilePage', () => {
 
   it('surfaces an error when the logbook export fails', async () => {
     const user = userEvent.setup()
+    useAuthStore.setState({ isAuthenticated: true, pilotId: profile.id })
     vi.mocked(pilotService.exportLogbook).mockRejectedValueOnce({
       status: 500,
       title: 'Uçuş kaydı indirilemedi.',
@@ -91,6 +92,7 @@ describe('PilotProfilePage', () => {
 
   it('re-enables the export buttons after a failure under StrictMode', async () => {
     const user = userEvent.setup()
+    useAuthStore.setState({ isAuthenticated: true, pilotId: profile.id })
     vi.mocked(pilotService.exportLogbook).mockRejectedValueOnce({
       status: 500,
       title: 'Uçuş kaydı indirilemedi.',
@@ -107,5 +109,24 @@ describe('PilotProfilePage', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /CSV İndir/ })).not.toBeDisabled(),
     )
+  })
+
+  it('hides the logbook export from another pilot below command rank', async () => {
+    useAuthStore.setState({ isAuthenticated: true, pilotId: 'someone-else', rank: 'FirstOfficer' })
+
+    renderProfile()
+    await screen.findByText('Test Pilot')
+
+    expect(screen.queryByRole('button', { name: /CSV İndir/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /PDF İndir/ })).not.toBeInTheDocument()
+  })
+
+  it('offers the logbook export to a command rank viewing another pilot', async () => {
+    useAuthStore.setState({ isAuthenticated: true, pilotId: 'someone-else', rank: 'ChiefPilot' })
+
+    renderProfile()
+    await screen.findByText('Test Pilot')
+
+    expect(screen.getByRole('button', { name: /CSV İndir/ })).toBeInTheDocument()
   })
 })

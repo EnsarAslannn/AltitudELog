@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { pilotService } from '../services/pilotService'
 import { useAuthStore } from '../store/authStore'
+import { hasCommandRank } from '../routes/ranks'
 import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -69,7 +70,9 @@ export function PilotProfilePage() {
   }
 
   const ownPilotId = useAuthStore((state) => state.pilotId)
+  const ownRank = useAuthStore((state) => state.rank)
   const isOwnProfile = profile !== null && profile.id === ownPilotId
+  const canExportLogbook = isOwnProfile || hasCommandRank(ownRank)
 
   const [licenseExpiryDraft, setLicenseExpiryDraft] = useState('')
   const [medicalExpiryDraft, setMedicalExpiryDraft] = useState('')
@@ -183,24 +186,26 @@ export function PilotProfilePage() {
                 {profile.isCurrent ? 'Current' : 'Not Current'}
               </Badge>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="secondary"
-                icon={FileText}
-                disabled={exportingFormat !== null}
-                onClick={() => handleExport('csv')}
-              >
-                {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
-              </Button>
-              <Button
-                variant="secondary"
-                icon={FileDown}
-                disabled={exportingFormat !== null}
-                onClick={() => handleExport('pdf')}
-              >
-                {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
-              </Button>
-            </div>
+            {canExportLogbook && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  icon={FileText}
+                  disabled={exportingFormat !== null}
+                  onClick={() => handleExport('csv')}
+                >
+                  {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  icon={FileDown}
+                  disabled={exportingFormat !== null}
+                  onClick={() => handleExport('pdf')}
+                >
+                  {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
+                </Button>
+              </div>
+            )}
             {exportError && (
               <p role="alert" className="text-sm text-error">
                 {exportError}

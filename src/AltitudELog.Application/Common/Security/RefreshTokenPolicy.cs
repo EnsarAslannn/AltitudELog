@@ -34,6 +34,13 @@ public static class RefreshTokenPolicy
     /// <summary>
     /// Issues the next token in an existing session, keeping the outgoing hash so a replay of it
     /// can be recognised. The session start deliberately carries over unchanged.
+    ///
+    /// These three fields must move together as one atomic step, which is why <c>Pilot</c> carries
+    /// an <c>xmin</c> concurrency token: two concurrent refreshes with the same valid token would
+    /// otherwise both pass the reuse check and both rotate, and the second write would leave
+    /// <see cref="Pilot.PreviousRefreshTokenHash"/> pointing at a token that is still live — so the
+    /// next legitimate refresh looks like a replay and revokes a healthy session. With the token in
+    /// place the loser's save throws instead, and the caller is answered 401.
     /// </summary>
     public static string Rotate(Pilot pilot, DateTime nowUtc)
     {

@@ -129,4 +129,36 @@ public class RegisterCommandHandlerTests
 
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
+
+    [Fact]
+    public async Task Handle_Should_Store_LicenseNumber_Trimmed_And_Upper_Cased()
+    {
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+
+        var pilotId = await handler.Handle(
+            new RegisterCommand(
+                "ensar", "P@ssw0rd123!", "Test Pilot", "  tr-1234  ", "ensar@example.com"),
+            CancellationToken.None);
+
+        var pilot = await context.Pilots.SingleAsync(p => p.Id == pilotId);
+        pilot.LicenseNumber.Should().Be("TR-1234");
+    }
+
+    [Fact]
+    public async Task Handle_Should_Reject_A_LicenseNumber_Differing_Only_By_Case_Or_Whitespace()
+    {
+        await using var context = CreateContext();
+        var handler = new RegisterCommandHandler(context, Substitute.For<ILogger<RegisterCommandHandler>>());
+
+        await handler.Handle(
+            new RegisterCommand("first", "P@ssw0rd123!", "Test Pilot", "TR-1234", "first@example.com"),
+            CancellationToken.None);
+
+        var act = () => handler.Handle(
+            new RegisterCommand("second", "P@ssw0rd123!", "Test Pilot", " tr-1234 ", "second@example.com"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
 }

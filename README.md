@@ -54,6 +54,8 @@ bir uygulama ortaya koymaktır.
 - Pilotun rütbesi JWT üzerinde rol bilgisi olarak taşınır
 - Uçuş/mürettebat oluşturma gibi yazma işlemleri komuta rütbeleriyle sınırlıdır
 - Aynı kurallar arayüzde route koruması olarak da uygulanır
+- Kayda özel kurallar controller'da değil handler'da durur, böylece dolaşılamaz:
+  bir pilotun uçuş kaydı dökümünü yalnızca kendisi ya da komuta rütbesi indirebilir
 
 ### ⚡ Cache & Arka Plan İşleri
 

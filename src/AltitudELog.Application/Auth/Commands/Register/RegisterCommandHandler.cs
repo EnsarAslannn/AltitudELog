@@ -25,6 +25,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     {
         var username = CredentialNormalizer.NormalizeUsername(request.Username);
         var email = CredentialNormalizer.NormalizeEmail(request.Email);
+        var licenseNumber = CredentialNormalizer.NormalizeLicenseNumber(request.LicenseNumber);
 
         var usernameTaken = await _context.Pilots
             .AnyAsync(p => p.Username == username, cancellationToken);
@@ -35,7 +36,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         }
 
         var licenseNumberTaken = await _context.Pilots
-            .AnyAsync(p => p.LicenseNumber == request.LicenseNumber, cancellationToken);
+            .AnyAsync(p => p.LicenseNumber == licenseNumber, cancellationToken);
 
         if (licenseNumberTaken)
         {
@@ -56,7 +57,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
-            LicenseNumber = request.LicenseNumber,
+            LicenseNumber = licenseNumber,
             Rank = Enum.IsDefined(request.Rank) ? request.Rank : PilotRank.Trainee,
             Username = username,
             Email = email,

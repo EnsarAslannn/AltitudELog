@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using AltitudELog.API.Common;
@@ -84,6 +85,7 @@ try
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.Zero,
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 ValidAudience = builder.Configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(
@@ -130,6 +132,13 @@ try
         options.OnRejected = async (context, cancellationToken) =>
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                context.HttpContext.Response.Headers.RetryAfter =
+                    ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+            }
+
             var problemDetails = new ProblemDetails
             {
                 Status = StatusCodes.Status429TooManyRequests,

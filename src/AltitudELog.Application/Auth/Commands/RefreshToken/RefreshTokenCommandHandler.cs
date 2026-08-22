@@ -65,7 +65,17 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         var (token, expiresAtUtc) = _jwtTokenGenerator.GenerateToken(pilot);
         var refreshToken = RefreshTokenPolicy.Rotate(pilot, now);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _logger.LogWarning(
+                "Concurrent refresh detected for pilot {PilotId}; this caller lost the race", pilot.Id);
+
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+        }
 
         _logger.LogInformation("Pilot {PilotId} refreshed their access token", pilot.Id);
 

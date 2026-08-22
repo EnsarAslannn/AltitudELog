@@ -1,0 +1,17 @@
+<Project>
+
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      NuGet audit warnings stay warnings. They report the state of the world, not of this code: a
+      newly published advisory against an existing transitive would otherwise turn a green commit
+      red with nothing changed here, and a visitor cloning the repo months from now would find a
+      build that fails for reasons the author could not have prevented. The CI "Audit dependencies"
+      step is the deliberate gate for these, where the failure is explicit and explains itself.
+    -->
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+</Project>

@@ -94,8 +94,16 @@ public class GetStatsQueryHandler : IRequestHandler<GetStatsQuery, StatsDto>
 
     private static DateOnly Soonest(DateOnly? license, DateOnly? medical)
     {
-        if (license is null) return medical!.Value;
-        if (medical is null) return license.Value;
+        if (license is null)
+        {
+            return medical!.Value;
+        }
+
+        if (medical is null)
+        {
+            return license.Value;
+        }
+
         return license.Value < medical.Value ? license.Value : medical.Value;
     }
 }

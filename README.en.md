@@ -53,6 +53,8 @@ background job processing, caching strategies, and modern CI/CD & containerized 
 - Pilot rank encoded as JWT role claim
 - Write operations (flight/crew creation) restricted to command ranks
 - Same authorization rules applied on frontend with route guards
+- Per-record rules live in the handler rather than the controller, so they cannot be
+  routed around: a logbook export is limited to its owner or a command rank
 
 ### ⚡ Caching & Background Processing
 
