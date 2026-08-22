@@ -1,22 +1,27 @@
-# Deploys run from the REPO ROOT (the Vercel project's Root Directory is "frontend"),
-# and the uploader applies only this file / the root .gitignore -- nested .gitignore
-# files are not consulted. frontend/.gitignore's "dist" rule therefore does not apply
-# to the upload, and a previous local build used to be shipped into the build context.
+# Deploys run from the REPO ROOT (the Vercel project's Root Directory is "frontend").
 #
-# That was not cosmetic. Tailwind v4 auto-detects its sources by walking the project,
-# so it scanned the last bundle and harvested class-like tokens out of it -- emitting
-# 14 utilities nothing uses plus their !important variants, +2.5kB, and leaving
-# production CSS unreproducible from a clean checkout. Keep build output out of here.
+# Without this file the CLI uploaded essentially the entire working directory --
+# measured at 2612 files against 2633 present on disk, of which 2294 were gitignored.
+# .gitignore is NOT a reliable filter for the upload; this file is. That is how a
+# previous local build (frontend/dist) reached the build context, and Tailwind v4 --
+# which auto-detects its sources by walking the project -- scanned that stale bundle
+# and harvested class-like tokens out of it, emitting 14 utilities nothing uses plus
+# their !important variants: +2.5kB, and production CSS no longer reproducible from a
+# clean checkout.
+#
+# So: anything that must stay out of the upload belongs HERE, not only in .gitignore.
 frontend/dist
 frontend/node_modules
 frontend/coverage
 
-# The .NET half of the repo is irrelevant to the frontend build.
+# The .NET half of the repo, which the frontend build never reads. This is the bulk of
+# it -- 2043 of the excluded files were bin/ and obj/ compiler output.
 #
 # Every pattern below MUST stay anchored with a leading slash. These follow .gitignore
 # matching, so a bare "src" matches a directory of that name at ANY depth -- it takes
 # frontend/src with it, and the build dies on "TS18003: No inputs were found in config
-# file tsconfig.app.json". Anchored, they match only the repo root.
+# file tsconfig.app.json". Anchored, they match only the repo root. Note these two
+# lines are also what currently keeps bin/obj out; do not drop them casually.
 /src
 /tests
 /AltitudELog.slnx
