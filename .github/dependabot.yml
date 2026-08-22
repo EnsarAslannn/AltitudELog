@@ -1,11 +1,21 @@
 version: 2
 
+# Major bumps are deliberately NOT proposed. Two of this repo's pins are licence
+# decisions, not version laziness: MediatR must stay on 12.x (v13+ needs a commercial
+# licence from Lucky Penny Software above a revenue threshold) and QuestPDF is used
+# under its Community licence on the same terms. A "Bump MediatR 12.4.1 -> 14.2.0" PR
+# is therefore never something to merge, and three further top-level references exist
+# only to pin a vulnerable transitive up. Majors stay a manual, considered change; the
+# CI audit step is what catches anything genuinely urgent in the meantime.
 updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
     groups:
       dotnet:
         patterns: [ "*" ]
@@ -16,6 +26,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
     groups:
       npm:
         patterns: [ "*" ]
@@ -25,3 +38,7 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major" ]
