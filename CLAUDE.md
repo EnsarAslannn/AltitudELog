@@ -554,16 +554,19 @@ between panels. `src/pages/LandingPage.test.tsx` guards the one-ground rule.
   8px); hairlines rather than shadows. Keep new UI on these primitives and tokens rather than one-off styling
   in pages.
 - **Deploys run from the repo root, and `.vercelignore` there is load-bearing.** The Vercel project's Root
-  Directory is `frontend`, so `vercel deploy --prod` is issued from the repo root — and the uploader consults
-  only the root `.gitignore`/`.vercelignore`, **not** nested `.gitignore` files. `frontend/.gitignore`'s `dist`
-  rule therefore does not apply to the upload, and a previous local build used to be shipped into the build
-  context. That was not cosmetic: Tailwind v4 auto-detects its sources by walking the project, so it scanned the
-  last bundle and harvested class-like tokens out of it — `visible`, `contents`, `table`, `shrink`, `shadow`,
-  `ring`, `blur`, `ease-*` and their `!important` variants — emitting 14 utilities nothing uses, +2.5kB, and
-  leaving production CSS unreproducible from a clean checkout. Verified by bisection: same output on Windows and
-  in a Linux container, unchanged with `.git` absent and with the build cache skipped, and back to the
-  reproducible hash the moment `frontend/dist` left the upload. The root `.vercelignore` also drops the .NET
-  half of the repo from the upload — 2612 files to 251.
+  Directory is `frontend`, so `vercel deploy --prod` is issued from the repo root. **`.gitignore` does not
+  filter that upload** — measured, the CLI shipped 2612 files against 2633 present on disk, 2294 of them
+  gitignored. Anything that must stay out of the build context belongs in `.vercelignore`, not only in
+  `.gitignore`. That is how a previous local build (`frontend/dist`) reached the context, and Tailwind v4 —
+  which auto-detects its sources by walking the project — scanned that stale bundle and harvested class-like
+  tokens out of it: `visible`, `contents`, `table`, `shrink`, `shadow`, `ring`, `blur`, `ease-*` and their
+  `!important` variants, 14 utilities nothing uses, +2.5kB, and production CSS no longer reproducible from a
+  clean checkout. Established by bisection, not inspection: identical output on Windows and in a Linux
+  container, unchanged with `.git` absent and with the build cache skipped on a fresh install, and back to the
+  reproducible hash the moment `frontend/dist` left the upload — so a Tailwind version drift (pinned 4.3.3 both
+  sides) and a platform difference were both ruled out first. The file also drops the .NET half of the repo,
+  which the frontend build never reads: 2612 files to 251, of which 2043 were `bin`/`obj` compiler output.
+  Its `/src` and `/tests` lines are what keep that output away now — `.gitignore` is not doing it.
 - Config: `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:5264` (must match the API's http
   launch profile). `vite.config.ts` pins the dev server to port `5180` with `strictPort: true` — this exact port
   is what the API's CORS policy allows; changing it requires updating `Program.cs` too.
