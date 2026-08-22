@@ -36,7 +36,7 @@ public class CachingBehaviorTests
         var behavior = CreateBehavior<CacheableTestQuery>(cache);
 
         var nextCalled = false;
-        Task<string> Next()
+        Task<string> Next(CancellationToken _)
         {
             nextCalled = true;
             return Task.FromResult("fresh-value");
@@ -58,7 +58,7 @@ public class CachingBehaviorTests
         var behavior = CreateBehavior<CacheableTestQuery>(cache);
 
         var result = await behavior.Handle(
-            new CacheableTestQuery("some-key"), () => Task.FromResult("fresh-value"), CancellationToken.None);
+            new CacheableTestQuery("some-key"), _ => Task.FromResult("fresh-value"), CancellationToken.None);
 
         result.Should().Be("fresh-value");
 
@@ -80,7 +80,7 @@ public class CachingBehaviorTests
         var behavior = CreateBehavior<CacheableTestQuery>(cache);
 
         var result = await behavior.Handle(
-            new CacheableTestQuery("some-key"), () => Task.FromResult("fresh-value"), CancellationToken.None);
+            new CacheableTestQuery("some-key"), _ => Task.FromResult("fresh-value"), CancellationToken.None);
 
         result.Should().Be("fresh-value");
     }
@@ -97,7 +97,7 @@ public class CachingBehaviorTests
         var behavior = CreateBehavior<CacheableTestQuery>(cache);
 
         var act = () => behavior.Handle(
-            new CacheableTestQuery("some-key"), () => Task.FromResult("fresh-value"), CancellationToken.None);
+            new CacheableTestQuery("some-key"), _ => Task.FromResult("fresh-value"), CancellationToken.None);
 
         await act.Should().NotThrowAsync();
     }
@@ -109,7 +109,7 @@ public class CachingBehaviorTests
         var behavior = CreateBehavior<NonCacheableTestQuery>(cache);
 
         var result = await behavior.Handle(
-            new NonCacheableTestQuery(), () => Task.FromResult("value"), CancellationToken.None);
+            new NonCacheableTestQuery(), _ => Task.FromResult("value"), CancellationToken.None);
 
         result.Should().Be("value");
         await cache.DidNotReceiveWithAnyArgs().GetAsync(default!, default);
