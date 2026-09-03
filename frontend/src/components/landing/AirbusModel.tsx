@@ -1,5 +1,5 @@
-import { Suspense, useMemo, useRef, type RefObject } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Float, Lightformer, useGLTF } from '@react-three/drei'
 import { Box3, Color, Mesh, Vector3, type Group, type Material } from 'three'
 
@@ -8,6 +8,9 @@ const MODEL_URL = '/models/airbus.glb'
 interface AirbusModelProps {
   scrollProgress: RefObject<number>
   reduceMotion: boolean
+  paused?: boolean
+  onContextLost?: () => void
+  onContextRestored?: () => void
 }
 
 const TARGET_SPAN = 3.6
@@ -55,6 +58,38 @@ function tintMaterials(root: Group): void {
       ? node.material.map(swap)
       : swap(node.material)
   })
+}
+
+/**
+ * A lost context leaves a permanently blank canvas unless something reacts to it.
+ * three preventDefaults the event itself and re-initialises on restore, but the
+ * browser is free never to restore — so the loss is reported upwards, and
+ * SculptureLayer remounts the whole Canvas if no restore arrives.
+ */
+function ContextGuard({
+  onContextLost,
+  onContextRestored,
+}: Pick<AirbusModelProps, 'onContextLost' | 'onContextRestored'>) {
+  const gl = useThree((state) => state.gl)
+
+  useEffect(() => {
+    const canvas = gl.domElement
+
+    const handleLost = (event: Event) => {
+      event.preventDefault()
+      onContextLost?.()
+    }
+    const handleRestored = () => onContextRestored?.()
+
+    canvas.addEventListener('webglcontextlost', handleLost)
+    canvas.addEventListener('webglcontextrestored', handleRestored)
+    return () => {
+      canvas.removeEventListener('webglcontextlost', handleLost)
+      canvas.removeEventListener('webglcontextrestored', handleRestored)
+    }
+  }, [gl, onContextLost, onContextRestored])
+
+  return null
 }
 
 function Airbus({ scrollProgress, reduceMotion }: AirbusModelProps) {
@@ -118,15 +153,27 @@ function Airbus({ scrollProgress, reduceMotion }: AirbusModelProps) {
   )
 }
 
-export default function AirbusModel({ scrollProgress, reduceMotion }: AirbusModelProps) {
+export default function AirbusModel({
+  scrollProgress,
+  reduceMotion,
+  paused = false,
+  onContextLost,
+  onContextRestored,
+}: AirbusModelProps) {
   return (
     <Canvas
       dpr={[1, 1.5]}
       camera={{ position: [0, 0.4, 7], fov: 38 }}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      frameloop={reduceMotion ? 'demand' : 'always'}
+      // 'high-performance' asks a hybrid-GPU machine to switch to the discrete
+      // GPU, and that switch is itself a common way to lose the context. This
+      // canvas is a decorative layer over a full-screen video — it is not worth
+      // a GPU switch.
+      gl={{ antialias: true, alpha: true, powerPreference: 'default' }}
+      frameloop={paused ? 'never' : reduceMotion ? 'demand' : 'always'}
       style={{ pointerEvents: 'none' }}
     >
+      <ContextGuard onContextLost={onContextLost} onContextRestored={onContextRestored} />
+
       <ambientLight intensity={0.75} />
       <directionalLight position={[4, 6, 4]} intensity={2.6} />
       <directionalLight position={[-5, -1, -3]} intensity={0.5} color="#8fb4e8" />
