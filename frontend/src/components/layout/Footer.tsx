@@ -1,6 +1,9 @@
 import { PlaneTakeoff } from 'lucide-react'
+import { useT } from '../../i18n'
 
 export function Footer() {
+  const t = useT()
+
   return (
     <footer className="relative z-10 mt-20 border-t border-outline-variant/30 bg-surface-container-lowest/72 text-on-surface-variant backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
@@ -12,7 +15,7 @@ export function Footer() {
             <p className="display text-base text-on-surface">
               Altitud<span className="text-on-surface">E</span>Log
             </p>
-            <p className="text-xs text-outline">Uçuş ve CRM kayıt sistemi</p>
+            <p className="text-xs text-outline">{t('appFooter.tagline')}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.18em] text-outline">

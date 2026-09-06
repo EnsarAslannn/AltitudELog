@@ -26,7 +26,15 @@ import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
 import { aircraftLabel } from '../data/aircraftTypes'
 import { downloadBlob } from '../lib/download'
-import { certStatus, certStatusIcon, certStatusLabel, certStatusTone, dutyRoleIcon, rankIcon } from '../lib/domainDisplay'
+import {
+  certStatus,
+  certStatusIcon,
+  certStatusLabelKey,
+  certStatusTone,
+  dutyRoleIcon,
+  rankIcon,
+} from '../lib/domainDisplay'
+import { useT, type TranslationKey } from '../i18n'
 import type { PilotProfileDto } from '../types/pilot'
 import type { ApiError } from '../types/problemDetails'
 
@@ -44,6 +52,7 @@ export function PilotProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [exportingFormat, setExportingFormat] = useState<'csv' | 'pdf' | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
+  const t = useT()
 
   const isMountedRef = useRef(true)
   useEffect(() => {
@@ -62,7 +71,7 @@ export function PilotProfilePage() {
     } catch (err) {
       if (isMountedRef.current) {
         const apiError = err as ApiError
-        setExportError(apiError.title ?? 'Uçuş kaydı indirilemedi.')
+        setExportError(apiError.title ?? t('profile.exportFailed'))
       }
     } finally {
       if (isMountedRef.current) setExportingFormat(null)
@@ -94,13 +103,13 @@ export function PilotProfilePage() {
         .catch((err) => {
           if (isCancelled()) return
           const apiError = err as ApiError
-          setError(apiError.status === 404 ? 'Pilot bulunamadı.' : (apiError.title ?? 'Pilot bilgisi yüklenemedi.'))
+          setError(apiError.status === 404 ? t('profile.notFound') : (apiError.title ?? t('profile.loadFailed')))
         })
         .finally(() => {
           if (!isCancelled() && showSkeleton) setIsLoading(false)
         })
     },
-    [pilotId],
+    [pilotId, t],
   )
 
   function refreshProfile() {
@@ -124,7 +133,7 @@ export function PilotProfilePage() {
       refreshProfile()
     } catch (err) {
       const apiError = err as ApiError
-      setCertSaveError(apiError.title ?? 'Sertifika bilgileri kaydedilemedi.')
+      setCertSaveError(apiError.title ?? t('profile.certSaveFailed'))
     } finally {
       setIsSavingCerts(false)
     }
@@ -133,7 +142,7 @@ export function PilotProfilePage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
-        <span className="sr-only">Yükleniyor…</span>
+        <span className="sr-only">{t('common.loading')}</span>
         <Skeleton className="h-40 rounded-lg" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-24 rounded-lg" />
@@ -150,7 +159,7 @@ export function PilotProfilePage() {
     return (
       <Card className="border-error/30 bg-error/5">
         <p role="alert" className="text-sm text-error">
-          {error ?? 'Pilot bulunamadı.'}
+          {error ?? t('profile.notFound')}
         </p>
       </Card>
     )
@@ -183,7 +192,7 @@ export function PilotProfilePage() {
                 {profile.licenseNumber}
               </Badge>
               <Badge tone={profile.isCurrent ? 'green' : 'red'} icon={profile.isCurrent ? ShieldCheck : ShieldX}>
-                {profile.isCurrent ? 'Current' : 'Not Current'}
+                {profile.isCurrent ? t('profile.current') : t('profile.notCurrent')}
               </Badge>
             </div>
             {canExportLogbook && (
@@ -194,7 +203,7 @@ export function PilotProfilePage() {
                   disabled={exportingFormat !== null}
                   onClick={() => handleExport('csv')}
                 >
-                  {exportingFormat === 'csv' ? 'İndiriliyor…' : 'CSV İndir'}
+                  {exportingFormat === 'csv' ? t('profile.downloading') : t('profile.downloadCsv')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -202,7 +211,7 @@ export function PilotProfilePage() {
                   disabled={exportingFormat !== null}
                   onClick={() => handleExport('pdf')}
                 >
-                  {exportingFormat === 'pdf' ? 'İndiriliyor…' : 'PDF İndir'}
+                  {exportingFormat === 'pdf' ? t('profile.downloading') : t('profile.downloadPdf')}
                 </Button>
               </div>
             )}
@@ -216,16 +225,16 @@ export function PilotProfilePage() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={profile.totalFlights} />
-        <StatTile icon={Clock3} label="Toplam Saat" value={profile.totalFlightHours} />
-        <StatTile icon={Wrench} label="Uçak Tipi Çeşidi" value={profile.hoursByAircraftType.length} />
-        <StatTile icon={CalendarDays} label="Son 90 Gün" value={profile.hoursLast90Days} />
+        <StatTile icon={PlaneTakeoff} label={t('profile.stat.totalFlights')} value={profile.totalFlights} />
+        <StatTile icon={Clock3} label={t('profile.stat.totalHours')} value={profile.totalFlightHours} />
+        <StatTile icon={Wrench} label={t('profile.stat.aircraftVariety')} value={profile.hoursByAircraftType.length} />
+        <StatTile icon={CalendarDays} label={t('profile.stat.last90Days')} value={profile.hoursLast90Days} />
       </div>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Uçak Tipine Göre Saatler</Eyebrow>
+        <Eyebrow>{t('profile.hoursByType')}</Eyebrow>
         {profile.hoursByAircraftType.length === 0 ? (
-          <Card className="py-8 text-center text-sm text-on-surface-variant">Henüz uçuş kaydı yok.</Card>
+          <Card className="py-8 text-center text-sm text-on-surface-variant">{t('profile.noFlights')}</Card>
         ) : (
           <div className="flex flex-col gap-3">
             {profile.hoursByAircraftType.map((entry) => (
@@ -237,7 +246,7 @@ export function PilotProfilePage() {
                   <div>
                     <p className="font-medium text-on-surface">{entry.aircraftType}</p>
                     <p className="text-xs text-on-surface-variant">
-                      {[aircraftLabel(entry.aircraftType), `${entry.flightCount} uçuş`]
+                      {[aircraftLabel(entry.aircraftType), t('profile.flightCount', { count: entry.flightCount })]
                         .filter(Boolean)
                         .join(' · ')}
                     </p>
@@ -251,12 +260,22 @@ export function PilotProfilePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Sertifikalar</Eyebrow>
+        <Eyebrow>{t('profile.certificates')}</Eyebrow>
         <div className="flex flex-col gap-3">
           {(
             [
-              { key: 'license' as const, label: 'Lisans', icon: BadgeCheck, date: profile.licenseExpiryDate },
-              { key: 'medical' as const, label: 'Medical', icon: Stethoscope, date: profile.medicalExpiryDate },
+              {
+                key: 'license' as const,
+                labelKey: 'profile.license' as TranslationKey,
+                icon: BadgeCheck,
+                date: profile.licenseExpiryDate,
+              },
+              {
+                key: 'medical' as const,
+                labelKey: 'profile.medical' as TranslationKey,
+                icon: Stethoscope,
+                date: profile.medicalExpiryDate,
+              },
             ]
           ).map((cert) => {
             const status = certStatus(cert.date)
@@ -268,12 +287,12 @@ export function PilotProfilePage() {
                     <cert.icon className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="font-medium text-on-surface">{cert.label}</p>
-                    <p className="data text-xs text-on-surface-variant">{cert.date ?? 'Tarih belirtilmemiş'}</p>
+                    <p className="font-medium text-on-surface">{t(cert.labelKey)}</p>
+                    <p className="data text-xs text-on-surface-variant">{cert.date ?? t('profile.noDate')}</p>
                   </div>
                 </div>
                 <Badge tone={certStatusTone[status]} icon={StatusIcon}>
-                  {certStatusLabel[status]}
+                  {t(certStatusLabelKey[status])}
                 </Badge>
               </Card>
             )
@@ -282,28 +301,28 @@ export function PilotProfilePage() {
 
         {isOwnProfile && (
           <Card className="flex flex-col gap-4">
-            <p className="text-xs font-medium text-on-surface-variant">Sertifika tarihlerini güncelle</p>
+            <p className="text-xs font-medium text-on-surface-variant">{t('profile.updateCerts')}</p>
             <form
               onSubmit={handleSaveCertificates}
               aria-busy={isSavingCerts}
               className="flex flex-col gap-4 sm:flex-row sm:items-end"
             >
               <Input
-                label="Lisans Bitiş Tarihi"
+                label={t('profile.licenseExpiry')}
                 name="licenseExpiryDate"
                 type="date"
                 value={licenseExpiryDraft}
                 onChange={(e) => setLicenseExpiryDraft(e.target.value)}
               />
               <Input
-                label="Medical Bitiş Tarihi"
+                label={t('profile.medicalExpiry')}
                 name="medicalExpiryDate"
                 type="date"
                 value={medicalExpiryDraft}
                 onChange={(e) => setMedicalExpiryDraft(e.target.value)}
               />
               <Button type="submit" variant="secondary" disabled={isSavingCerts}>
-                {isSavingCerts ? 'Kaydediliyor…' : 'Kaydet'}
+                {isSavingCerts ? t('common.saving') : t('common.save')}
               </Button>
             </form>
             {certSaveError && (
@@ -316,13 +335,13 @@ export function PilotProfilePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Son Uçuşlar</Eyebrow>
+        <Eyebrow>{t('profile.recentFlights')}</Eyebrow>
         {profile.recentFlights.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-16 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-twilight-blue/12 text-twilight-blue">
               <PlaneTakeoff className="h-6 w-6" />
             </span>
-            <p className="font-medium text-on-surface">Henüz kayıtlı uçuş yok.</p>
+            <p className="font-medium text-on-surface">{t('profile.emptyFlights')}</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-4">

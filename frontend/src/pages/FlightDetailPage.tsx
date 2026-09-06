@@ -29,6 +29,7 @@ import { aircraftLabel } from '../data/aircraftTypes'
 import { apiErrorMessage } from '../lib/apiMessages'
 import { cn } from '../lib/cn'
 import { dutyRoleIcon, severityIcon, severityTone } from '../lib/domainDisplay'
+import { useLocaleTag, useT } from '../i18n'
 import { hasCommandRank } from '../routes/ranks'
 import type { FlightDto } from '../types/flight'
 import type { CrewDto, DutyRole } from '../types/crew'
@@ -64,6 +65,7 @@ export function FlightDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshError, setRefreshError] = useState<string | null>(null)
+  const t = useT()
 
   useEffect(() => {
     let cancelled = false
@@ -86,7 +88,9 @@ export function FlightDetailPage() {
       .catch((err) => {
         if (cancelled) return
         const apiError = err as ApiError
-        setError(apiError.status === 404 ? 'Uçuş bulunamadı.' : (apiError.title ?? 'Uçuş bilgisi yüklenemedi.'))
+        setError(
+          apiError.status === 404 ? t('flightDetail.notFound') : (apiError.title ?? t('flightDetail.loadFailed')),
+        )
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
@@ -95,14 +99,14 @@ export function FlightDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [flightId, canCommand])
+  }, [flightId, canCommand, t])
 
   function refreshFlight() {
     setRefreshError(null)
     flightService
       .getById(flightId)
       .then(setFlight)
-      .catch(() => setRefreshError('Uçuş bilgisi güncellenemedi. Sayfayı yenileyin.'))
+      .catch(() => setRefreshError(t('flightDetail.refreshFlightFailed')))
   }
 
   function refreshCrew() {
@@ -110,7 +114,7 @@ export function FlightDetailPage() {
     crewService
       .getByFlight(flightId)
       .then(setCrew)
-      .catch(() => setRefreshError('Mürettebat listesi güncellenemedi. Sayfayı yenileyin.'))
+      .catch(() => setRefreshError(t('flightDetail.refreshCrewFailed')))
   }
 
   function refreshReports() {
@@ -118,13 +122,13 @@ export function FlightDetailPage() {
     crmReportService
       .getByFlight(flightId)
       .then(setReports)
-      .catch(() => setRefreshError('CRM raporları güncellenemedi. Sayfayı yenileyin.'))
+      .catch(() => setRefreshError(t('flightDetail.refreshReportsFailed')))
   }
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-6" aria-busy="true">
-        <span className="sr-only">Yükleniyor…</span>
+        <span className="sr-only">{t('common.loading')}</span>
         <Skeleton className="h-40 rounded-lg" />
         <SkeletonCard />
       </div>
@@ -135,7 +139,7 @@ export function FlightDetailPage() {
     return (
       <Card className="border-error/30 bg-error/5">
         <p role="alert" className="text-sm text-error">
-          {error ?? 'Uçuş bulunamadı.'}
+          {error ?? t('flightDetail.notFound')}
         </p>
       </Card>
     )
@@ -147,11 +151,11 @@ export function FlightDetailPage() {
         <div className="flex flex-col justify-center gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Eyebrow tone="soft" rule={false}>
-              Flight Record
+              {t('flightDetail.eyebrow')}
             </Eyebrow>
             {flight.isCancelled ? (
               <Badge tone="red" icon={Ban}>
-                İptal Edildi
+                {t('flight.cancelled')}
               </Badge>
             ) : (
               canCommand && (
@@ -161,7 +165,7 @@ export function FlightDetailPage() {
                     className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
                   >
                     <Pencil className="h-3.5 w-3.5" />
-                    Düzenle
+                    {t('flightDetail.edit')}
                   </Link>
                   <CancelFlightControl flightId={flightId} onCancelled={refreshFlight} />
                 </div>
@@ -212,10 +216,10 @@ export function FlightDetailPage() {
 
       <div className="inline-flex w-fit gap-1 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-1 shadow-sm">
         <TabButton active={tab === 'crew'} onClick={() => setTab('crew')} icon={Users}>
-          Mürettebat
+          {t('flightDetail.tab.crew')}
         </TabButton>
         <TabButton active={tab === 'crm'} onClick={() => setTab('crm')} icon={ShieldAlert}>
-          CRM Raporları
+          {t('flightDetail.tab.crm')}
         </TabButton>
       </div>
 
@@ -237,6 +241,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
   const [confirming, setConfirming] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
 
   async function handleConfirm() {
     setError(null)
@@ -247,7 +252,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
       setConfirming(false)
     } catch (err) {
       const apiError = err as ApiError
-      setError(apiErrorMessage(apiError, 'Uçuş iptal edilemedi.'))
+      setError(apiErrorMessage(apiError, t, t('flightDetail.cancelFailed')))
 
       if (apiError.status === 409) {
         onCancelled()
@@ -261,14 +266,14 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
     return (
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-on-surface">Emin misiniz?</span>
+          <span className="text-xs font-medium text-on-surface">{t('flightDetail.cancelConfirmQuestion')}</span>
           <button
             onClick={handleConfirm}
             disabled={isCancelling}
             className="flex items-center gap-1.5 rounded bg-error px-3 py-1.5 text-xs font-medium text-on-error transition-colors hover:bg-error-hover disabled:opacity-50"
           >
             <Ban className="h-3.5 w-3.5" />
-            {isCancelling ? 'İptal ediliyor…' : 'Onayla'}
+            {isCancelling ? t('flightDetail.cancelling') : t('flightDetail.cancelConfirm')}
           </button>
           <button
             onClick={() => {
@@ -278,7 +283,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
             disabled={isCancelling}
             className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
           >
-            Vazgeç
+            {t('flightDetail.cancelAbort')}
           </button>
         </div>
         {error && (
@@ -296,7 +301,7 @@ export function CancelFlightControl({ flightId, onCancelled }: { flightId: strin
       className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low"
     >
       <XCircle className="h-3.5 w-3.5" />
-      İptal Et
+      {t('flightDetail.cancel')}
     </button>
   )
 }
@@ -345,6 +350,7 @@ function CrewTab({
   const [dutyRole, setDutyRole] = useState<DutyRole>('PIC')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useT()
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -355,7 +361,7 @@ function CrewTab({
       setPilotId('')
       onCreated()
     } catch (err) {
-      setError((err as ApiError).detail ?? (err as ApiError).title ?? 'Mürettebat eklenemedi.')
+      setError((err as ApiError).detail ?? (err as ApiError).title ?? t('crew.failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -364,9 +370,9 @@ function CrewTab({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-3">
-        <Eyebrow>Atanan Mürettebat</Eyebrow>
+        <Eyebrow>{t('crew.assigned')}</Eyebrow>
         {crew.length === 0 && (
-          <Card className="py-10 text-center text-sm text-on-surface-variant">Henüz mürettebat atanmadı.</Card>
+          <Card className="py-10 text-center text-sm text-on-surface-variant">{t('crew.empty')}</Card>
         )}
         {crew.map((member) => {
           const RoleIcon = dutyRoleIcon[member.dutyRole]
@@ -399,12 +405,12 @@ function CrewTab({
         <Card className="h-fit lg:sticky lg:top-24">
           <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-on-surface">
             <UserPlus className="h-4 w-4 text-primary" />
-            Mürettebat Ata
+            {t('crew.assignTitle')}
           </h2>
           <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
-            <Select label="Pilot" value={pilotId} onChange={(e) => setPilotId(e.target.value)} required>
+            <Select label={t('crew.pilot')} value={pilotId} onChange={(e) => setPilotId(e.target.value)} required>
               <option value="" disabled>
-                Pilot seçin
+                {t('crew.pilotPlaceholder')}
               </option>
               {pilots.map((pilot) => (
                 <option key={pilot.id} value={pilot.id}>
@@ -413,7 +419,7 @@ function CrewTab({
               ))}
             </Select>
             <Select
-              label="Görev"
+              label={t('crew.duty')}
               value={dutyRole}
               onChange={(e) => setDutyRole(e.target.value as DutyRole)}
             >
@@ -429,7 +435,7 @@ function CrewTab({
               </p>
             )}
             <Button type="submit" icon={UserPlus} disabled={isSubmitting}>
-              {isSubmitting ? 'Ekleniyor…' : 'Ata'}
+              {isSubmitting ? t('crew.submitting') : t('crew.submit')}
             </Button>
           </form>
         </Card>
@@ -453,6 +459,8 @@ function CrmTab({
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useT()
+  const localeTag = useLocaleTag()
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -465,7 +473,7 @@ function CrmTab({
       setIsAnonymous(false)
       onCreated()
     } catch (err) {
-      setError((err as ApiError).detail ?? (err as ApiError).title ?? 'Rapor oluşturulamadı.')
+      setError((err as ApiError).detail ?? (err as ApiError).title ?? t('crm.failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -474,9 +482,9 @@ function CrmTab({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="flex flex-col gap-3">
-        <Eyebrow>CRM Raporları</Eyebrow>
+        <Eyebrow>{t('crm.sectionTitle')}</Eyebrow>
         {reports.length === 0 && (
-          <Card className="py-10 text-center text-sm text-on-surface-variant">Henüz CRM raporu yok.</Card>
+          <Card className="py-10 text-center text-sm text-on-surface-variant">{t('crm.empty')}</Card>
         )}
         {reports.map((report) => {
           const SeverityIcon = severityIcon[report.severityLevel]
@@ -491,9 +499,9 @@ function CrmTab({
               <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">{report.description}</p>
               <p className="mt-3 flex items-center gap-1.5 text-xs text-outline">
                 <span className="font-medium text-on-surface-variant">
-                  {report.isAnonymous ? 'Anonim' : (report.reporterName ?? 'Bilinmiyor')}
+                  {report.isAnonymous ? t('crm.anonymous') : (report.reporterName ?? t('crm.unknownReporter'))}
                 </span>
-                ·<span className="data">{new Date(report.createdDate).toLocaleString()}</span>
+                ·<span className="data">{new Date(report.createdDate).toLocaleString(localeTag)}</span>
               </p>
             </Card>
           )
@@ -503,12 +511,12 @@ function CrmTab({
       <Card className="h-fit lg:sticky lg:top-24">
         <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-on-surface">
           <ShieldAlert className="h-4 w-4 text-primary" />
-          Yeni CRM Raporu
+          {t('crm.newTitle')}
         </h2>
         <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-4">
-          <Input label="Başlık" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <Input label={t('crm.title')} name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <div className="flex flex-col gap-1.5">
-            <label className="eyebrow text-[11px] text-on-surface-variant">Açıklama</label>
+            <label className="eyebrow text-[11px] text-on-surface-variant">{t('crm.description')}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -518,7 +526,7 @@ function CrmTab({
             />
           </div>
           <Select
-            label="Ciddiyet Seviyesi"
+            label={t('crm.severity')}
             value={severityLevel}
             onChange={(e) => setSeverityLevel(e.target.value as SeverityLevel)}
           >
@@ -535,7 +543,7 @@ function CrmTab({
               onChange={(e) => setIsAnonymous(e.target.checked)}
               className="h-4 w-4 rounded border-outline-variant bg-surface-container-lowest accent-primary"
             />
-            Anonim olarak gönder
+            {t('crm.anonymousToggle')}
           </label>
           {error && (
             <p role="alert" className="text-sm text-error">
@@ -543,7 +551,7 @@ function CrmTab({
             </p>
           )}
           <Button type="submit" icon={ShieldAlert} disabled={isSubmitting}>
-            {isSubmitting ? 'Gönderiliyor…' : 'Raporu Gönder'}
+            {isSubmitting ? t('crm.submitting') : t('crm.submit')}
           </Button>
         </form>
       </Card>

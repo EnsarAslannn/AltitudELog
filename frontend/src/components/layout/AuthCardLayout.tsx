@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { PlaneTakeoff } from 'lucide-react'
 import { VideoBackdrop } from '../common/VideoBackdrop'
+import { LanguageToggle } from '../ui/LanguageToggle'
 
 interface AuthCardLayoutProps {
   title: string
@@ -16,15 +17,18 @@ export function AuthCardLayout({ title, subtitle, children, footer }: AuthCardLa
       <VideoBackdrop />
 
       <div className="air-surface relative z-10 w-full max-w-md rounded-2xl p-6 shadow-[var(--shadow-panel-hover)] sm:p-9">
-        <Link
-          to="/"
-          className="mb-9 inline-flex w-fit items-center gap-2.5 rounded-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
-            <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
-          </span>
-          <span className="display text-lg tracking-tight">AltitudELog</span>
-        </Link>
+        <div className="mb-9 flex items-center gap-3">
+          <LanguageToggle variant="surface" />
+          <Link
+            to="/"
+            className="inline-flex w-fit items-center gap-2.5 rounded-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
+              <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+            </span>
+            <span className="display text-lg tracking-tight">AltitudELog</span>
+          </Link>
+        </div>
 
         <h1 className="text-[1.75rem] font-medium leading-tight tracking-[-0.02em] text-on-surface">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{subtitle}</p>

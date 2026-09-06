@@ -1,8 +1,9 @@
+import type { Translate } from '../i18n'
 import type { ApiError } from '../types/problemDetails'
 
-export function apiErrorMessage(error: ApiError, fallback: string): string {
+export function apiErrorMessage(error: ApiError, t: Translate, fallback: string): string {
   if (error.status === 409) {
-    return 'Bu kayıt başka bir işlem tarafından değiştirilmiş. Sayfayı yenileyip tekrar deneyin.'
+    return t('api.conflict')
   }
 
   return error.detail ?? error.title ?? fallback

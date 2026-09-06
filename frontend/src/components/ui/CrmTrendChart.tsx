@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT, type TranslationKey } from '../../i18n'
 import type { MonthlyCrmTrendDto } from '../../types/stats'
 import type { SeverityLevel } from '../../types/crmReport'
 
@@ -15,7 +16,10 @@ const severityColor: Record<SeverityLevel, string> = {
   Critical: '#b3261e',
 }
 
-const monthLabels = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+/** 1-based month number to its short-name key; the chart labels one bar cluster per month. */
+function monthLabelKey(month: number): TranslationKey {
+  return `chart.month.${month}` as TranslationKey
+}
 
 const CHART_WIDTH = 640
 const CHART_HEIGHT = 220
@@ -34,6 +38,7 @@ type HoveredBar = { monthIndex: number; severity: SeverityLevel; x: number; y: n
 
 export function CrmTrendChart({ data }: CrmTrendChartProps) {
   const [hovered, setHovered] = useState<HoveredBar | null>(null)
+  const t = useT()
 
   const maxCount = Math.max(1, ...data.flatMap((m) => severityOrder.map((s) => m.countsBySeverity[s] ?? 0)))
   const plotHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM
@@ -49,7 +54,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           className="w-full"
           role="img"
-          aria-label="CRM raporları — son 6 ay ciddiyet trendi"
+          aria-label={t('chart.crmTrendLabel')}
         >
           <line
             x1={PADDING_X}
@@ -109,7 +114,7 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
                   fontSize={10}
                   fill="#4a5573"
                 >
-                  {monthLabels[month.month - 1]}
+                  {t(monthLabelKey(month.month))}
                 </text>
               </g>
             )
@@ -127,7 +132,9 @@ export function CrmTrendChart({ data }: CrmTrendChartProps) {
           >
             <span className="font-medium text-on-surface">{hovered.severity}</span>
             <span className="ml-1.5 text-on-surface-variant">
-              {data[hovered.monthIndex].countsBySeverity[hovered.severity] ?? 0} rapor
+              {t('chart.reportCount', {
+                count: data[hovered.monthIndex].countsBySeverity[hovered.severity] ?? 0,
+              })}
             </span>
           </div>
         )}

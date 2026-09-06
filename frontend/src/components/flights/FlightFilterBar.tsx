@@ -5,16 +5,17 @@ import { Card } from '../ui/Card'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { aircraftTypes } from '../../data/aircraftTypes'
+import { useT, type TranslationKey } from '../../i18n'
 import { FLIGHT_SORT_FIELDS, type FlightQuery, type FlightSortField } from '../../types/flight'
 
 const SEARCH_DEBOUNCE_MS = 350
 
-const sortLabel: Record<FlightSortField, string> = {
-  Date: 'Tarih',
-  FlightTime: 'Uçuş Süresi',
-  OriginICAO: 'Kalkış',
-  DestinationICAO: 'Varış',
-  AircraftType: 'Uçak Tipi',
+const sortLabelKey: Record<FlightSortField, TranslationKey> = {
+  Date: 'filters.sort.date',
+  FlightTime: 'filters.sort.flightTime',
+  OriginICAO: 'filters.sort.origin',
+  DestinationICAO: 'filters.sort.destination',
+  AircraftType: 'filters.sort.aircraftType',
 }
 
 interface FlightFilterBarProps {
@@ -36,6 +37,7 @@ export function FlightFilterBar({
 }: FlightFilterBarProps) {
   const panelId = useId()
   const [isOpen, setIsOpen] = useState(activeFilterCount > 0)
+  const t = useT()
 
   const [searchDraft, setSearchDraft] = useState(query.search ?? '')
 
@@ -58,11 +60,11 @@ export function FlightFilterBar({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
           <Input
-            label="Ara"
+            label={t('filters.search')}
             name="search"
             type="search"
             icon={Search}
-            placeholder="Havaalanı veya uçak tipi (örn. LTFM, A320)"
+            placeholder={t('filters.searchPlaceholder')}
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
           />
@@ -75,7 +77,7 @@ export function FlightFilterBar({
             aria-controls={panelId}
             onClick={() => setIsOpen((open) => !open)}
           >
-            Filtreler
+            {t('filters.toggle')}
             {activeFilterCount > 0 && (
               <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold text-on-primary">
                 {activeFilterCount}
@@ -84,7 +86,7 @@ export function FlightFilterBar({
           </Button>
           {activeFilterCount > 0 && (
             <Button variant="ghost" icon={X} onClick={onClear}>
-              Temizle
+              {t('filters.clear')}
             </Button>
           )}
         </div>
@@ -94,7 +96,7 @@ export function FlightFilterBar({
         <div id={panelId} className="flex flex-col gap-4 border-t border-outline-variant pt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Input
-              label="Başlangıç Tarihi"
+              label={t('filters.dateFrom')}
               name="dateFrom"
               type="date"
               max={query.dateTo || today}
@@ -102,7 +104,7 @@ export function FlightFilterBar({
               onChange={(e) => onChange({ dateFrom: e.target.value })}
             />
             <Input
-              label="Bitiş Tarihi"
+              label={t('filters.dateTo')}
               name="dateTo"
               type="date"
               min={query.dateFrom || undefined}
@@ -111,12 +113,12 @@ export function FlightFilterBar({
               onChange={(e) => onChange({ dateTo: e.target.value })}
             />
             <Select
-              label="Uçak Tipi"
+              label={t('filters.aircraftType')}
               name="aircraftType"
               value={query.aircraftType ?? ''}
               onChange={(e) => onChange({ aircraftType: e.target.value })}
             >
-              <option value="">Tümü</option>
+              <option value="">{t('common.all')}</option>
               {aircraftTypes.map((type) => (
                 <option key={type.code} value={type.code}>
                   {type.code} — {type.label}
@@ -124,22 +126,22 @@ export function FlightFilterBar({
               ))}
             </Select>
             <Select
-              label="Durum"
+              label={t('filters.status')}
               name="isCancelled"
               value={query.isCancelled === undefined ? '' : String(query.isCancelled)}
               onChange={(e) =>
                 onChange({ isCancelled: e.target.value === '' ? undefined : e.target.value === 'true' })
               }
             >
-              <option value="">Tümü</option>
-              <option value="false">Aktif</option>
-              <option value="true">İptal Edilmiş</option>
+              <option value="">{t('common.all')}</option>
+              <option value="false">{t('filters.status.active')}</option>
+              <option value="true">{t('filters.status.cancelled')}</option>
             </Select>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Input
-              label="Kalkış (ICAO)"
+              label={t('filters.origin')}
               name="origin"
               maxLength={4}
               placeholder="LTFM"
@@ -147,7 +149,7 @@ export function FlightFilterBar({
               onChange={(e) => onChange({ originICAO: e.target.value.toUpperCase() })}
             />
             <Input
-              label="Varış (ICAO)"
+              label={t('filters.destination')}
               name="destination"
               maxLength={4}
               placeholder="EGLL"
@@ -155,14 +157,14 @@ export function FlightFilterBar({
               onChange={(e) => onChange({ destinationICAO: e.target.value.toUpperCase() })}
             />
             <Select
-              label="Sırala"
+              label={t('filters.sort')}
               name="sortBy"
               value={query.sortBy ?? 'Date'}
               onChange={(e) => onChange({ sortBy: e.target.value as FlightSortField })}
             >
               {FLIGHT_SORT_FIELDS.map((field) => (
                 <option key={field} value={field}>
-                  {sortLabel[field]}
+                  {t(sortLabelKey[field])}
                 </option>
               ))}
             </Select>
@@ -172,7 +174,7 @@ export function FlightFilterBar({
                 icon={query.sortDescending === false ? ArrowUpNarrowWide : ArrowDownNarrowWide}
                 onClick={() => onChange({ sortDescending: !(query.sortDescending ?? true) })}
               >
-                {query.sortDescending === false ? 'Artan' : 'Azalan'}
+                {query.sortDescending === false ? t('filters.sortAscending') : t('filters.sortDescending')}
               </Button>
             </div>
           </div>
@@ -181,10 +183,10 @@ export function FlightFilterBar({
 
       <p aria-live="polite" className="text-xs text-on-surface-variant">
         {isLoading
-          ? 'Uçuşlar filtreleniyor…'
+          ? t('filters.filtering')
           : activeFilterCount > 0
-            ? `${resultCount} uçuş bulundu.`
-            : `Toplam ${resultCount} uçuş.`}
+            ? t('filters.matchCount', { count: resultCount })
+            : t('filters.totalCount', { count: resultCount })}
       </p>
     </Card>
   )
