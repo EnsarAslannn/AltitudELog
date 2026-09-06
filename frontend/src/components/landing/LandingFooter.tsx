@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { PlaneTakeoff } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
+import { useT } from '../../i18n'
 
 export function LandingFooter() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const t = useT()
 
   const linkClass =
     'air-underline w-fit text-sm font-medium text-[color:var(--air-accent)] transition-opacity hover:opacity-70'
@@ -22,48 +24,52 @@ export function LandingFooter() {
             <span className="text-lg font-medium tracking-tight text-[color:var(--air-fg)]">AltitudELog</span>
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-[color:var(--air-fg-muted)]">
-            Uçuş, mürettebat ve CRM kayıtları için tek operasyon defteri.
+            {t('landing.footer.tagline')}
           </p>
         </div>
 
-        <nav className="flex flex-col gap-3" aria-label="Alt menü">
-          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">Hesap</span>
+        <nav className="flex flex-col gap-3" aria-label={t('landing.footer.bottomMenu')}>
+          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">
+            {t('landing.footer.account')}
+          </span>
           {isAuthenticated ? (
             <Link to="/dashboard" className={linkClass}>
-              Panele Git
+              {t('cta.dashboard')}
             </Link>
           ) : (
             <>
               <Link to="/login" className={linkClass}>
-                Giriş Yap
+                {t('cta.login')}
               </Link>
               <Link to="/register" className={linkClass}>
-                Hesap Oluştur
+                {t('cta.register')}
               </Link>
               <Link to="/forgot-password" className={linkClass}>
-                Şifremi Unuttum
+                {t('landing.footer.forgotPassword')}
               </Link>
             </>
           )}
         </nav>
 
-        <nav className="flex flex-col gap-3" aria-label="Bölümler">
-          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">Bölümler</span>
+        <nav className="flex flex-col gap-3" aria-label={t('landing.footer.sections')}>
+          <span className="eyebrow text-xs font-medium text-[color:var(--air-fg-muted)]">
+            {t('landing.footer.sections')}
+          </span>
           <a href="#ucus-kaydi" className={sectionLinkClass}>
-            Uçuş Kaydı
+            {t('landing.footer.flightLog')}
           </a>
           <a href="#crm" className={sectionLinkClass}>
-            CRM Raporları
+            {t('landing.footer.crm')}
           </a>
           <a href="#logbook" className={sectionLinkClass}>
-            Logbook
+            {t('landing.footer.logbook')}
           </a>
         </nav>
       </div>
 
       <div className="relative z-30 mx-auto mt-12 max-w-[1150px] border-t border-[color:var(--air-rule)] px-5 pt-6 sm:px-8">
         <p className="text-xs text-[color:var(--air-fg-muted)]">
-          © {new Date().getFullYear()} AltitudELog — Flight &amp; CRM Logbook.
+          {t('landing.footer.copyright', { year: new Date().getFullYear() })}
         </p>
       </div>
     </footer>

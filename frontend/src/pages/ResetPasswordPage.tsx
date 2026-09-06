@@ -5,12 +5,14 @@ import { authService } from '../services/authService'
 import { AuthCardLayout } from '../components/layout/AuthCardLayout'
 import { AuthField } from '../components/ui/AuthField'
 import { Button } from '../components/ui/Button'
+import { useT } from '../i18n'
 import type { ApiError } from '../types/problemDetails'
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const navigate = useNavigate()
+  const t = useT()
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -22,7 +24,7 @@ export function ResetPasswordPage() {
     setError(null)
 
     if (newPassword !== confirmPassword) {
-      setError('Şifreler eşleşmiyor.')
+      setError(t('resetPassword.mismatch'))
       return
     }
 
@@ -34,8 +36,8 @@ export function ResetPasswordPage() {
       const apiError = err as ApiError
       setError(
         apiError.status === 401
-          ? 'Bağlantı geçersiz veya süresi dolmuş. Yeniden sıfırlama isteği gönderin.'
-          : (apiError.detail ?? apiError.title ?? 'Şifre sıfırlanamadı.'),
+          ? t('resetPassword.expired')
+          : (apiError.detail ?? apiError.title ?? t('resetPassword.failed')),
       )
     } finally {
       setIsSubmitting(false)
@@ -44,29 +46,29 @@ export function ResetPasswordPage() {
 
   return (
     <AuthCardLayout
-      title="Şifre Sıfırla"
-      subtitle="Yeni şifrenizi girin. En az sekiz karakter olmalıdır."
+      title={t('resetPassword.title')}
+      subtitle={t('resetPassword.subtitle')}
       footer={
         <Link
           to="/login"
           className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface"
         >
-          Girişe dön
+          {t('resetPassword.backToLogin')}
         </Link>
       }
     >
       {token === '' ? (
         <p role="alert" className="text-sm text-error">
-          Bağlantı geçersiz. Sıfırlama e-postasındaki bağlantıyı olduğu gibi kullanın veya{' '}
+          {t('resetPassword.invalidLinkLead')}{' '}
           <Link to="/forgot-password" className="font-medium underline underline-offset-4">
-            yeni bir istek gönderin
+            {t('resetPassword.invalidLinkAction')}
           </Link>
           .
         </p>
       ) : (
         <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-5">
           <AuthField
-            label="Yeni Şifre"
+            label={t('resetPassword.newPassword')}
             name="newPassword"
             type="password"
             icon={Lock}
@@ -77,7 +79,7 @@ export function ResetPasswordPage() {
             required
           />
           <AuthField
-            label="Yeni Şifre (Tekrar)"
+            label={t('resetPassword.confirmPassword')}
             name="confirmPassword"
             type="password"
             icon={Lock}
@@ -99,7 +101,7 @@ export function ResetPasswordPage() {
             disabled={isSubmitting}
             className="mt-1 h-12 w-full rounded-[10px]"
           >
-            {isSubmitting ? 'Kaydediliyor…' : 'Şifreyi Sıfırla'}
+            {isSubmitting ? t('common.saving') : t('resetPassword.submit')}
           </Button>
         </form>
       )}

@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Skeleton } from '../components/ui/Skeleton'
+import { useT } from '../i18n'
 import type { FlightDto } from '../types/flight'
 import type { ApiError } from '../types/problemDetails'
 
@@ -15,6 +16,7 @@ export function EditFlightPage() {
   const { id } = useParams<{ id: string }>()
   const flightId = id!
   const navigate = useNavigate()
+  const t = useT()
 
   const [flight, setFlight] = useState<FlightDto | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -33,7 +35,9 @@ export function EditFlightPage() {
       .catch((err) => {
         if (cancelled) return
         const apiError = err as ApiError
-        setError(apiError.status === 404 ? 'Uçuş bulunamadı.' : (apiError.title ?? 'Uçuş yüklenemedi.'))
+        setError(
+          apiError.status === 404 ? t('editFlight.notFound') : (apiError.title ?? t('editFlight.loadFailed')),
+        )
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
@@ -42,7 +46,7 @@ export function EditFlightPage() {
     return () => {
       cancelled = true
     }
-  }, [flightId])
+  }, [flightId, t])
 
   async function handleSubmit(values: FlightFormValues) {
     await flightService.update(flightId, {
@@ -58,7 +62,7 @@ export function EditFlightPage() {
   if (isLoading) {
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-6" aria-busy="true">
-        <span className="sr-only">Yükleniyor…</span>
+        <span className="sr-only">{t('common.loading')}</span>
         <Skeleton className="h-24 rounded-lg" />
         <Skeleton className="h-96 rounded-lg" />
       </div>
@@ -69,7 +73,7 @@ export function EditFlightPage() {
     return (
       <Card className="mx-auto max-w-lg border-error/30 bg-error/5">
         <p role="alert" className="text-sm text-error">
-          {error ?? 'Uçuş bulunamadı.'}
+          {error ?? t('editFlight.notFound')}
         </p>
       </Card>
     )
@@ -79,13 +83,13 @@ export function EditFlightPage() {
     return (
       <Card className="mx-auto flex max-w-lg flex-col items-start gap-4">
         <Badge tone="red" icon={Ban}>
-          İptal Edildi
+          {t('flight.cancelled')}
         </Badge>
         <p className="text-sm text-on-surface-variant">
-          Bu uçuş iptal edilmiş ve artık düzenlenemez.
+          {t('editFlight.cancelledNote')}
         </p>
         <Link to={`/flights/${flightId}`}>
-          <Button variant="secondary">Uçuş detayına dön</Button>
+          <Button variant="secondary">{t('editFlight.backToDetail')}</Button>
         </Link>
       </Card>
     )
@@ -96,13 +100,13 @@ export function EditFlightPage() {
       <section className="rise">
         <div className="flex flex-col justify-center gap-2">
           <Eyebrow tone="soft" rule={false}>
-            Captain · Flight Plan
+            {t('createFlight.eyebrow')}
           </Eyebrow>
           <h1 className="on-photo display text-3xl leading-[1.15] text-on-surface sm:text-4xl">
-            Uçuşu Düzenle
+            {t('editFlight.title')}
           </h1>
           <p className="max-w-md text-sm text-on-surface-variant">
-            Rota bilgisini güncelleyin. Kalkış havaalanı değişirse METAR yeniden çekilir.
+            {t('editFlight.subtitle')}
           </p>
         </div>
       </section>
@@ -115,8 +119,8 @@ export function EditFlightPage() {
           aircraftType: flight.aircraftType,
           date: flight.date,
         }}
-        submitLabel="Değişiklikleri Kaydet"
-        submittingLabel="Kaydediliyor…"
+        submitLabel={t('editFlight.submit')}
+        submittingLabel={t('common.saving')}
         submitIcon={Save}
         onSubmit={handleSubmit}
       />

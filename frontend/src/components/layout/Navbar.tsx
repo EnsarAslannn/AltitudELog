@@ -4,7 +4,9 @@ import { useAuthStore } from '../../store/authStore'
 import { authService } from '../../services/authService'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
+import { LanguageToggle } from '../ui/LanguageToggle'
 import { cn } from '../../lib/cn'
+import { useT } from '../../i18n'
 import { hasCommandRank } from '../../routes/ranks'
 import type { PilotRank } from '../../types/auth'
 
@@ -19,6 +21,7 @@ export function Navbar() {
   const { username, rank, pilotId, logout } = useAuthStore()
   const navigate = useNavigate()
   const isCommand = hasCommandRank(rank)
+  const t = useT()
 
   function handleLogout() {
     authService.logout().catch(() => {})
@@ -42,28 +45,31 @@ export function Navbar() {
     )
 
   const destinations = [
-    { to: '/dashboard', label: 'Uçuşlar', icon: null, end: true, show: true },
-    { to: '/flights/new', label: 'Yeni Uçuş', icon: PlaneTakeoff, end: false, show: isCommand },
-    { to: `/pilots/${pilotId}`, label: 'Profil', icon: User, end: false, show: !!pilotId },
-    { to: '/admin/stats', label: 'İstatistikler', icon: BarChart3, end: false, show: isCommand },
+    { to: '/dashboard', label: t('appNav.flights'), icon: null, end: true, show: true },
+    { to: '/flights/new', label: t('appNav.newFlight'), icon: PlaneTakeoff, end: false, show: isCommand },
+    { to: `/pilots/${pilotId}`, label: t('appNav.profile'), icon: User, end: false, show: !!pilotId },
+    { to: '/admin/stats', label: t('appNav.stats'), icon: BarChart3, end: false, show: isCommand },
   ].filter((d) => d.show)
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/20 bg-white/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-5">
         <div className="flex items-center gap-10">
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-blue"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
-              <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} />
-            </span>
-            <span className="display text-xl text-on-surface">
-              Altitud<span className="text-on-surface">E</span>Log
-            </span>
-          </Link>
-          <nav className="hidden items-center gap-7 sm:flex" aria-label="Ana menü">
+          <div className="flex items-center gap-3">
+            <LanguageToggle variant="surface" />
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-blue"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-on-primary">
+                <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} />
+              </span>
+              <span className="display text-xl text-on-surface">
+                Altitud<span className="text-on-surface">E</span>Log
+              </span>
+            </Link>
+          </div>
+          <nav className="hidden items-center gap-7 sm:flex" aria-label={t('appNav.mainMenu')}>
             {destinations.map(({ to, label, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end} className={linkClass}>
                 {Icon && <Icon className="h-3.5 w-3.5" />}
@@ -85,14 +91,14 @@ export function Navbar() {
             onClick={handleLogout}
             className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
           >
-            <span className="hidden sm:inline">Çıkış</span>
+            <span className="hidden sm:inline">{t('appNav.logout')}</span>
           </Button>
         </div>
       </div>
 
       <nav
         className="flex gap-2 overflow-x-auto border-t border-outline-variant/30 px-4 pb-3 pt-2 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        aria-label="Ana menü"
+        aria-label={t('appNav.mainMenu')}
       >
         {destinations.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={mobileLinkClass}>

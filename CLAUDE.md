@@ -500,6 +500,41 @@ solution/build — it's a separate `npm` project.
 - `src/services/`: one thin service module per backend resource (`authService`, `flightService`, `crewService`,
   `crmReportService`, `pilotService`), all going through `apiClient`.
 
+### Frontend — language (TR/EN)
+
+The whole SPA is bilingual, **Turkish by default**. `src/i18n/` holds two flat dictionaries with identical keys
+(`tr.ts` is the source of truth — `en.ts` is typed as `Record<keyof typeof tr, string>`, so a key added to one
+and not the other fails `tsc`) plus `index.ts`, which owns the `useLanguageStore` (`zustand` + `persist`,
+`localStorage` key `altitudelog-language`, defaulting to `'tr'`), the `useT()` translator, `useLanguage()` and
+`useLocaleTag()`. `translate()` interpolates `{name}` placeholders and falls back to the Turkish string rather
+than rendering a raw key. Switching language also writes `document.documentElement.lang` and mirrors across
+tabs through a `storage` listener, the same way `authStore` does.
+
+**It is a store, not a React context, on purpose**: components call `useT()` directly and every existing test
+renders them with no provider wrapper. A context would mean wrapping every test render.
+
+`src/components/ui/LanguageToggle.tsx` is the `TR | EN` control, sitting **to the left of the AltitudELog
+wordmark** in `LandingNav`, `Navbar`, `AuthCardLayout` and `AuthSplitLayout` (in the split layout it is on the
+video panel at `lg` and in the form panel below it — exactly one is visible at any width), plus a fixed
+top-left copy on `NotFoundPage`, which has no chrome. Its three `variant`s exist because the control renders
+on three different grounds: `air` over the clip, `surface` on the light app chrome, `onDark` over the darkened
+auth video panel — see "Frontend — the video ground" below.
+
+Conventions when adding UI:
+- No user-visible string literals in components. Add the key to `tr.ts` **and** `en.ts`, then `t('key')`.
+- Domain enum values (`PilotRank`, `DutyRole`, `SeverityLevel`) render as their raw English tokens in both
+  languages — they are the API's vocabulary, not prose. Only the *descriptive* label around them is translated
+  (e.g. certificate status, which lives in `domainDisplay.ts` as `certStatusLabelKey` — a map of translation
+  keys, not text).
+- `apiErrorMessage(error, t, fallback)` takes the translator; server-supplied `detail`/`title` still pass
+  through untranslated, since the API answers in its own language.
+- Dates go through `useLocaleTag()` (`tr-TR` / `en-GB`), never a bare `toLocaleString()`.
+- `src/data/airports.ts` is deliberately **not** translated — city and airport names are proper nouns.
+- An effect that builds an error message with `t` carries `t` in its dependency array; a language switch
+  therefore refetches that page's data, which is what keeps the whole view in one language.
+
+`index.html` ships `lang="tr"` as the pre-hydration default; the store overwrites it on load.
+
 ### Frontend — the video ground
 
 **Every route in the app runs on one fixed background clip**, `public/videos/air-backdrop.mp4` ("Air 1"), via

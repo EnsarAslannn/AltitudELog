@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { AuthSplitLayout } from '../components/layout/AuthSplitLayout'
 import { AuthField } from '../components/ui/AuthField'
 import { Button } from '../components/ui/Button'
+import { useT } from '../i18n'
 import type { ApiError } from '../types/problemDetails'
 
 export function LoginPage() {
@@ -17,6 +18,7 @@ export function LoginPage() {
   const login = useAuthStore((state) => state.login)
   const navigate = useNavigate()
   const location = useLocation()
+  const t = useT()
   const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard'
 
   async function handleSubmit(event: FormEvent) {
@@ -29,7 +31,7 @@ export function LoginPage() {
       login(response, username)
       navigate(from, { replace: true })
     } catch (err) {
-      setError((err as ApiError).detail ?? (err as ApiError).title ?? 'Giriş başarısız.')
+      setError((err as ApiError).detail ?? (err as ApiError).title ?? t('login.failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -37,32 +39,32 @@ export function LoginPage() {
 
   return (
     <AuthSplitLayout
-      eyebrow="Flight Operations Console"
+      eyebrow={t('login.eyebrow')}
       title={
         <>
-          Uçuş kayıtlarınız
+          {t('login.titleLine1')}
           <br />
-          kokpitte başlar.
+          {t('login.titleLine2')}
         </>
       }
-      subtitle="Uçuşlar, mürettebat atamaları ve CRM raporları için operasyon defterinize giriş yapın."
-      formTitle="Giriş Yap"
-      formSubtitle="Hesabınıza erişmek için bilgilerinizi girin."
+      subtitle={t('login.subtitle')}
+      formTitle={t('login.formTitle')}
+      formSubtitle={t('login.formSubtitle')}
       footer={
         <>
-          Hesabın yok mu?{' '}
+          {t('login.noAccount')}{' '}
           <Link
             to="/register"
             className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface"
           >
-            Kayıt ol
+            {t('login.registerLink')}
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-5">
         <AuthField
-          label="Kullanıcı Adı"
+          label={t('login.username')}
           name="username"
           icon={User}
           autoComplete="username"
@@ -72,7 +74,7 @@ export function LoginPage() {
         />
         <div className="flex flex-col gap-2">
           <AuthField
-            label="Şifre"
+            label={t('login.password')}
             name="password"
             type="password"
             icon={Lock}
@@ -85,7 +87,7 @@ export function LoginPage() {
             to="/forgot-password"
             className="self-end text-xs font-medium text-on-surface-variant underline decoration-outline-variant underline-offset-4 transition-colors hover:text-on-surface hover:decoration-on-surface"
           >
-            Şifremi unuttum
+            {t('login.forgotPassword')}
           </Link>
         </div>
         {error && (
@@ -100,7 +102,7 @@ export function LoginPage() {
           disabled={isSubmitting}
           className="mt-1 h-12 w-full rounded-[10px]"
         >
-          {isSubmitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
+          {isSubmitting ? t('login.submitting') : t('login.formTitle')}
         </Button>
       </form>
     </AuthSplitLayout>

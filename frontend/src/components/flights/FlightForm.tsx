@@ -8,6 +8,7 @@ import { RouteRibbon } from '../ui/RouteRibbon'
 import { airports } from '../../data/airports'
 import { aircraftTypes } from '../../data/aircraftTypes'
 import { apiErrorMessage } from '../../lib/apiMessages'
+import { useT } from '../../i18n'
 import type { ApiError } from '../../types/problemDetails'
 
 export interface FlightFormValues {
@@ -41,6 +42,7 @@ export function FlightForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useT()
 
   const airportOptions = useMemo(
     () =>
@@ -76,7 +78,7 @@ export function FlightForm({
     } catch (err) {
       const apiError = err as ApiError
       setFieldErrors(apiError.fieldErrors)
-      setError(apiErrorMessage(apiError, 'İşlem başarısız.'))
+      setError(apiErrorMessage(apiError, t, t('flightForm.failed')))
     } finally {
       setIsSubmitting(false)
     }
@@ -98,7 +100,7 @@ export function FlightForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Combobox
-              label="Kalkış (ICAO)"
+              label={t('flightForm.origin')}
               name="originICAO"
               value={originICAO}
               onChange={(v) => setOriginICAO(v.toUpperCase())}
@@ -107,7 +109,7 @@ export function FlightForm({
               required
             />
             <Combobox
-              label="Varış (ICAO)"
+              label={t('flightForm.destination')}
               name="destinationICAO"
               value={destinationICAO}
               onChange={(v) => setDestinationICAO(v.toUpperCase())}
@@ -118,7 +120,7 @@ export function FlightForm({
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Tarih"
+              label={t('flightForm.date')}
               name="date"
               type="date"
               icon={CalendarDays}
@@ -129,7 +131,7 @@ export function FlightForm({
               required
             />
             <Input
-              label="Uçuş Süresi"
+              label={t('flightForm.flightTime')}
               name="flightTime"
               type="time"
               icon={Clock3}
@@ -140,7 +142,7 @@ export function FlightForm({
             />
           </div>
           <Combobox
-            label="Uçak Tipi"
+            label={t('flightForm.aircraftType')}
             name="aircraftType"
             icon={Wrench}
             value={aircraftType}
@@ -151,7 +153,7 @@ export function FlightForm({
           />
           <div className="flex items-start gap-2 rounded border border-outline-variant/40 bg-surface-container-low p-3 text-xs text-on-surface-variant">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant" />
-            <p>METAR bilgisi, uçuş kaydedildikten sonra sistem tarafından otomatik olarak alınır.</p>
+            <p>{t('flightForm.metarNote')}</p>
           </div>
           {error && <p className="text-sm text-error">{error}</p>}
           <Button type="submit" variant="primary" icon={SubmitIcon} disabled={isSubmitting}>

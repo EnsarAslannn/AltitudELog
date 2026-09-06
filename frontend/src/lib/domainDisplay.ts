@@ -13,6 +13,7 @@ import {
   User,
   UserCheck,
 } from 'lucide-react'
+import type { TranslationKey } from '../i18n'
 import type { PilotRank } from '../types/auth'
 import type { DutyRole } from '../types/crew'
 import type { SeverityLevel } from '../types/crmReport'
@@ -46,11 +47,12 @@ export const certStatusIcon: Record<CertStatus, typeof CheckCircle2> = {
   expired: AlertOctagon,
 }
 
-export const certStatusLabel: Record<CertStatus, string> = {
-  unknown: 'Belirtilmemiş',
-  valid: 'Geçerli',
-  expiringSoon: 'Yakında Doluyor',
-  expired: 'Süresi Doldu',
+/** Translation keys, not text — the caller resolves them with `useT()`. */
+export const certStatusLabelKey: Record<CertStatus, TranslationKey> = {
+  unknown: 'certStatus.unknown',
+  valid: 'certStatus.valid',
+  expiringSoon: 'certStatus.expiringSoon',
+  expired: 'certStatus.expired',
 }
 
 export const rankIcon: Record<PilotRank, typeof Shield> = {

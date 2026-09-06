@@ -15,6 +15,7 @@ import { Eyebrow } from '../components/ui/Eyebrow'
 import { Skeleton, SkeletonCard } from '../components/ui/Skeleton'
 import { StatTile } from '../components/ui/StatTile'
 import { certStatus, certStatusTone, rankIcon, severityIcon, severityTone } from '../lib/domainDisplay'
+import { useT } from '../i18n'
 import type { StatsDto } from '../types/stats'
 import type { PilotRank } from '../types/auth'
 import type { SeverityLevel } from '../types/crmReport'
@@ -32,6 +33,7 @@ export function AdminStatsPage() {
   const [stats, setStats] = useState<StatsDto | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
 
   useEffect(() => {
     let cancelled = false
@@ -44,7 +46,7 @@ export function AdminStatsPage() {
         if (!cancelled) setStats(data)
       })
       .catch((err) => {
-        if (!cancelled) setError((err as ApiError).title ?? 'İstatistikler yüklenemedi.')
+        if (!cancelled) setError((err as ApiError).title ?? t('stats.loadFailed'))
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
@@ -53,12 +55,12 @@ export function AdminStatsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [t])
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
-        <span className="sr-only">Yükleniyor…</span>
+        <span className="sr-only">{t('common.loading')}</span>
         <Skeleton className="h-24 rounded-lg" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-24 rounded-lg" />
@@ -75,7 +77,7 @@ export function AdminStatsPage() {
     return (
       <Card className="border-error/30 bg-error/5">
         <p role="alert" className="text-sm text-error">
-          {error ?? 'İstatistikler yüklenemedi.'}
+          {error ?? t('stats.loadFailed')}
         </p>
       </Card>
     )
@@ -86,23 +88,23 @@ export function AdminStatsPage() {
       <section className="rise">
         <div className="flex flex-col justify-center gap-2">
           <Eyebrow tone="soft" rule={false}>
-            Yönetim Paneli
+            {t('stats.eyebrow')}
           </Eyebrow>
           <h1 className="on-photo display text-3xl leading-[1.15] text-on-surface sm:text-4xl md:text-5xl">
-            Operasyon İstatistikleri
+            {t('stats.title')}
           </h1>
         </div>
       </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile icon={PlaneTakeoff} label="Toplam Uçuş" value={stats.totalFlights} />
-        <StatTile icon={CalendarDays} label="Bu Ay" value={stats.flightsThisMonth} />
-        <StatTile icon={Users} label="Toplam Pilot" value={stats.totalPilots} />
-        <StatTile icon={ShieldAlert} label="Toplam CRM Raporu" value={stats.totalCrmReports} />
+        <StatTile icon={PlaneTakeoff} label={t('stats.totalFlights')} value={stats.totalFlights} />
+        <StatTile icon={CalendarDays} label={t('stats.thisMonth')} value={stats.flightsThisMonth} />
+        <StatTile icon={Users} label={t('stats.totalPilots')} value={stats.totalPilots} />
+        <StatTile icon={ShieldAlert} label={t('stats.totalCrmReports')} value={stats.totalCrmReports} />
       </div>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Rütbeye Göre Pilotlar</Eyebrow>
+        <Eyebrow>{t('stats.pilotsByRank')}</Eyebrow>
         <div className="flex flex-col gap-3">
           {pilotRanks.map((rank) => {
             const RankIcon = rankIcon[rank]
@@ -124,7 +126,7 @@ export function AdminStatsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>CRM Trend (Son 6 Ay)</Eyebrow>
+        <Eyebrow>{t('stats.crmTrend')}</Eyebrow>
         <Card className="p-5">
           <Suspense fallback={<Skeleton className="h-[220px] rounded-lg" />}>
             <CrmTrendChart data={stats.crmTrendByMonth} />
@@ -133,10 +135,10 @@ export function AdminStatsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Yaklaşan Sertifika Süreleri</Eyebrow>
+        <Eyebrow>{t('stats.expiringCerts')}</Eyebrow>
         {stats.expiringCertifications.length === 0 ? (
           <Card className="py-8 text-center text-sm text-on-surface-variant">
-            Yaklaşan veya süresi dolmuş sertifika yok.
+            {t('stats.noExpiringCerts')}
           </Card>
         ) : (
           <div className="flex flex-col gap-3">
@@ -168,7 +170,7 @@ export function AdminStatsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <Eyebrow>Ciddiyete Göre CRM Raporları</Eyebrow>
+        <Eyebrow>{t('stats.crmBySeverity')}</Eyebrow>
         <div className="flex flex-col gap-3">
           {severityLevels.map((level) => {
             const SeverityIcon = severityIcon[level]

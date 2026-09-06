@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useReducedMotion } from 'framer-motion'
 import { PlaneTakeoff } from 'lucide-react'
+import { LanguageToggle } from '../ui/LanguageToggle'
 
 interface AuthSplitLayoutProps {
   eyebrow: string
@@ -53,7 +54,8 @@ export function AuthSplitLayout({
 
         <div className="absolute inset-0 hidden bg-gradient-to-t from-black/65 via-black/10 to-transparent lg:block" />
 
-        <div className="relative hidden lg:block">
+        <div className="relative hidden items-center gap-3 lg:flex">
+          <LanguageToggle variant="onDark" />
           <Link
             to="/"
             className="inline-flex items-center gap-2.5 rounded-lg text-whiteout focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-blue"
@@ -78,15 +80,18 @@ export function AuthSplitLayout({
 
       <div className="relative flex w-full items-center justify-center px-4 py-10 lg:w-1/4 lg:min-w-[380px] lg:shrink-0 lg:items-stretch lg:px-0 lg:py-0">
         <div className="air-surface w-full max-w-sm rounded-2xl p-6 shadow-[var(--shadow-panel-hover)] sm:p-8 lg:flex lg:max-h-screen lg:max-w-none lg:flex-col lg:[justify-content:safe_center] lg:overflow-y-auto lg:rounded-none lg:border-0 lg:border-l lg:border-outline-variant/50 lg:bg-surface-container-lowest lg:p-10 lg:shadow-none lg:backdrop-blur-none xl:p-12">
-          <Link
-            to="/"
-            className="mb-9 inline-flex w-fit items-center gap-2.5 rounded-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary lg:mb-10"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
-              <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
-            </span>
-            <span className="display text-lg tracking-tight">AltitudELog</span>
-          </Link>
+          <div className="mb-9 flex items-center gap-3 lg:mb-10">
+            <LanguageToggle variant="surface" className="lg:hidden" />
+            <Link
+              to="/"
+              className="inline-flex w-fit items-center gap-2.5 rounded-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
+                <PlaneTakeoff className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+              </span>
+              <span className="display text-lg tracking-tight">AltitudELog</span>
+            </Link>
+          </div>
 
           <h1 className="text-[1.75rem] font-medium leading-tight tracking-[-0.02em] text-on-surface">
             {formTitle}

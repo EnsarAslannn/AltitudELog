@@ -5,14 +5,15 @@ import { authService } from '../services/authService'
 import { AuthSplitLayout } from '../components/layout/AuthSplitLayout'
 import { AuthField, AuthSelect } from '../components/ui/AuthField'
 import { Button } from '../components/ui/Button'
+import { useT, type TranslationKey } from '../i18n'
 import type { PilotRank, RegisterRequest } from '../types/auth'
 import type { ApiError } from '../types/problemDetails'
 
-const rankOptions: { value: PilotRank; label: string }[] = [
-  { value: 'Trainee', label: 'Trainee — Stajyer' },
-  { value: 'FirstOfficer', label: 'First Officer — İkinci Pilot' },
-  { value: 'Captain', label: 'Captain — Kaptan Pilot' },
-  { value: 'ChiefPilot', label: 'Chief Pilot — Baş Pilot' },
+const rankOptions: { value: PilotRank; labelKey: TranslationKey }[] = [
+  { value: 'Trainee', labelKey: 'register.rank.trainee' },
+  { value: 'FirstOfficer', labelKey: 'register.rank.firstOfficer' },
+  { value: 'Captain', labelKey: 'register.rank.captain' },
+  { value: 'ChiefPilot', labelKey: 'register.rank.chiefPilot' },
 ]
 
 export function RegisterPage() {
@@ -31,6 +32,7 @@ export function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navigate = useNavigate()
+  const t = useT()
 
   function updateField(
     field: 'username' | 'password' | 'name' | 'licenseNumber' | 'email' | 'licenseExpiryDate' | 'medicalExpiryDate',
@@ -55,7 +57,7 @@ export function RegisterPage() {
     } catch (err) {
       const apiError = err as ApiError
       setFieldErrors(apiError.fieldErrors)
-      setError(apiError.detail ?? apiError.title ?? 'Kayıt başarısız.')
+      setError(apiError.detail ?? apiError.title ?? t('register.failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -63,32 +65,32 @@ export function RegisterPage() {
 
   return (
     <AuthSplitLayout
-      eyebrow="New Crew Onboarding"
+      eyebrow={t('register.eyebrow')}
       title={
         <>
-          Ekibe katılın,
+          {t('register.titleLine1')}
           <br />
-          göreve hazırlanın.
+          {t('register.titleLine2')}
         </>
       }
-      subtitle="Rütbenizi seçin ve hesabınızı oluşturun. Captain rütbesi uçuş ve mürettebat kaydı oluşturma yetkisi verir."
-      formTitle="Pilot Kaydı"
-      formSubtitle="Rütbenizi seçerek hesabınızı oluşturun."
+      subtitle={t('register.subtitle')}
+      formTitle={t('register.formTitle')}
+      formSubtitle={t('register.formSubtitle')}
       footer={
         <>
-          Zaten hesabın var mı?{' '}
+          {t('register.hasAccount')}{' '}
           <Link
             to="/login"
             className="font-medium text-on-surface underline decoration-outline-variant underline-offset-4 transition-colors hover:decoration-on-surface"
           >
-            Giriş yap
+            {t('register.loginLink')}
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="flex flex-col gap-5">
         <AuthField
-          label="Ad Soyad"
+          label={t('register.name')}
           name="name"
           icon={BadgeCheck}
           value={form.name}
@@ -97,7 +99,7 @@ export function RegisterPage() {
           required
         />
         <AuthField
-          label="Lisans Numarası"
+          label={t('register.licenseNumber')}
           name="licenseNumber"
           icon={IdCard}
           value={form.licenseNumber}
@@ -106,7 +108,7 @@ export function RegisterPage() {
           required
         />
         <AuthField
-          label="Kullanıcı Adı"
+          label={t('register.username')}
           name="username"
           icon={User}
           autoComplete="username"
@@ -116,7 +118,7 @@ export function RegisterPage() {
           required
         />
         <AuthField
-          label="E-posta"
+          label={t('register.email')}
           name="email"
           type="email"
           icon={Mail}
@@ -127,7 +129,7 @@ export function RegisterPage() {
           required
         />
         <AuthField
-          label="Şifre"
+          label={t('register.password')}
           name="password"
           type="password"
           icon={Lock}
@@ -138,7 +140,7 @@ export function RegisterPage() {
           required
         />
         <AuthField
-          label="Lisans Bitiş (opsiyonel)"
+          label={t('register.licenseExpiry')}
           name="licenseExpiryDate"
           type="date"
           icon={CalendarDays}
@@ -146,7 +148,7 @@ export function RegisterPage() {
           onChange={updateField('licenseExpiryDate')}
         />
         <AuthField
-          label="Medical Bitiş (opsiyonel)"
+          label={t('register.medicalExpiry')}
           name="medicalExpiryDate"
           type="date"
           icon={Stethoscope}
@@ -155,21 +157,20 @@ export function RegisterPage() {
         />
         <div className="flex flex-col gap-2">
           <AuthSelect
-            label="Rütbe"
+            label={t('register.rank')}
             name="rank"
             value={form.rank}
             onChange={(e) => setForm((prev) => ({ ...prev, rank: e.target.value as PilotRank }))}
           >
             {rankOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </option>
             ))}
           </AuthSelect>
           <p className="flex gap-1.5 text-xs leading-relaxed text-on-surface-variant">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            Captain seçerseniz uçuş ve mürettebat oluşturabilirsiniz. Bu bir demo özelliğidir — gerçek bir
-            sistemde rütbe ataması yönetici onayına tabi olur.
+            {t('register.rankNote')}
           </p>
         </div>
         {error && (
@@ -184,7 +185,7 @@ export function RegisterPage() {
           disabled={isSubmitting}
           className="mt-1 h-12 w-full rounded-[10px]"
         >
-          {isSubmitting ? 'Kayıt olunuyor…' : 'Kayıt Ol'}
+          {isSubmitting ? t('register.submitting') : t('register.submit')}
         </Button>
       </form>
     </AuthSplitLayout>

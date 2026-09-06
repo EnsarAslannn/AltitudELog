@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   certStatus,
   certStatusIcon,
-  certStatusLabel,
+  certStatusLabelKey,
   certStatusTone,
   dutyRoleIcon,
   rankIcon,
@@ -43,7 +43,7 @@ describe('display lookup tables', () => {
     for (const status of statuses) {
       expect(certStatusTone[status]).toBeDefined()
       expect(certStatusIcon[status]).toBeDefined()
-      expect(certStatusLabel[status]).toBeDefined()
+      expect(certStatusLabelKey[status]).toBeDefined()
     }
   })
 
