@@ -7,6 +7,7 @@ import {
   Pencil,
   Radio,
   ShieldAlert,
+  UserMinus,
   UserPlus,
   Users,
   XCircle,
@@ -229,7 +230,7 @@ export function FlightDetailPage() {
           crew={crew}
           pilots={pilots}
           canCommand={canCommand}
-          onCreated={refreshCrew}
+          onChanged={refreshCrew}
         />
       )}
       {tab === 'crm' && <CrmTab flightId={flightId} reports={reports} onCreated={refreshReports} />}
@@ -338,13 +339,13 @@ function CrewTab({
   crew,
   pilots,
   canCommand,
-  onCreated,
+  onChanged,
 }: {
   flightId: string
   crew: CrewDto[]
   pilots: PilotDto[]
   canCommand: boolean
-  onCreated: () => void
+  onChanged: () => void
 }) {
   const [pilotId, setPilotId] = useState('')
   const [dutyRole, setDutyRole] = useState<DutyRole>('PIC')
@@ -359,7 +360,7 @@ function CrewTab({
     try {
       await crewService.create({ flightId, pilotId, dutyRole })
       setPilotId('')
-      onCreated()
+      onChanged()
     } catch (err) {
       setError((err as ApiError).detail ?? (err as ApiError).title ?? t('crew.failed'))
     } finally {
@@ -376,27 +377,38 @@ function CrewTab({
         )}
         {crew.map((member) => {
           const RoleIcon = dutyRoleIcon[member.dutyRole]
+          const identity = (
+            <Link
+              to={`/pilots/${member.pilotId}`}
+              className="group flex min-w-0 items-center gap-3 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-signal-blue/35"
+            >
+              <span
+                className={cn(
+                  'data flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  member.dutyRole === 'PIC' ? 'bg-primary text-on-primary' : 'bg-primary/10 text-primary',
+                )}
+              >
+                {initials(member.pilotName)}
+              </span>
+              <span className="truncate font-medium text-on-surface transition-colors group-hover:text-primary">
+                {member.pilotName}
+              </span>
+            </Link>
+          )
+
+          // The command view puts a select and a remove button on the row, so the whole card can no
+          // longer be one link — nesting controls inside an anchor swallows their clicks.
           return (
-            <Link key={member.id} to={`/pilots/${member.pilotId}`} className="group block">
-              <Card interactive className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      'data flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
-                      member.dutyRole === 'PIC'
-                        ? 'bg-primary text-on-primary'
-                        : 'bg-primary/10 text-primary',
-                    )}
-                  >
-                    {initials(member.pilotName)}
-                  </span>
-                  <span className="font-medium text-on-surface">{member.pilotName}</span>
-                </div>
+            <Card key={member.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+              {identity}
+              {canCommand ? (
+                <CrewMemberControls member={member} onChanged={onChanged} />
+              ) : (
                 <Badge tone={member.dutyRole === 'PIC' ? 'solid' : 'neutral'} icon={RoleIcon}>
                   {member.dutyRole}
                 </Badge>
-              </Card>
-            </Link>
+              )}
+            </Card>
           )
         })}
       </div>
@@ -439,6 +451,124 @@ function CrewTab({
             </Button>
           </form>
         </Card>
+      )}
+    </div>
+  )
+}
+
+export function CrewMemberControls({
+  member,
+  onChanged,
+}: {
+  member: CrewDto
+  onChanged: () => void
+}) {
+  const [dutyRole, setDutyRole] = useState<DutyRole>(member.dutyRole)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
+  const [pending, setPending] = useState<'duty' | 'remove' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const t = useT()
+
+  // A 409 here means the row this control was drawn from is stale — the flight has since been
+  // cancelled, or someone else changed the assignment — so refetch and let the fresh list decide
+  // what is still on offer, exactly as CancelFlightControl does.
+  function report(err: unknown, fallback: string) {
+    const apiError = err as ApiError
+    setError(apiErrorMessage(apiError, t, fallback))
+
+    if (apiError.status === 409 || apiError.status === 404) {
+      onChanged()
+    }
+  }
+
+  async function handleDutyChange(next: DutyRole) {
+    const previous = dutyRole
+    setDutyRole(next)
+    setError(null)
+    setPending('duty')
+    try {
+      await crewService.updateDutyRole(member.id, next)
+      onChanged()
+    } catch (err) {
+      setDutyRole(previous)
+      report(err, t('crew.updateFailed'))
+    } finally {
+      setPending(null)
+    }
+  }
+
+  async function handleRemove() {
+    setError(null)
+    setPending('remove')
+    try {
+      await crewService.remove(member.id)
+      onChanged()
+      setConfirmingRemove(false)
+    } catch (err) {
+      report(err, t('crew.removeFailed'))
+    } finally {
+      setPending(null)
+    }
+  }
+
+  const isBusy = pending !== null
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {pending === 'duty' && (
+          <span className="text-xs font-medium text-on-surface-variant">{t('crew.updating')}</span>
+        )}
+        <select
+          aria-label={t('crew.changeDuty')}
+          value={dutyRole}
+          disabled={isBusy}
+          onChange={(event) => handleDutyChange(event.target.value as DutyRole)}
+          className="rounded border border-outline-variant bg-surface-container-lowest px-2.5 py-1.5 text-xs font-medium text-on-surface outline-none transition-colors focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:opacity-50"
+        >
+          {dutyRoles.map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
+
+        {confirmingRemove ? (
+          <>
+            <button
+              onClick={handleRemove}
+              disabled={isBusy}
+              className="flex items-center gap-1.5 rounded bg-error px-3 py-1.5 text-xs font-medium text-on-error transition-colors hover:bg-error-hover disabled:opacity-50"
+            >
+              <UserMinus className="h-3.5 w-3.5" />
+              {pending === 'remove' ? t('crew.removing') : t('crew.removeConfirm')}
+            </button>
+            <button
+              onClick={() => {
+                setConfirmingRemove(false)
+                setError(null)
+              }}
+              disabled={isBusy}
+              className="rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low disabled:opacity-50"
+            >
+              {t('crew.removeAbort')}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirmingRemove(true)}
+            disabled={isBusy}
+            className="flex items-center gap-1.5 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-low disabled:opacity-50"
+          >
+            <UserMinus className="h-3.5 w-3.5" />
+            {t('crew.remove')}
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="text-xs font-medium text-error">
+          {error}
+        </p>
       )}
     </div>
   )

@@ -43,3 +43,34 @@ Content-Type: application/json
 ###
 GET {{baseUrl}}/Flights
 Accept: application/json
+
+###
+
+###
+# Crew — assign, re-role, remove. All three are Captain/ChiefPilot only.
+POST {{baseUrl}}/Crew
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "flightId": "00000000-0000-0000-0000-000000000000",
+  "pilotId": "00000000-0000-0000-0000-000000000000",
+  "dutyRole": "SIC"
+}
+
+###
+
+###
+PUT {{baseUrl}}/Crew/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "dutyRole": "PIC"
+}
+
+###
+
+###
+DELETE {{baseUrl}}/Crew/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{login.response.body.token}}
