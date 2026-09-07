@@ -15,6 +15,10 @@ public class CRMReportConfiguration : IEntityTypeConfiguration<CRMReport>
         builder.HasIndex(r => r.FlightId);
         builder.HasIndex(r => r.ReporterId);
 
+        // The safety-review list is filtered by status far more often than by anything else — an
+        // open-reports queue is the whole point of it — and every row carries one of three values.
+        builder.HasIndex(r => r.Status);
+
         builder.Property(r => r.Title)
             .IsRequired()
             .HasMaxLength(200);
@@ -27,6 +31,11 @@ public class CRMReportConfiguration : IEntityTypeConfiguration<CRMReport>
             .IsRequired();
 
         builder.Property(r => r.SeverityLevel)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(r => r.Status)
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(50);

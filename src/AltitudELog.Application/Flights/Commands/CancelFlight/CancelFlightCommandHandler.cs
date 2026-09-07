@@ -10,11 +10,16 @@ namespace AltitudELog.Application.Flights.Commands.CancelFlight;
 public class CancelFlightCommandHandler : IRequestHandler<CancelFlightCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<CancelFlightCommandHandler> _logger;
 
-    public CancelFlightCommandHandler(IApplicationDbContext context, ILogger<CancelFlightCommandHandler> logger)
+    public CancelFlightCommandHandler(
+        IApplicationDbContext context,
+        ICurrentUserService currentUserService,
+        ILogger<CancelFlightCommandHandler> logger)
     {
         _context = context;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -29,6 +34,9 @@ public class CancelFlightCommandHandler : IRequestHandler<CancelFlightCommand>
         }
 
         flight.IsCancelled = true;
+        flight.CancelledAtUtc = DateTime.UtcNow;
+        flight.CancelledByPilotId = _currentUserService.PilotId;
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var crewPilotIds = await _context.Crew
@@ -39,6 +47,7 @@ public class CancelFlightCommandHandler : IRequestHandler<CancelFlightCommand>
         request.CacheKeysToInvalidate =
             [.. request.CacheKeysToInvalidate, .. crewPilotIds.Select(CacheKeys.PilotProfile)];
 
-        _logger.LogInformation("Flight {FlightId} cancelled", flight.Id);
+        _logger.LogInformation(
+            "Flight {FlightId} cancelled by pilot {PilotId}", flight.Id, flight.CancelledByPilotId);
     }
 }
