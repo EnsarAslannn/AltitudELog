@@ -15,6 +15,7 @@ import {
 import { flightService } from '../services/flightService'
 import { crewService } from '../services/crewService'
 import { crmReportService } from '../services/crmReportService'
+import { CrmStatusControl } from '../components/crm/CrmStatusControl'
 import { pilotService } from '../services/pilotService'
 import { useAuthStore } from '../store/authStore'
 import { AircraftSilhouette } from '../components/ui/AircraftSilhouette'
@@ -233,7 +234,14 @@ export function FlightDetailPage() {
           onChanged={refreshCrew}
         />
       )}
-      {tab === 'crm' && <CrmTab flightId={flightId} reports={reports} onCreated={refreshReports} />}
+      {tab === 'crm' && (
+        <CrmTab
+          flightId={flightId}
+          reports={reports}
+          canCommand={canCommand}
+          onChanged={refreshReports}
+        />
+      )}
     </div>
   )
 }
@@ -577,11 +585,13 @@ export function CrewMemberControls({
 function CrmTab({
   flightId,
   reports,
-  onCreated,
+  canCommand,
+  onChanged,
 }: {
   flightId: string
   reports: CRMReportDto[]
-  onCreated: () => void
+  canCommand: boolean
+  onChanged: () => void
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -601,7 +611,7 @@ function CrmTab({
       setTitle('')
       setDescription('')
       setIsAnonymous(false)
-      onCreated()
+      onChanged()
     } catch (err) {
       setError((err as ApiError).detail ?? (err as ApiError).title ?? t('crm.failed'))
     } finally {
@@ -620,18 +630,36 @@ function CrmTab({
           const SeverityIcon = severityIcon[report.severityLevel]
           return (
             <Card key={report.id} className={cn('border-l-4', severityBorder[report.severityLevel])}>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-semibold text-on-surface">{report.title}</p>
-                <Badge tone={severityTone[report.severityLevel]} icon={SeverityIcon}>
-                  {report.severityLevel}
-                </Badge>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Badge tone={severityTone[report.severityLevel]} icon={SeverityIcon}>
+                    {report.severityLevel}
+                  </Badge>
+                  <CrmStatusControl
+                    reportId={report.id}
+                    status={report.status}
+                    canReview={canCommand}
+                    onChanged={onChanged}
+                  />
+                </div>
               </div>
               <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">{report.description}</p>
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-outline">
+              <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-outline">
                 <span className="font-medium text-on-surface-variant">
                   {report.isAnonymous ? t('crm.anonymous') : (report.reporterName ?? t('crm.unknownReporter'))}
                 </span>
                 ·<span className="data">{new Date(report.createdDate).toLocaleString(localeTag)}</span>
+                {report.updatedAtUtc && (
+                  <>
+                    ·
+                    <span className="data">
+                      {t('crm.reviewedAt', {
+                        date: new Date(report.updatedAtUtc).toLocaleString(localeTag),
+                      })}
+                    </span>
+                  </>
+                )}
               </p>
             </Card>
           )

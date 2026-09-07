@@ -1,5 +1,6 @@
 using AltitudELog.Application.Common.Caching;
 using AltitudELog.Application.Common.Exceptions;
+using AltitudELog.Application.Common.Interfaces;
 using AltitudELog.Application.Flights.Commands.CancelFlight;
 using AltitudELog.Application.UnitTests.TestUtilities;
 using AltitudELog.Domain.Entities;
@@ -20,6 +21,17 @@ public class CancelFlightCommandHandlerTests
             .Options;
 
         return new TestApplicationDbContext(options);
+    }
+
+    private static readonly Guid ActingPilotId = Guid.NewGuid();
+
+    private static CancelFlightCommandHandler NewHandler(TestApplicationDbContext context)
+    {
+        var currentUser = Substitute.For<ICurrentUserService>();
+        currentUser.PilotId.Returns(ActingPilotId);
+
+        return new CancelFlightCommandHandler(
+            context, currentUser, Substitute.For<ILogger<CancelFlightCommandHandler>>());
     }
 
     private static Flight NewFlight() => new()
@@ -53,7 +65,7 @@ public class CancelFlightCommandHandlerTests
         context.Crew.Add(new AltitudELog.Domain.Entities.Crew { Id = Guid.NewGuid(), FlightId = flight.Id, PilotId = pilot.Id, DutyRole = DutyRole.PIC });
         await context.SaveChangesAsync();
 
-        var handler = new CancelFlightCommandHandler(context, Substitute.For<ILogger<CancelFlightCommandHandler>>());
+        var handler = NewHandler(context);
         var command = new CancelFlightCommand(flight.Id);
 
         await handler.Handle(command, CancellationToken.None);
@@ -65,7 +77,7 @@ public class CancelFlightCommandHandlerTests
     public async Task Handle_Should_Throw_NotFound_When_Flight_Does_Not_Exist()
     {
         await using var context = CreateContext();
-        var handler = new CancelFlightCommandHandler(context, Substitute.For<ILogger<CancelFlightCommandHandler>>());
+        var handler = NewHandler(context);
 
         var act = () => handler.Handle(new CancelFlightCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -80,7 +92,7 @@ public class CancelFlightCommandHandlerTests
         context.Flights.Add(flight);
         await context.SaveChangesAsync();
 
-        var handler = new CancelFlightCommandHandler(context, Substitute.For<ILogger<CancelFlightCommandHandler>>());
+        var handler = NewHandler(context);
 
         await handler.Handle(new CancelFlightCommand(flight.Id), CancellationToken.None);
 
@@ -97,7 +109,7 @@ public class CancelFlightCommandHandlerTests
         context.Flights.Add(flight);
         await context.SaveChangesAsync();
 
-        var handler = new CancelFlightCommandHandler(context, Substitute.For<ILogger<CancelFlightCommandHandler>>());
+        var handler = NewHandler(context);
 
         var act = () => handler.Handle(new CancelFlightCommand(flight.Id), CancellationToken.None);
 

@@ -1,8 +1,9 @@
+using AltitudELog.Domain.Common;
 using AltitudELog.Domain.Enums;
 
 namespace AltitudELog.Domain.Entities;
 
-public class Crew
+public class Crew : IAuditableEntity
 {
     public Guid Id { get; set; }
 
@@ -13,4 +14,9 @@ public class Crew
     public Pilot Pilot { get; set; } = null!;
 
     public DutyRole DutyRole { get; set; }
+
+    public DateTime? CreatedAtUtc { get; set; }
+    public Guid? CreatedByPilotId { get; set; }
+    public DateTime? UpdatedAtUtc { get; set; }
+    public Guid? UpdatedByPilotId { get; set; }
 }

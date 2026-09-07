@@ -3,11 +3,13 @@ import {
   AlertOctagon,
   AlertTriangle,
   CheckCircle2,
+  CircleDot,
   Crown,
   Eye,
   GraduationCap,
   HelpCircle,
   Info,
+  Search,
   Shield,
   ShieldCheck,
   User,
@@ -16,7 +18,7 @@ import {
 import type { TranslationKey } from '../i18n'
 import type { PilotRank } from '../types/auth'
 import type { DutyRole } from '../types/crew'
-import type { SeverityLevel } from '../types/crmReport'
+import type { CRMReportStatus, SeverityLevel } from '../types/crmReport'
 
 const CERT_WARNING_DAYS = 30
 
@@ -82,4 +84,23 @@ export const severityIcon: Record<SeverityLevel, typeof Info> = {
   Medium: AlertCircle,
   High: AlertTriangle,
   Critical: AlertOctagon,
+}
+
+export const crmStatusTone: Record<CRMReportStatus, 'neutral' | 'warning' | 'green'> = {
+  Open: 'warning',
+  UnderReview: 'neutral',
+  Closed: 'green',
+}
+
+export const crmStatusIcon: Record<CRMReportStatus, typeof CircleDot> = {
+  Open: CircleDot,
+  UnderReview: Search,
+  Closed: CheckCircle2,
+}
+
+/** Translation keys, not text — the caller resolves them with `useT()`. */
+export const crmStatusLabelKey: Record<CRMReportStatus, TranslationKey> = {
+  Open: 'crm.status.Open',
+  UnderReview: 'crm.status.UnderReview',
+  Closed: 'crm.status.Closed',
 }

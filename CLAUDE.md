@@ -79,6 +79,10 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   - `CRMReport.ReporterId` (nullable FK to `Pilot`) is tracked even when `IsAnonymous` is true — anonymity is
     enforced at the application/presentation layer, not by omitting the data. This is intentional for
     accountability/audit purposes.
+  - `CRMReport.Status` (`CRMReportStatus`: `Open`/`UnderReview`/`Closed`) is what closes the loop — a report
+    that can only be filed is a suggestion box. It is also the *only* field a filed report will change: the
+    title, description and severity are the reporter's account of what happened, and are deliberately not
+    editable. `CRMReportConfiguration` indexes it, since the review queue filters on it constantly.
   - `Flight.METARInfo` is populated asynchronously after creation by a Hangfire job, not at creation time — see
     "Background jobs & caching". `CreateFlightCommand` does not accept it as input; a Captain cannot set it at
     creation, only the Hangfire job writes it.
@@ -88,7 +92,28 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     (`Property<uint>("xmin").IsRowVersion()`, not `UseXminAsConcurrencyToken()` — that method doesn't exist on
     this Npgsql provider version) — a stale concurrent update throws `DbUpdateConcurrencyException`, mapped to
     `409` (see "API — Global exception handling").
-- `Enums/`: `PilotRank`, `DutyRole`, `SeverityLevel`.
+- `Enums/`: `PilotRank`, `DutyRole`, `SeverityLevel`, `CRMReportStatus`.
+
+**Audit trail.** `Domain/Common/IAuditableEntity.cs` declares two interfaces, and
+`ApplicationDbContext.SaveChanges`/`SaveChangesAsync` fill them from `ICurrentUserService` — centrally, so a new
+command cannot forget to. `IModificationAudited` (`UpdatedAtUtc`, `UpdatedByPilotId`) is implemented by
+`CRMReport`; `IAuditableEntity`, which adds `CreatedAtUtc`/`CreatedByPilotId`, by `Flight` and `Crew`. The split
+is deliberate: `CRMReport` already records who filed it and when (`ReporterId`, `CreatedDate`), and duplicating
+those as audit columns would give the same truth two homes. Three things worth knowing before changing this:
+- **`CreatedAtUtc` is nullable.** Rows written before the audit trail existed have no creation timestamp to
+  recover, and both alternatives — `0001-01-01`, or the migration's own run time — would be fabricated history
+  on a safety-relevant record. It is also null for anything written without a request behind it (a Hangfire job).
+- **The pilot ids carry no FK.** A pilot is never deleted here, so there is no delete-behaviour question, and
+  four more constraints on the write path buy nothing any read needs.
+- **`Flight.CancelledAtUtc`/`CancelledByPilotId` are separate from the `Updated*` pair**, set explicitly by
+  `CancelFlightCommandHandler`. A cancelled flight admits no further updates today, so `UpdatedBy` *would*
+  currently be the canceller — but cancellation is the one decision on this record anyone will later be asked
+  to account for, and reading it out of a generic "last modified" column means betting that guard is never
+  relaxed.
+
+The unit tests cannot see any of this: they run against `TestApplicationDbContext`, a plain InMemory context
+with no such override, and would pass whether the stamping works or not.
+`tests/AltitudELog.IntegrationTests/Common/AuditTrailTests.cs` is what actually guards it.
 
 ### Application (`src/AltitudELog.Application`)
 
@@ -228,7 +253,19 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     existence is a handler-side `NotFoundException`, see above;
     invalidates `crmreports:flight:{flightId}` and `stats:all`; resolves `ReporterId` via `ICurrentUserService`
     regardless of `IsAnonymous`, per the accountability note in the Domain section above),
-    `CRMReports/Queries/GetCRMReportsByFlight/` (cached per flight, 5 min).
+    `CRMReports/Commands/UpdateCRMReportStatus/` (**the only mutation a filed report accepts** — the title,
+    description and severity are the reporter's account of what happened, and a safety record whose narrative
+    can be rewritten after the fact is worth less than one that cannot. Mutable `CacheKeysToInvalidate`, since
+    the report's flight has to be read before `crmreports:flight:{id}` is knowable),
+    `CRMReports/Queries/GetCRMReportsByFlight/` (cached per flight, 5 min) and
+    `CRMReports/Queries/GetCRMReports/` — the safety-review queue: every report across every flight, paginated
+    (`PageNumber`/`PageSize`, 1-100) with `Search` (title + description), `Status`, `SeverityLevel`,
+    `DateFrom`/`DateTo`, `FlightId`, and `SortBy` (`CRMReportSortField`) + `SortDescending`. **Not cached**, for
+    the same reason `GetFlightsQuery` isn't. Two things to know before touching it: every count in
+    `CRMReportsPageResult` reflects the *filtered* set (same rule as `FlightsPageResult`), and sorting by
+    severity or status goes through the `SeverityRank`/`StatusRank` expressions rather than the column —
+    both enums are persisted as strings, so ordering by the column itself sorts Critical/High/Low/Medium
+    alphabetically and puts a Low report above a Medium one.
   - Each command/query, its handler, and any feature-specific DTO live together in its folder.
 - `DependencyInjection.cs`: `AddApplicationServices()` registers `FluentValidation` validators from this assembly
   and MediatR (with the three pipeline behaviors above, in order) against this assembly. Called from `Program.cs`.
@@ -247,15 +284,17 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   `LicenseNumber`; `CrewConfiguration` enforces a unique composite index on `(FlightId, PilotId)` to reject
   duplicate crew assignments at the DB level (in addition to the handler-level check).
 - `Persistence/ApplicationDbContext.cs`: implements `IApplicationDbContext`, applies all configurations via
-  `ApplyConfigurationsFromAssembly`.
+  `ApplyConfigurationsFromAssembly`, and **owns the audit trail** — see the audit-trail note at the end of the
+  Domain section above.
 - `Persistence/Migrations/`: EF Core migrations live here (in Infrastructure, next to the `DbContext`), not in
-  API. Eleven so far, all applied, in order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
+  API. In order: `InitialCreate` (creates `Flights`, `Pilots`, `Crew`, `CRMReports`),
   `AddPilotAuthFields` (`Pilots.Username` unique, `Pilots.PasswordHash`), `FormalizeNonClusteredIndexes` — this
   one has an **empty `Up()`/`Down()`**, it's a no-op that just records index state already reflected in the
   model snapshot; don't expect a schema diff from it — `AddPilotCertificateExpiry`, `AddFlightCancellation`,
   `AddPilotPasswordReset`, `AddFlightConcurrencyToken`, `AddPilotRefreshToken`,
   `AddAuthLookupIndexesAndNormalizeCredentials`, `AddRefreshTokenSessionTracking` (self-describing; back the
-  features documented elsewhere in this file), `AddPilotConcurrencyTokenAndNormalizeLicenseNumber`. Don't
+  features documented elsewhere in this file), `AddPilotConcurrencyTokenAndNormalizeLicenseNumber`,
+  `AddAuditTrailAndCRMReportStatus`. Don't
   hardcode this count/list in future edits to this doc —
   check `Persistence/Migrations/` directly, since new migrations land here regularly as features ship. Hangfire
   manages its own Postgres schema independently — no EF migration needed or expected for it.
@@ -269,6 +308,11 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
   `Sql(...)` guards itself with a `DO $$ ... RAISE EXCEPTION` block first: `LicenseNumber` is uniquely indexed,
   so upper-casing two rows that differ only by case would otherwise fail on the constraint with a raw Postgres
   error instead of a sentence explaining what to fix.
+
+  **A new non-nullable enum column needs its scaffolded `defaultValue` corrected by hand too.** EF writes
+  `defaultValue: ""` for a string-converted enum, and an empty string maps to no enum value at all — every
+  existing row then fails to materialise on the next read. `AddAuditTrailAndCRMReportStatus` is edited to
+  `defaultValue: "Open"`, which is also the truthful backfill: a report nobody has reviewed yet is Open.
 - `Identity/JwtTokenGenerator.cs`: implements `IJwtTokenGenerator` — HMAC-SHA256 signed token, claims are
   `NameIdentifier` (Pilot Id), `Name` (Username), `Role` (`Pilot.Rank.ToString()`, e.g. `"Captain"`). Reads
   `Jwt:Key`/`Jwt:Issuer`/`Jwt:Audience`/`Jwt:ExpiryMinutes` from `IConfiguration` directly (same pattern as the
@@ -380,9 +424,13 @@ exact-match list, not a rank hierarchy, so a Captain-only gate locks out `ChiefP
   carry a **`[Authorize(Roles = "Captain,ChiefPilot")]`** override tightening the class-level attribute; the
   two new ones answer `404` for an unknown assignment and `409` when the flight is already cancelled.
   `GET /Crew/flight/{flightId}` (→ `GetCrewByFlightQuery`, any authenticated pilot).
-- `Controllers/CRMReportsController.cs`: class-level `[Authorize]`, no extra role restriction. `POST /CRMReports`
-  (→ `CreateCRMReportCommand`), `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) — any
-  authenticated pilot can create/read CRM reports.
+- `Controllers/CRMReportsController.cs`: class-level `[Authorize]`. `POST /CRMReports`
+  (→ `CreateCRMReportCommand`) and `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) are open
+  to any authenticated pilot — filing and reading the reports on a flight you flew is the whole point of a CRM
+  system. The review side is not: `GET /CRMReports` (→ `GetCRMReportsQuery`, the cross-flight queue) and
+  `PUT /CRMReports/{id}/status` (→ `UpdateCRMReportStatusCommand`) both carry
+  **`[Authorize(Roles = "Captain,ChiefPilot")]`**, because a searchable index of every report ever filed is a
+  safety-management view rather than a crew one.
 - `Controllers/PilotsController.cs`, class-level **`[Authorize]`**. Reads split deliberately at the personal-data
   line: `GET /Pilots` (→ `GetPilotsQuery`, used by the frontend's crew-assignment picker) and
   `GET /Pilots/{id}` (→ `GetPilotProfileQuery`) stay open to any authenticated pilot, because currency and
@@ -489,7 +537,7 @@ re-introducing caching here; revisit with a version-counter key if profiling eve
 | `GetStatsQuery` | `stats:all` | `RegisterCommand`, `CreateFlightCommand`, `UpdateFlightCommand`, `CancelFlightCommand`, `CreateCRMReportCommand`, `UpdatePilotCertificatesCommand` |
 | `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateCrewCommand`, `RemoveCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight), `UpdatePilotCertificatesCommand` (the caller's own profile) |
 | `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand`, `UpdateCrewCommand`, `RemoveCrewCommand` (same flight only) |
-| `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand` (same flight only) |
+| `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand`, `UpdateCRMReportStatusCommand` (same flight only) |
 
 Both caching pipeline behaviors are **fail-open**: if Redis is unreachable, the request still succeeds (served
 from/written straight to Postgres, cache step skipped with a logged warning) rather than the API returning a
@@ -510,7 +558,8 @@ solution/build — it's a separate `npm` project.
 - `src/pages/`: `LandingPage` (public marketing page at `/`), `LoginPage`, `RegisterPage`,
   `ForgotPasswordPage`, `ResetPasswordPage`, `DashboardPage` (flight list, at `/dashboard`),
   `FlightDetailPage` (crew + CRM report tabs), `CreateFlightPage`/`EditFlightPage` (Captain-only),
-  `PilotProfilePage`, `AdminStatsPage`, `UnauthorizedPage`, `NotFoundPage`.
+  `PilotProfilePage`, `AdminStatsPage`, `SafetyReportsPage` (the cross-flight CRM review queue at
+  `/safety-reports`, command ranks only), `UnauthorizedPage`, `NotFoundPage`.
 - `src/routes/`: `ProtectedRoute` (redirects to `/login` if not authenticated), `CaptainRoute` (redirects to
   `/unauthorized` unless `rank === 'Captain'`), `CommandRoute` (same, but for `rank === 'Captain' ||
   rank === 'ChiefPilot'`) — mirror the API's role-based `[Authorize(Roles = "...")]` gates on the corresponding
@@ -603,6 +652,12 @@ between panels. `src/pages/LandingPage.test.tsx` guards the one-ground rule.
   uncompressed) and its decoder is WebAssembly, which is why `index.html`'s CSP `script-src` carries
   `'wasm-unsafe-eval'` — that token permits WebAssembly compilation only and still refuses `eval()`/
   `new Function()`, so do not widen it to `'unsafe-eval'`.
+- `src/components/common/ErrorBoundary.tsx` wraps `<RouterProvider>` in `App.tsx` — **outside** it on purpose,
+  since a crash thrown while the router itself renders has to be caught above it or nothing catches it. Without
+  one, a single bad render leaves a blank white page with no way back. It has to be a class component
+  (`getDerivedStateFromError` has no hook equivalent), which is why it reads `useLanguageStore.getState()`
+  directly instead of calling `useT()`. `SculptureLayer`'s own boundary stays where it is: a model failure
+  should still cost only the model.
 - `src/components/layout/`: `AppLayout` (signed-in shell), `AuthSplitLayout` (Login/Register — Air 2 on the left
   three quarters, form panel on the right quarter with a 380px floor so the fields stay usable below ~1520px),
   `AuthCardLayout` (forgot/reset — same clip, centred card), `Navbar`, `Footer`.

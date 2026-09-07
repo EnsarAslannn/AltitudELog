@@ -1,11 +1,18 @@
 using AltitudELog.Domain.Enums;
 
-namespace AltitudELog.Application.CRMReports.Queries.GetCRMReportsByFlight;
+namespace AltitudELog.Application.CRMReports.Queries.GetCRMReports;
 
-public class CRMReportDto
+/// <summary>
+/// A queue row. Carries the flight's route and date inline so the list reads without a lookup per
+/// row — the reviewer needs to know which flight a report belongs to before opening it.
+/// </summary>
+public class CRMReportListItemDto
 {
     public Guid Id { get; init; }
     public Guid FlightId { get; init; }
+    public string OriginICAO { get; init; } = string.Empty;
+    public string DestinationICAO { get; init; } = string.Empty;
+    public DateOnly FlightDate { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public bool IsAnonymous { get; init; }
