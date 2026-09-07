@@ -74,3 +74,22 @@ Content-Type: application/json
 ###
 DELETE {{baseUrl}}/Crew/00000000-0000-0000-0000-000000000000
 Authorization: Bearer {{login.response.body.token}}
+
+###
+
+###
+# CRM safety-review queue — Captain/ChiefPilot only.
+GET {{baseUrl}}/CRMReports?status=Open&sortBy=SeverityLevel&sortDescending=true
+Authorization: Bearer {{login.response.body.token}}
+Accept: application/json
+
+###
+
+###
+PUT {{baseUrl}}/CRMReports/00000000-0000-0000-0000-000000000000/status
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "status": "Closed"
+}

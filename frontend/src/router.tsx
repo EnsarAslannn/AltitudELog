@@ -12,6 +12,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { FlightDetailPage } from './pages/FlightDetailPage'
 import { PilotProfilePage } from './pages/PilotProfilePage'
 import { AdminStatsPage } from './pages/AdminStatsPage'
+import { SafetyReportsPage } from './pages/SafetyReportsPage'
 import { CreateFlightPage } from './pages/CreateFlightPage'
 import { EditFlightPage } from './pages/EditFlightPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
@@ -42,7 +43,10 @@ export const router = createBrowserRouter([
           },
           {
             element: <CommandRoute />,
-            children: [{ path: '/admin/stats', element: <AdminStatsPage /> }],
+            children: [
+              { path: '/admin/stats', element: <AdminStatsPage /> },
+              { path: '/safety-reports', element: <SafetyReportsPage /> },
+            ],
           },
         ],
       },

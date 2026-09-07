@@ -26,7 +26,9 @@ public class GetCRMReportsByFlightQueryHandler : IRequestHandler<GetCRMReportsBy
                 Description = r.Description,
                 IsAnonymous = r.IsAnonymous,
                 SeverityLevel = r.SeverityLevel,
+                Status = r.Status,
                 CreatedDate = r.CreatedDate,
+                UpdatedAtUtc = r.UpdatedAtUtc,
                 ReporterId = r.IsAnonymous ? null : r.ReporterId,
                 ReporterName = r.IsAnonymous ? null : r.Reporter!.Name
             })

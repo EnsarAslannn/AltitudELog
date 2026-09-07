@@ -1,5 +1,15 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { BarChart3, Crown, GraduationCap, LogOut, PlaneTakeoff, Shield, ShieldCheck, User } from 'lucide-react'
+import {
+  BarChart3,
+  Crown,
+  GraduationCap,
+  LogOut,
+  PlaneTakeoff,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  User,
+} from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { authService } from '../../services/authService'
 import { Badge } from '../ui/Badge'
@@ -48,6 +58,7 @@ export function Navbar() {
     { to: '/dashboard', label: t('appNav.flights'), icon: null, end: true, show: true },
     { to: '/flights/new', label: t('appNav.newFlight'), icon: PlaneTakeoff, end: false, show: isCommand },
     { to: `/pilots/${pilotId}`, label: t('appNav.profile'), icon: User, end: false, show: !!pilotId },
+    { to: '/safety-reports', label: t('safety.navLabel'), icon: ShieldAlert, end: false, show: isCommand },
     { to: '/admin/stats', label: t('appNav.stats'), icon: BarChart3, end: false, show: isCommand },
   ].filter((d) => d.show)
 
