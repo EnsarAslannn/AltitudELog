@@ -15,8 +15,9 @@ projects (unit + Testcontainers-backed integration), a CI workflow (backend test
 and a full React/TypeScript frontend (`frontend/`, see its own section below). All of this exists and works
 end-to-end. Also shipped, beyond the original migration scope: JWT refresh tokens with rotation-on-use,
 forgot/reset-password, flight cancellation with an EF Core (`xmin`) optimistic-concurrency token, IP-based rate
-limiting on all `Auth` endpoints, pilot profile/logbook views (+ CSV/PDF export), a stats dashboard, and pilot
-certificate expiry tracking.
+limiting on all `Auth` endpoints, pilot profile/logbook views (+ CSV/PDF export), a stats dashboard, pilot
+certificate expiry tracking with a daily Hangfire sweep that emails the pilots whose licence or medical is
+about to lapse, and editable/removable crew assignments.
 
 **Real, current gaps — do not assume otherwise, and do not add without an explicit go-ahead:**
 - No CI/local requirement to actually run Redis or Hangfire in dev beyond what's described below — see
@@ -213,7 +214,16 @@ Plain POCOs, no package or project references (not even EF Core) — keep it tha
     the handler**, which throws `NotFoundException` → `404`; a validator rule would report a nonexistent
     flight/pilot as `400`. Same reasoning applies to `UpdateFlightCommandValidator` and
     `CreateCRMReportCommandValidator`: none of them do existence lookups. Invalidates `crew:flight:{flightId}`
-    and `pilot:profile:{PilotId}`), `Crew/Queries/GetCrewByFlight/` (cached per flight, 5 min).
+    and `pilot:profile:{PilotId}`), `Crew/Commands/UpdateCrew/` (changes only the `DutyRole` — the pilot behind
+    an assignment is deliberately not swappable, since that would collide with the unique
+    `(FlightId, PilotId)` index; express it as a removal plus a fresh assignment),
+    `Crew/Commands/RemoveCrew/` (a hard delete: `Crew` is a join row carrying a duty role and nothing else, so
+    there is no history to preserve the way there is on a `Flight`, which is cancelled rather than deleted).
+    Both take only the crew-row id and therefore declare `CacheKeysToInvalidate` as a mutable `{ get; set; }` —
+    the flight and pilot have to be read before the keys are knowable, per the note above. Both also refuse to
+    touch the crew of an already-cancelled flight (`InvalidOperationException` → `409`), matching
+    `UpdateFlightCommandHandler`/`CancelFlightCommandHandler`. `Crew/Queries/GetCrewByFlight/` (cached per
+    flight, 5 min).
   - `CRMReports/Commands/CreateCRMReport/` (+ validator: `Title` ≤200, `Description` ≤4000 — `FlightId`
     existence is a handler-side `NotFoundException`, see above;
     invalidates `crmreports:flight:{flightId}` and `stats:all`; resolves `ReporterId` via `ICurrentUserService`
@@ -365,9 +375,11 @@ exact-match list, not a rank hierarchy, so a Captain-only gate locks out `ChiefP
   `NotFoundException` → `404` for a nonexistent `FlightId`, see "API — Global exception handling"). Creating a
   flight publishes `FlightCreatedEvent`, which enqueues the METAR-fetch Hangfire job — see "Background jobs &
   caching".
-- `Controllers/CrewController.cs`: class-level `[Authorize]`. `POST /Crew` (→ `CreateCrewCommand`,
-  **`[Authorize(Roles = "Captain,ChiefPilot")]`** override, tightens the class-level attribute), `GET /Crew/flight/{flightId}`
-  (→ `GetCrewByFlightQuery`, any authenticated pilot).
+- `Controllers/CrewController.cs`: class-level `[Authorize]`. `POST /Crew` (→ `CreateCrewCommand`),
+  `PUT /Crew/{id}` (→ `UpdateCrewCommand`, duty role only) and `DELETE /Crew/{id}` (→ `RemoveCrewCommand`) all
+  carry a **`[Authorize(Roles = "Captain,ChiefPilot")]`** override tightening the class-level attribute; the
+  two new ones answer `404` for an unknown assignment and `409` when the flight is already cancelled.
+  `GET /Crew/flight/{flightId}` (→ `GetCrewByFlightQuery`, any authenticated pilot).
 - `Controllers/CRMReportsController.cs`: class-level `[Authorize]`, no extra role restriction. `POST /CRMReports`
   (→ `CreateCRMReportCommand`), `GET /CRMReports/flight/{flightId}` (→ `GetCRMReportsByFlightQuery`) — any
   authenticated pilot can create/read CRM reports.
@@ -437,8 +449,8 @@ default ASP.NET Core `ProblemDetails` `500` response. The frontend's `ApiError`/
 
 **METAR flow**: `POST /Flights` (Captain-only) → `CreateFlightCommandHandler` saves the `Flight` → publishes
 `FlightCreatedEvent` (MediatR notification) → `FlightCreatedEventHandler` enqueues `UpdateFlightMetarJob` via
-`IBackgroundJobClient.Enqueue` (fire-once, not scheduled/recurring — there is no `RecurringJob.*` usage anywhere
-in the codebase) → the Hangfire server (Postgres-backed queue) picks it up and runs
+`IBackgroundJobClient.Enqueue` (fire-once — the one recurring job in the codebase is the certificate sweep
+below) → the Hangfire server (Postgres-backed queue) picks it up and runs
 `UpdateFlightMetarJob.ExecuteAsync`, which calls `IMetarService.GetRawMetarAsync(icaoCode)`, sets
 `flight.METARInfo` if a result came back, and saves. This means a newly created flight's METAR is **not**
 present in the `POST /Flights` response — it appears asynchronously once the job runs, and since
@@ -447,6 +459,21 @@ present in the `POST /Flights` response — it appears asynchronously once the j
 backoff) — bounded because a transient NOAA API failure shouldn't keep retrying this non-critical enrichment
 job for days; once attempts are exhausted the job shows as Failed in the `/hangfire` dashboard rather than
 being silently dropped.
+
+**Certificate expiry sweep**: `NotifyExpiringCertificatesJob` (`Application/Pilots/Jobs/`) is the codebase's
+only recurring job — registered in `Program.cs` after the host is built (a recurring job is written to Hangfire
+*storage*, which doesn't exist until then) via `IRecurringJobManager.AddOrUpdate`, id
+`pilot-certificate-expiry-notifications`, `Cron.Daily(6)` in **UTC**. `AddOrUpdate` is idempotent, so every
+start re-asserts the schedule rather than duplicating it, and a changed cron takes effect on the next deploy.
+The job mails pilots whose `LicenseExpiryDate`/`MedicalExpiryDate` is exactly 30, 14, 7, 3, 1 or 0 days out
+(`NoticeDaysBefore`), via `IEmailService.SendCertificateExpiryEmailAsync`. **Exact day counts, not a
+"within 30 days" window** — a daily job over a window would mail the same pilot every morning for a month, and
+exact days keep it to at most six notices per certificate *without* a "last notified" column, since the run
+date is the state. The trade-off is that a fully missed run skips that day's notices instead of catching up,
+which is the right failure mode for a reminder. It carries `[AutomaticRetry(Attempts = 0)]`: a failure here is
+almost always SMTP being unreachable or unconfigured, which a retry minutes later won't fix, and a per-pilot
+try/catch already keeps one undeliverable address from costing the rest of the batch their warning. Already-
+lapsed certificates are *not* re-notified — the window starts at today.
 
 **`GetFlightsQuery` is deliberately not cached.** It used to be (a single `flights:all` key, whole dataset),
 but once the query became paginated (`PageNumber`/`PageSize`), caching would require either a per-page cache
@@ -460,8 +487,8 @@ re-introducing caching here; revisit with a version-counter key if profiling eve
 |---|---|---|
 | `GetPilotsQuery` | `pilots:all` | `RegisterCommand` |
 | `GetStatsQuery` | `stats:all` | `RegisterCommand`, `CreateFlightCommand`, `UpdateFlightCommand`, `CancelFlightCommand`, `CreateCRMReportCommand`, `UpdatePilotCertificatesCommand` |
-| `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight), `UpdatePilotCertificatesCommand` (the caller's own profile) |
-| `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand` (same flight only) |
+| `GetPilotProfileQuery(pilotId)` | `pilot:profile:{pilotId}` | `CreateCrewCommand`, `UpdateCrewCommand`, `RemoveCrewCommand`, `UpdateFlightCommand`, `CancelFlightCommand` (for every pilot crewed on the affected flight), `UpdatePilotCertificatesCommand` (the caller's own profile) |
+| `GetCrewByFlightQuery(flightId)` | `crew:flight:{flightId}` | `CreateCrewCommand`, `UpdateCrewCommand`, `RemoveCrewCommand` (same flight only) |
 | `GetCRMReportsByFlightQuery(flightId)` | `crmreports:flight:{flightId}` | `CreateCRMReportCommand` (same flight only) |
 
 Both caching pipeline behaviors are **fail-open**: if Redis is unreachable, the request still succeeds (served
@@ -684,7 +711,9 @@ specifically.
   platform proxy — see "Forwarded headers" below) → `UseExceptionHandler()` → `UseSerilogRequestLogging()` → `UseHttpsRedirection()`
   (Development-only — TLS is terminated by the platform proxy in production) → `UseCors("FrontendCorsPolicy")`
   → `UseAuthentication()` → `UseAuthorization()` → `UseRateLimiter()` → `MapControllers()` →
-  `MapHealthChecks("/health", ...)` → `UseHangfireDashboard("/hangfire", ...)`. `UseAuthentication()` must
+  `MapHealthChecks("/health", ...)` → `UseHangfireDashboard("/hangfire", ...)` →
+  `IRecurringJobManager.AddOrUpdate<NotifyExpiringCertificatesJob>(...)` (see "Background jobs & caching" —
+  it lives here, not in Infrastructure's DI, because it writes to Hangfire storage). `UseAuthentication()` must
   precede `UseAuthorization()`; `UseCors()` must precede both.
 - **Startup failures must exit non-zero.** The top-level `try/catch` around the whole of `Program.cs` sets
   `Environment.ExitCode = 1` in its `catch`. Without that, the fail-fast guards (`Jwt:Key`, production

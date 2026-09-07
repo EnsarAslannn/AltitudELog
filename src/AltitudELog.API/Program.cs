@@ -5,6 +5,7 @@ using AltitudELog.API.Common;
 using AltitudELog.API.Services;
 using AltitudELog.Application;
 using AltitudELog.Application.Common.Interfaces;
+using AltitudELog.Application.Pilots.Jobs;
 using AltitudELog.Infrastructure;
 using AltitudELog.Infrastructure.Persistence;
 using Hangfire;
@@ -225,6 +226,15 @@ try
     {
         Authorization = [new HangfireBasicAuthFilter(app.Configuration)]
     });
+
+    // Registered here rather than in Infrastructure's DI because a recurring job is written to
+    // Hangfire's storage, which only exists once the host is built. AddOrUpdate is idempotent, so
+    // every start re-asserts the schedule (and picks up a changed cron) instead of duplicating it.
+    app.Services.GetRequiredService<IRecurringJobManager>().AddOrUpdate<NotifyExpiringCertificatesJob>(
+        NotifyExpiringCertificatesJob.RecurringJobId,
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Daily(6),
+        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
     app.Run();
 }
