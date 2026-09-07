@@ -1,4 +1,6 @@
 using AltitudELog.Application.Crew.Commands.CreateCrew;
+using AltitudELog.Application.Crew.Commands.RemoveCrew;
+using AltitudELog.Application.Crew.Commands.UpdateCrew;
 using AltitudELog.Application.Crew.Queries.GetCrewByFlight;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -44,5 +46,36 @@ public class CrewController : ControllerBase
     {
         var crew = await _mediator.Send(new GetCrewByFlightQuery(flightId), cancellationToken);
         return Ok(crew);
+    }
+
+    /// <summary>
+    /// Changes a crew member's duty role. The pilot behind the assignment cannot be swapped here —
+    /// that is a removal plus a fresh assignment. Answers 409 if the flight is already cancelled.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Captain,ChiefPilot")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(Guid id, UpdateCrewCommand command, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(command with { Id = id }, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Removes a pilot from a flight's crew. Answers 409 if the flight is already cancelled.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Captain,ChiefPilot")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Remove(Guid id, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new RemoveCrewCommand(id), cancellationToken);
+        return NoContent();
     }
 }
