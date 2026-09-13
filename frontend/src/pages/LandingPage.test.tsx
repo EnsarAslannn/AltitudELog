@@ -16,6 +16,7 @@ function renderLandingPage() {
 const authResponse: AuthResponseDto = {
   token: 'jwt-token',
   expiresAtUtc: '2026-08-01T00:00:00Z',
+  refreshTokenExpiresAtUtc: '2026-08-08T00:00:00Z',
   pilotId: 'pilot-1',
   rank: 'Captain',
   refreshToken: 'refresh-token',

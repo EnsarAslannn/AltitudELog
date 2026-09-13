@@ -22,6 +22,7 @@ export interface AuthResponseDto {
   pilotId: string
   rank: PilotRank
   refreshToken: string
+  refreshTokenExpiresAtUtc: string
 }
 
 export interface ForgotPasswordRequest {

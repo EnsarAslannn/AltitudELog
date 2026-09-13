@@ -79,6 +79,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
 
         _logger.LogInformation("Pilot {PilotId} refreshed their access token", pilot.Id);
 
-        return new AuthResponseDto(token, expiresAtUtc, pilot.Id, pilot.Rank.ToString(), refreshToken);
+        return new AuthResponseDto(
+            token, expiresAtUtc, pilot.Id, pilot.Rank.ToString(), refreshToken, pilot.RefreshTokenExpiresAtUtc!.Value);
     }
 }

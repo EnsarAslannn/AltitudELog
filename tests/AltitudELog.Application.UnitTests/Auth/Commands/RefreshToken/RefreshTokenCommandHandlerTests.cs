@@ -55,6 +55,7 @@ public class RefreshTokenCommandHandlerTests
         result.Token.Should().Be("new-access-token");
         result.PilotId.Should().Be(pilot.Id);
         result.RefreshToken.Should().NotBe(rawToken);
+        result.RefreshTokenExpiresAtUtc.Should().BeAfter(DateTime.UtcNow.AddDays(6));
 
         var updated = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
         updated.RefreshTokenHash.Should().NotBe(TokenHasher.Hash(rawToken));

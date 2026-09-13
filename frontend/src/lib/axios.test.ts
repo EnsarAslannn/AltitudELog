@@ -110,6 +110,7 @@ describe('apiClient response interceptor', () => {
       token: 'new-token',
       refreshToken: 'new-refresh-token',
       expiresAtUtc: '2026-08-01T00:00:00Z',
+      refreshTokenExpiresAtUtc: '2026-08-08T00:00:00Z',
       pilotId: 'pilot-1',
       rank: 'Captain',
     }
@@ -150,6 +151,7 @@ describe('apiClient response interceptor', () => {
       token: 'new-token',
       refreshToken: 'new-refresh-token',
       expiresAtUtc: '2026-08-01T00:00:00Z',
+      refreshTokenExpiresAtUtc: '2026-08-08T00:00:00Z',
       pilotId: 'pilot-1',
       rank: 'Captain',
     }
@@ -196,6 +198,7 @@ describe('apiClient response interceptor', () => {
       token: 'new-token',
       refreshToken: 'new-refresh-token',
       expiresAtUtc: '2026-08-01T00:00:00Z',
+      refreshTokenExpiresAtUtc: '2026-08-08T00:00:00Z',
       pilotId: 'pilot-1',
       rank: 'Captain',
     }

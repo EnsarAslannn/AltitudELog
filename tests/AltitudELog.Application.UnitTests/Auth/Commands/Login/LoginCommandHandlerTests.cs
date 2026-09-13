@@ -61,6 +61,7 @@ public class LoginCommandHandlerTests
         result.RefreshToken.Should().NotBeNullOrEmpty();
 
         var updated = await context.Pilots.SingleAsync(p => p.Id == pilot.Id);
+        result.RefreshTokenExpiresAtUtc.Should().Be(updated.RefreshTokenExpiresAtUtc!.Value);
         updated.RefreshTokenHash.Should().NotBeNullOrEmpty();
         updated.RefreshTokenExpiresAtUtc.Should().NotBeNull();
         updated.RefreshTokenExpiresAtUtc.Should().BeAfter(DateTime.UtcNow);

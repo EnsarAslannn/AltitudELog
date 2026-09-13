@@ -6,6 +6,7 @@ const sampleAuth: AuthResponseDto = {
   token: 'test-token',
   refreshToken: 'test-refresh-token',
   expiresAtUtc: '2026-08-01T00:00:00Z',
+  refreshTokenExpiresAtUtc: '2026-08-08T00:00:00Z',
   pilotId: 'pilot-1',
   rank: 'Captain',
 }
@@ -80,6 +81,40 @@ describe('authStore', () => {
       persist({
         token: 'expired-token',
         refreshToken: 'still-good-refresh-token',
+        pilotId: 'pilot-1',
+        username: 'testuser',
+        rank: 'Captain',
+        expiresAtUtc: '2020-01-01T00:00:00Z',
+        isAuthenticated: true,
+      })
+
+      await useAuthStore.persist.rehydrate()
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
+    })
+
+    it('drops a session whose refresh token has itself expired', async () => {
+      persist({
+        token: 'expired-token',
+        refreshToken: 'expired-refresh-token',
+        pilotId: 'pilot-1',
+        username: 'testuser',
+        rank: 'Captain',
+        expiresAtUtc: '2020-01-01T00:00:00Z',
+        refreshTokenExpiresAtUtc: '2020-01-08T00:00:00Z',
+        isAuthenticated: true,
+      })
+
+      await useAuthStore.persist.rehydrate()
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(false)
+      expect(useAuthStore.getState().refreshToken).toBeNull()
+    })
+
+    it('keeps a session persisted before the refresh expiry was reported', async () => {
+      persist({
+        token: 'expired-token',
+        refreshToken: 'legacy-refresh-token',
         pilotId: 'pilot-1',
         username: 'testuser',
         rank: 'Captain',
