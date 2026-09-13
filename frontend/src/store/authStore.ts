@@ -11,6 +11,7 @@ interface AuthState {
   username: string | null
   rank: PilotRank | null
   expiresAtUtc: string | null
+  refreshTokenExpiresAtUtc: string | null
   isAuthenticated: boolean
   login: (auth: AuthResponseDto, username: string) => void
   logout: () => void
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
       username: null,
       rank: null,
       expiresAtUtc: null,
+      refreshTokenExpiresAtUtc: null,
       isAuthenticated: false,
       login: (auth, username) =>
         set({
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
           username,
           rank: auth.rank,
           expiresAtUtc: auth.expiresAtUtc,
+          refreshTokenExpiresAtUtc: auth.refreshTokenExpiresAtUtc,
           isAuthenticated: true,
         }),
       logout: () =>
@@ -44,6 +47,7 @@ export const useAuthStore = create<AuthState>()(
           username: null,
           rank: null,
           expiresAtUtc: null,
+          refreshTokenExpiresAtUtc: null,
           isAuthenticated: false,
         }),
     }),
@@ -52,8 +56,13 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (!state?.isAuthenticated) return
 
-        const expired = state.expiresAtUtc !== null && new Date(state.expiresAtUtc) <= new Date()
-        if (expired && !state.refreshToken) {
+        const now = new Date()
+        const expired = state.expiresAtUtc !== null && new Date(state.expiresAtUtc) <= now
+        // Sessions persisted before the API reported this field have none; for those the
+        // interceptor's failed refresh remains the only signal.
+        const refreshExpired =
+          !!state.refreshTokenExpiresAtUtc && new Date(state.refreshTokenExpiresAtUtc) <= now
+        if ((expired && !state.refreshToken) || refreshExpired) {
           state.logout()
         }
       },

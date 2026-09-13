@@ -57,6 +57,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
         _logger.LogInformation("Pilot {PilotId} ({Username}) logged in", pilot.Id, pilot.Username);
 
-        return new AuthResponseDto(token, expiresAtUtc, pilot.Id, pilot.Rank.ToString(), refreshToken);
+        return new AuthResponseDto(
+            token, expiresAtUtc, pilot.Id, pilot.Rank.ToString(), refreshToken, pilot.RefreshTokenExpiresAtUtc!.Value);
     }
 }
