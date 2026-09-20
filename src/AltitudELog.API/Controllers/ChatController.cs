@@ -1,0 +1,69 @@
+using AltitudELog.Application.Chat;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AltitudELog.API.Controllers;
+
+[ApiController]
+[Route("api/chat")]
+public class ChatController : ControllerBase
+{
+    private const int MaximumMessageLength = 500;
+    private const int MaximumHistoryMessages = 20;
+    private const int MaximumHistoryMessageLength = 1_000;
+
+    private readonly IChatKnowledgeBaseService _knowledgeBase;
+
+    public ChatController(IChatKnowledgeBaseService knowledgeBase)
+    {
+        _knowledgeBase = knowledgeBase;
+    }
+
+    /// <summary>
+    /// Answers AltitudELog product questions from the local Turkish and English knowledge base.
+    /// No prompt or private user data is sent to an external AI service.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ChatResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public ActionResult<ChatResponse> Post(ChatRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Message))
+        {
+            ModelState.AddModelError(nameof(request.Message), "Message is required.");
+        }
+        else if (request.Message.Length > MaximumMessageLength)
+        {
+            ModelState.AddModelError(
+                nameof(request.Message),
+                $"Message cannot exceed {MaximumMessageLength} characters.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var history = (request.History ?? [])
+            .Where(message =>
+                !string.IsNullOrWhiteSpace(message.Content) &&
+                (message.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ||
+                 message.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase)))
+            .TakeLast(MaximumHistoryMessages)
+            .Select(message => message with
+            {
+                Content = message.Content[..Math.Min(message.Content.Length, MaximumHistoryMessageLength)]
+            })
+            .ToArray();
+
+        var normalizedRequest = request with
+        {
+            Message = request.Message.Trim(),
+            Language = request.Language.Equals("en", StringComparison.OrdinalIgnoreCase) ? "en" : "tr",
+            History = history
+        };
+
+        return Ok(_knowledgeBase.Answer(normalizedRequest));
+    }
+}

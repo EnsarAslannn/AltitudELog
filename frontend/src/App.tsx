@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { setLoginRedirect } from './lib/axios'
+import { ChatAssistant } from './components/chat/ChatAssistant'
 
 function App() {
   useEffect(() => {
@@ -14,6 +15,7 @@ function App() {
   return (
     <ErrorBoundary>
       <RouterProvider router={router} />
+      <ChatAssistant />
     </ErrorBoundary>
   )
 }

@@ -1,4 +1,5 @@
 using AltitudELog.Application.Common.Behaviors;
+using AltitudELog.Application.Chat;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +9,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddSingleton<IChatKnowledgeBaseService, ChatKnowledgeBaseService>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
         services.AddMediatR(cfg =>

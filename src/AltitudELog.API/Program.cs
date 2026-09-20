@@ -65,16 +65,8 @@ try
         }
     });
 
-    const string FrontendCorsPolicy = "FrontendCorsPolicy";
     var corsOriginsSection = builder.Configuration.GetSection("Cors:AllowedOrigins");
-    var allowedOrigins = corsOriginsSection.Get<string[]>() ?? ["http://localhost:5180"];
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy(FrontendCorsPolicy, policy => policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod());
-    });
+    builder.Services.AddFrontendCors(builder.Configuration);
 
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -209,7 +201,7 @@ try
         app.UseHttpsRedirection();
     }
 
-    app.UseCors(FrontendCorsPolicy);
+    app.UseCors(FrontendCors.PolicyName);
 
     app.UseAuthentication();
     app.UseAuthorization();

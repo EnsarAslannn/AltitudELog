@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
@@ -7,16 +7,20 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: LucideIcon
 }
 
-export function Button({
-  variant = 'primary',
-  icon: Icon,
-  className,
-  children,
-  type = 'button',
-  ...props
-}: ButtonProps) {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    variant = 'primary',
+    icon: Icon,
+    className,
+    children,
+    type = 'button',
+    ...props
+  },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type={type}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-sm font-semibold tracking-tight transition-all',
@@ -37,4 +41,4 @@ export function Button({
       {children}
     </button>
   )
-}
+})
