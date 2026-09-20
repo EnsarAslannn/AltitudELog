@@ -12,7 +12,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish ./
 
-RUN groupadd -r appuser && useradd -r -g appuser appuser \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r appuser && useradd -r -g appuser appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
