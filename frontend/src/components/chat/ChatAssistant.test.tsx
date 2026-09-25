@@ -133,6 +133,26 @@ describe('ChatAssistant', () => {
     expect(screen.getByRole('link', { name: 'Yeni uçuş oluştur' })).toHaveAttribute('href', '/flights/new')
   })
 
+  it('uses the authenticated personal chat endpoint for signed-in users', async () => {
+    mock.onPost('/api/chat/personal').reply(200, {
+      answer: 'Bu ay 2 saat 30 dakika uçtunuz.',
+      sources: [{ title: 'Pilot profilim', url: '/pilots/pilot-1' }],
+      suggestions: [],
+      usedAi: false,
+    })
+    useAuthStore.getState().login(authResponse, 'captain')
+    const user = userEvent.setup()
+    renderAssistant()
+
+    await user.click(screen.getByRole('button', { name: 'AltitudELog asistanını aç' }))
+    await user.type(screen.getByLabelText('Mesajınız'), 'Bu ay kaç saat uçtum?')
+    await user.click(screen.getByRole('button', { name: 'Gönder' }))
+
+    expect(await screen.findByText('Bu ay 2 saat 30 dakika uçtunuz.')).toBeInTheDocument()
+    expect(mock.history.post).toHaveLength(1)
+    expect(mock.history.post[0].url).toBe('/api/chat/personal')
+  })
+
   it('requires confirmation before clearing all conversations', async () => {
     const user = userEvent.setup()
     renderAssistant()

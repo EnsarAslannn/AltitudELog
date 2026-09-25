@@ -162,7 +162,7 @@ export function ChatAssistant() {
     setIsSending(true)
 
     try {
-      const response = await chatService.ask({ message, language, history })
+      const response = await chatService.ask({ message, language, history }, isAuthenticated)
       addMessage(conversationId, {
         role: 'assistant',
         content: response.answer,
