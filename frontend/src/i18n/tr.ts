@@ -41,8 +41,11 @@ export const tr = {
   'chat.messageLabel': 'Mesajınız',
   'chat.placeholder': 'AltitudELog hakkında sorun',
   'chat.send': 'Gönder',
-  'chat.privacy': 'Yanıtlar yerel bilgi tabanından gelir. Harici yapay zekâ kullanılmaz.',
+  'chat.privacy':
+    'Harici yapay zekâ kullanılmaz. Cevapsız sorular, olası kişisel bilgiler maskelenerek iyileştirme amacıyla kaydedilebilir.',
   'chat.error': 'Yanıt alınamadı. Lütfen tekrar deneyin.',
+  'chat.feedback.helpful': 'Yanıt yararlı',
+  'chat.feedback.unhelpful': 'Yanıt yararlı değil',
 
   // ---- shared calls to action ----
   'cta.dashboard': 'Panele Git',

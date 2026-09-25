@@ -22,6 +22,7 @@ public class ChatKnowledgeBaseServiceTests
         response.Sources.Should().ContainSingle(source => source.Url == expectedSource);
         response.Suggestions.Should().HaveCountLessThanOrEqualTo(3);
         response.UsedAi.Should().BeFalse();
+        response.IsAnswered.Should().BeTrue();
     }
 
     [Fact]
@@ -52,6 +53,7 @@ public class ChatKnowledgeBaseServiceTests
         response.Answer.Should().Contain(expectedAnswerFragment);
         response.Sources.Should().ContainSingle(source => source.Url == "/");
         response.UsedAi.Should().BeFalse();
+        response.IsAnswered.Should().BeFalse();
     }
 
     [Theory]

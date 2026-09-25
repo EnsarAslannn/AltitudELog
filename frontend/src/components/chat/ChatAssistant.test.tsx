@@ -179,6 +179,39 @@ describe('ChatAssistant', () => {
     })
   })
 
+  it('submits helpful feedback for a tracked assistant response', async () => {
+    const interactionId = '4a249db8-844d-47de-8890-04672e722ca8'
+    mock.onPost('/api/chat').reply(200, {
+      answer: 'Otomatik METAR uçuş kaydından sonra alınır.',
+      sources: [],
+      suggestions: [],
+      usedAi: false,
+      isAnswered: true,
+      interactionId,
+    })
+    mock.onPost(`/api/chat/feedback/${interactionId}`).replyOnce(500)
+    mock.onPost(`/api/chat/feedback/${interactionId}`).reply(204)
+    const user = userEvent.setup()
+    renderAssistant()
+
+    await user.click(screen.getByRole('button', { name: 'AltitudELog asistanını aç' }))
+    await user.type(screen.getByLabelText('Mesajınız'), 'METAR nasıl çalışır?')
+    await user.click(screen.getByRole('button', { name: 'Gönder' }))
+    await screen.findByText('Otomatik METAR uçuş kaydından sonra alınır.')
+
+    const helpful = screen.getByRole('button', { name: 'Yanıt yararlı' })
+    await user.click(helpful)
+
+    await waitFor(() => expect(helpful).not.toBeDisabled())
+    expect(helpful).toHaveAttribute('aria-pressed', 'false')
+    await user.click(helpful)
+
+    await waitFor(() => expect(helpful).toHaveAttribute('aria-pressed', 'true'))
+    const feedbackRequests = mock.history.post.filter((request) => request.url?.includes('/feedback/'))
+    expect(feedbackRequests).toHaveLength(2)
+    expect(JSON.parse(feedbackRequests[1].data)).toEqual({ helpful: true })
+  })
+
   it('requires confirmation before clearing all conversations', async () => {
     const user = userEvent.setup()
     renderAssistant()

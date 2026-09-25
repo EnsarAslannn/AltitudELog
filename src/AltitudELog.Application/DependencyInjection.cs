@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IChatKnowledgeBaseService, ChatKnowledgeBaseService>();
         services.AddScoped<IPersonalChatService, PersonalChatService>();
+        services.AddScoped<IChatInteractionService, ChatInteractionService>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
         services.AddMediatR(cfg =>

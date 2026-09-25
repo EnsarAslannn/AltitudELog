@@ -7,4 +7,7 @@ export const chatService = {
     const response = await apiClient.post<ChatResponse>(endpoint, request)
     return response.data
   },
+  async submitFeedback(interactionId: string, helpful: boolean): Promise<void> {
+    await apiClient.post(`/api/chat/feedback/${interactionId}`, { helpful })
+  },
 }

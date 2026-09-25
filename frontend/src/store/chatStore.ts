@@ -16,6 +16,9 @@ export interface ChatMessage {
   sources?: ChatSource[]
   suggestions?: string[]
   isError?: boolean
+  interactionId?: string
+  isAnswered?: boolean
+  feedback?: 'helpful' | 'unhelpful'
 }
 
 export interface ChatConversation {
@@ -34,6 +37,11 @@ interface ChatState {
   startConversation: () => string
   selectConversation: (id: string) => void
   addMessage: (conversationId: string, message: NewMessage) => void
+  setMessageFeedback: (
+    conversationId: string,
+    messageId: string,
+    feedback: 'helpful' | 'unhelpful',
+  ) => void
   clearAll: () => void
   reset: () => void
 }
@@ -90,6 +98,19 @@ export const useChatStore = create<ChatState>()(
             }),
           }
         }),
+      setMessageFeedback: (conversationId, messageId, feedback) =>
+        set((state) => ({
+          conversations: state.conversations.map((conversation) =>
+            conversation.id !== conversationId
+              ? conversation
+              : {
+                  ...conversation,
+                  messages: conversation.messages.map((message) =>
+                    message.id === messageId ? { ...message, feedback } : message,
+                  ),
+                },
+          ),
+        })),
       clearAll: () => {
         const conversation = emptyConversation()
         set({ conversations: [conversation], activeConversationId: conversation.id })

@@ -9,6 +9,7 @@ public interface IApplicationDbContext
     DbSet<Pilot> Pilots { get; }
     DbSet<AltitudELog.Domain.Entities.Crew> Crew { get; }
     DbSet<CRMReport> CRMReports { get; }
+    DbSet<ChatInteraction> ChatInteractions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

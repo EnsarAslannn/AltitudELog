@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace AltitudELog.IntegrationTests.Chat;
@@ -32,6 +33,8 @@ public class ChatEndpointTests : IDisposable
                 {
                     services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
                     services.AddApplicationServices();
+                    services.RemoveAll<IChatInteractionService>();
+                    services.AddSingleton<IChatInteractionService, PassthroughChatInteractionService>();
                     services.AddFrontendCors(context.Configuration);
                 })
                 .Configure(app =>
@@ -96,5 +99,24 @@ public class ChatEndpointTests : IDisposable
     {
         _client.Dispose();
         _host.Dispose();
+    }
+
+    private sealed class PassthroughChatInteractionService : IChatInteractionService
+    {
+        public Task<ChatResponse> RecordAsync(
+            ChatRequest request,
+            ChatResponse response,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(response with { InteractionId = Guid.NewGuid() });
+
+        public Task<bool> SetFeedbackAsync(
+            Guid interactionId,
+            bool helpful,
+            CancellationToken cancellationToken) => Task.FromResult(false);
+
+        public Task<IReadOnlyList<UnansweredChatQuestionDto>> GetUnansweredAsync(
+            int take,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<UnansweredChatQuestionDto>>([]);
     }
 }

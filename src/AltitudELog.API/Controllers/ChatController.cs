@@ -13,10 +13,14 @@ public class ChatController : ControllerBase
     private const int MaximumHistoryMessageLength = 1_000;
 
     private readonly IChatKnowledgeBaseService _knowledgeBase;
+    private readonly IChatInteractionService _interactions;
 
-    public ChatController(IChatKnowledgeBaseService knowledgeBase)
+    public ChatController(
+        IChatKnowledgeBaseService knowledgeBase,
+        IChatInteractionService interactions)
     {
         _knowledgeBase = knowledgeBase;
+        _interactions = interactions;
     }
 
     /// <summary>
@@ -27,7 +31,9 @@ public class ChatController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType(typeof(ChatResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public ActionResult<ChatResponse> Post(ChatRequest request)
+    public async Task<ActionResult<ChatResponse>> Post(
+        ChatRequest request,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Message))
         {
@@ -64,6 +70,7 @@ public class ChatController : ControllerBase
             History = history
         };
 
-        return Ok(_knowledgeBase.Answer(normalizedRequest));
+        var response = _knowledgeBase.Answer(normalizedRequest);
+        return Ok(await _interactions.RecordAsync(normalizedRequest, response, cancellationToken));
     }
 }

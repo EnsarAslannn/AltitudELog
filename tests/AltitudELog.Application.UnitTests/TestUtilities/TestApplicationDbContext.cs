@@ -14,4 +14,5 @@ public class TestApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Pilot> Pilots => Set<Pilot>();
     public DbSet<AltitudELog.Domain.Entities.Crew> Crew => Set<AltitudELog.Domain.Entities.Crew>();
     public DbSet<CRMReport> CRMReports => Set<CRMReport>();
+    public DbSet<ChatInteraction> ChatInteractions => Set<ChatInteraction>();
 }

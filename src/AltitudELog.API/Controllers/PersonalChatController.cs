@@ -15,13 +15,16 @@ public class PersonalChatController : ControllerBase
 
     private readonly IChatKnowledgeBaseService _knowledgeBase;
     private readonly IPersonalChatService _personalChat;
+    private readonly IChatInteractionService _interactions;
 
     public PersonalChatController(
         IChatKnowledgeBaseService knowledgeBase,
-        IPersonalChatService personalChat)
+        IPersonalChatService personalChat,
+        IChatInteractionService interactions)
     {
         _knowledgeBase = knowledgeBase;
         _personalChat = personalChat;
+        _interactions = interactions;
     }
 
     /// <summary>
@@ -71,6 +74,7 @@ public class PersonalChatController : ControllerBase
         };
 
         var personalAnswer = await _personalChat.TryAnswerAsync(normalizedRequest, cancellationToken);
-        return Ok(personalAnswer ?? _knowledgeBase.Answer(normalizedRequest));
+        var response = personalAnswer ?? _knowledgeBase.Answer(normalizedRequest);
+        return Ok(await _interactions.RecordAsync(normalizedRequest, response, cancellationToken));
     }
 }

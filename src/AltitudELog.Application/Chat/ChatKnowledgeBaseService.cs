@@ -202,11 +202,13 @@ public sealed partial class ChatKnowledgeBaseService : IChatKnowledgeBaseService
             "That question is outside my scope. I only answer questions about AltitudELog and I will not invent information.",
             [new ChatSource("AltitudELog overview", "/")],
             ["What can AltitudELog do?", "How do I create an account?", "How does automatic METAR work?"],
+            false,
             false)
         : new ChatResponse(
             "Bu soru kapsamım dışında. Yalnızca AltitudELog hakkında yanıt veriyorum ve bilgi uydurmuyorum.",
             [new ChatSource("AltitudELog genel bakış", "/")],
             ["AltitudELog neler yapabilir?", "Nasıl hesap oluştururum?", "Otomatik METAR nasıl çalışır?"],
+            false,
             false);
 
     [GeneratedRegex("[a-z0-9]+", RegexOptions.CultureInvariant)]

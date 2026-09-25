@@ -7,6 +7,8 @@ import {
   MessageCircle,
   Plus,
   Send,
+  ThumbsDown,
+  ThumbsUp,
   Trash2,
   X,
 } from 'lucide-react'
@@ -57,12 +59,14 @@ export function ChatAssistant() {
   const selectConversation = useChatStore((state) => state.selectConversation)
   const addMessage = useChatStore((state) => state.addMessage)
   const clearAll = useChatStore((state) => state.clearAll)
+  const setMessageFeedback = useChatStore((state) => state.setMessageFeedback)
 
   const [isOpen, setIsOpen] = useState(false)
   const [view, setView] = useState<'chat' | 'history'>('chat')
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [showClearConfirmation, setShowClearConfirmation] = useState(false)
+  const [feedbackPendingId, setFeedbackPendingId] = useState<string | null>(null)
 
   const launcherRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -183,6 +187,8 @@ export function ChatAssistant() {
         content: response.answer,
         sources: response.sources,
         suggestions: response.suggestions.slice(0, 3),
+        interactionId: response.interactionId,
+        isAnswered: response.isAnswered,
       })
     } catch {
       addMessage(conversationId, {
@@ -192,6 +198,24 @@ export function ChatAssistant() {
       })
     } finally {
       setIsSending(false)
+    }
+  }
+
+  async function submitFeedback(message: ChatMessage, helpful: boolean) {
+    if (!activeConversation || !message.interactionId || feedbackPendingId === message.id) return
+
+    setFeedbackPendingId(message.id)
+    try {
+      await chatService.submitFeedback(message.interactionId, helpful)
+      setMessageFeedback(
+        activeConversation.id,
+        message.id,
+        helpful ? 'helpful' : 'unhelpful',
+      )
+    } catch {
+      // Leave the controls unchanged so the user can retry without losing their choice.
+    } finally {
+      setFeedbackPendingId(null)
     }
   }
 
@@ -415,6 +439,36 @@ export function ChatAssistant() {
                               {suggestion}
                             </button>
                           ))}
+                        </div>
+                      )}
+                      {message.role === 'assistant' && message.interactionId && !message.isError && (
+                        <div className="mt-3 flex items-center gap-1 border-t border-outline-variant pt-2">
+                          <button
+                            type="button"
+                            aria-label={t('chat.feedback.helpful')}
+                            aria-pressed={message.feedback === 'helpful'}
+                            disabled={feedbackPendingId === message.id}
+                            onClick={() => void submitFeedback(message, true)}
+                            className={cn(
+                              'rounded p-1.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue/40 disabled:opacity-50',
+                              message.feedback === 'helpful' && 'bg-secondary-container text-primary',
+                            )}
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={t('chat.feedback.unhelpful')}
+                            aria-pressed={message.feedback === 'unhelpful'}
+                            disabled={feedbackPendingId === message.id}
+                            onClick={() => void submitFeedback(message, false)}
+                            className={cn(
+                              'rounded p-1.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-blue/40 disabled:opacity-50',
+                              message.feedback === 'unhelpful' && 'bg-secondary-container text-primary',
+                            )}
+                          >
+                            <ThumbsDown className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
                         </div>
                       )}
                     </article>

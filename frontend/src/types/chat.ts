@@ -29,4 +29,6 @@ export interface ChatResponse {
   sources: ChatSource[]
   suggestions: string[]
   usedAi: boolean
+  isAnswered: boolean
+  interactionId?: string
 }

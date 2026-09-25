@@ -1,10 +1,14 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using AltitudELog.API.Controllers;
 using AltitudELog.Application.Auth.Commands.Login;
 using AltitudELog.Application.Auth.Commands.Register;
 using AltitudELog.Application.Chat;
+using AltitudELog.Infrastructure.Persistence;
 using AltitudELog.IntegrationTests.Infrastructure;
 using AwesomeAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AltitudELog.IntegrationTests.Chat;
 
@@ -50,5 +54,17 @@ public class PersonalChatEndpointTests : IAsyncLifetime
         result.Should().NotBeNull();
         result!.Answer.Should().Contain("0 saat");
         result.Sources.Should().ContainSingle(source => source.Url == $"/pilots/{auth.PilotId}");
+        result.InteractionId.Should().NotBeNull();
+
+        var feedbackResponse = await _client.PostAsJsonAsync(
+            $"/api/chat/feedback/{result.InteractionId}",
+            new ChatFeedbackRequest(true));
+        feedbackResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.NoContent);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var interaction = await context.ChatInteractions.SingleAsync(item => item.Id == result.InteractionId);
+        interaction.IsHelpful.Should().BeTrue();
+        interaction.UnansweredQuestion.Should().BeNull();
     }
 }

@@ -43,8 +43,11 @@ export const en: Record<keyof typeof tr, string> = {
   'chat.messageLabel': 'Your message',
   'chat.placeholder': 'Ask about AltitudELog',
   'chat.send': 'Send',
-  'chat.privacy': 'Answers come from the local knowledge base. No external AI is used.',
+  'chat.privacy':
+    'No external AI is used. Unanswered questions may be stored for improvement after potential personal data is masked.',
   'chat.error': 'I could not get an answer. Please try again.',
+  'chat.feedback.helpful': 'Response helpful',
+  'chat.feedback.unhelpful': 'Response not helpful',
 
   // ---- shared calls to action ----
   'cta.dashboard': 'Go to Dashboard',
