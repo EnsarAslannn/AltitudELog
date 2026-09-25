@@ -32,6 +32,7 @@ describe('ChatAssistant', () => {
 
   beforeEach(() => {
     mock.reset()
+    window.history.replaceState({}, '', '/')
     localStorage.clear()
     useChatStore.getState().reset()
     useAuthStore.getState().logout()
@@ -151,6 +152,31 @@ describe('ChatAssistant', () => {
     expect(await screen.findByText('Bu ay 2 saat 30 dakika uçtunuz.')).toBeInTheDocument()
     expect(mock.history.post).toHaveLength(1)
     expect(mock.history.post[0].url).toBe('/api/chat/personal')
+  })
+
+  it('sends the current flight page as bounded chat context', async () => {
+    const flightId = '8f5ca72b-2b9f-4c74-85b6-cb3d8ee6e671'
+    window.history.replaceState({}, '', `/flights/${flightId}`)
+    mock.onPost('/api/chat/personal').reply(200, {
+      answer: 'Bu uçuş için kaydedilen METAR: LTAC 201250Z 03008KT CAVOK.',
+      sources: [{ title: 'Mevcut uçuş', url: `/flights/${flightId}` }],
+      suggestions: [],
+      usedAi: false,
+    })
+    useAuthStore.getState().login(authResponse, 'captain')
+    const user = userEvent.setup()
+    renderAssistant()
+
+    await user.click(screen.getByRole('button', { name: 'AltitudELog asistanını aç' }))
+    expect(screen.getByRole('button', { name: 'Bu uçuşu özetle' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Bu uçuşun METAR kaydını göster' })).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Mesajınız'), 'Bu METAR kaydı ne?')
+    await user.click(screen.getByRole('button', { name: 'Gönder' }))
+
+    await screen.findByText(/Bu uçuş için kaydedilen METAR/)
+    expect(JSON.parse(mock.history.post[0].data)).toMatchObject({
+      context: { page: 'flight', entityId: flightId },
+    })
   })
 
   it('requires confirmation before clearing all conversations', async () => {

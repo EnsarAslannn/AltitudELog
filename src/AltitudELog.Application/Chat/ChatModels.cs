@@ -5,7 +5,10 @@ public sealed record ChatHistoryMessage(string Role, string Content);
 public sealed record ChatRequest(
     string Message,
     string Language,
-    IReadOnlyList<ChatHistoryMessage> History);
+    IReadOnlyList<ChatHistoryMessage> History,
+    ChatPageContext? Context = null);
+
+public sealed record ChatPageContext(string Page, string? EntityId = null);
 
 public sealed record ChatSource(string Title, string Url);
 

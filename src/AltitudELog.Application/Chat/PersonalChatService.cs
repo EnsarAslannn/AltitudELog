@@ -27,6 +27,16 @@ public sealed class PersonalChatService : IPersonalChatService
         }
 
         var message = Normalize(request.Message);
+        var contextualAnswer = await TryAnswerFromPageContextAsync(
+            request.Context,
+            message,
+            request.Language,
+            cancellationToken);
+        if (contextualAnswer is not null)
+        {
+            return contextualAnswer;
+        }
+
         if (IsCertificateQuestion(message))
         {
             return await AnswerCertificateQuestionAsync(pilotId.Value, request.Language, cancellationToken);
@@ -65,6 +75,110 @@ public sealed class PersonalChatService : IPersonalChatService
             isEnglish
                 ? ["When do my certificates expire?", "Show my latest flight"]
                 : ["Sertifikalarım ne zaman bitiyor?", "Son uçuşumu göster"],
+            false);
+    }
+
+    private async Task<ChatResponse?> TryAnswerFromPageContextAsync(
+        ChatPageContext? context,
+        string message,
+        string language,
+        CancellationToken cancellationToken)
+    {
+        if (context is null || !Guid.TryParse(context.EntityId, out var entityId))
+        {
+            return null;
+        }
+
+        if (context.Page == "pilot" && IsSummaryQuestion(message))
+        {
+            return await AnswerContextPilotSummaryAsync(entityId, language, cancellationToken);
+        }
+
+        if (context.Page != "flight" ||
+            (!message.Contains("metar", StringComparison.Ordinal) && !IsSummaryQuestion(message)))
+        {
+            return null;
+        }
+
+        var flight = await _context.Flights
+            .AsNoTracking()
+            .Where(item => item.Id == entityId)
+            .Select(item => new
+            {
+                item.Id,
+                item.OriginICAO,
+                item.DestinationICAO,
+                item.Date,
+                item.AircraftType,
+                item.FlightTime,
+                item.METARInfo,
+                item.IsCancelled
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (flight is null)
+        {
+            return null;
+        }
+
+        var isEnglish = language.Equals("en", StringComparison.OrdinalIgnoreCase);
+        if (IsSummaryQuestion(message))
+        {
+            var status = flight.IsCancelled
+                ? isEnglish ? "cancelled" : "iptal edilmiş"
+                : isEnglish ? "active" : "aktif";
+            return new ChatResponse(
+                isEnglish
+                    ? $"This is an {status} {flight.OriginICAO}–{flight.DestinationICAO} flight on {flight.Date:dd MMM yyyy}, operated with {flight.AircraftType}, lasting {FormatDuration(flight.FlightTime, true)}."
+                    : $"Bu, {flight.Date:dd.MM.yyyy} tarihli, {flight.AircraftType} ile yapılan, {FormatDuration(flight.FlightTime, false)} süren {status} bir {flight.OriginICAO}–{flight.DestinationICAO} uçuşu.",
+                [new ChatSource(isEnglish ? "Current flight" : "Mevcut uçuş", $"/flights/{flight.Id}")],
+                isEnglish ? ["Show this flight's METAR"] : ["Bu uçuşun METAR kaydını göster"],
+                false);
+        }
+
+        var answer = flight.METARInfo is null
+            ? isEnglish
+                ? $"No METAR has been recorded for this {flight.OriginICAO}–{flight.DestinationICAO} flight yet."
+                : $"Bu {flight.OriginICAO}–{flight.DestinationICAO} uçuşu için henüz METAR kaydedilmemiş."
+            : isEnglish
+                ? $"The METAR recorded for this {flight.OriginICAO}–{flight.DestinationICAO} flight is: {flight.METARInfo}"
+                : $"Bu {flight.OriginICAO}–{flight.DestinationICAO} uçuşu için kaydedilen METAR: {flight.METARInfo}";
+
+        return new ChatResponse(
+            answer,
+            [new ChatSource(isEnglish ? "Current flight" : "Mevcut uçuş", $"/flights/{flight.Id}")],
+            isEnglish ? ["How is automatic METAR added?"] : ["Otomatik METAR nasıl eklenir?"],
+            false);
+    }
+
+    private async Task<ChatResponse?> AnswerContextPilotSummaryAsync(
+        Guid pilotId,
+        string language,
+        CancellationToken cancellationToken)
+    {
+        var pilot = await _context.Pilots
+            .AsNoTracking()
+            .Where(item => item.Id == pilotId)
+            .Select(item => new { item.Id, item.Name, item.Rank })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (pilot is null)
+        {
+            return null;
+        }
+
+        var durations = await _context.Crew
+            .AsNoTracking()
+            .Where(crew => crew.PilotId == pilotId && !crew.Flight.IsCancelled)
+            .Select(crew => crew.Flight.FlightTime)
+            .ToListAsync(cancellationToken);
+        var total = TimeSpan.FromTicks(durations.Sum(duration => duration.Ticks));
+        var isEnglish = language.Equals("en", StringComparison.OrdinalIgnoreCase);
+
+        return new ChatResponse(
+            isEnglish
+                ? $"{pilot.Name} is a {pilot.Rank} with {durations.Count} recorded flights and {FormatDuration(total, true)} total flight time."
+                : $"{pilot.Name}, {pilot.Rank} rütbesinde; {durations.Count} uçuş ve toplam {FormatDuration(total, false)} uçuş süresi kayıtlı.",
+            [new ChatSource(isEnglish ? "Current pilot profile" : "Mevcut pilot profili", $"/pilots/{pilot.Id}")],
+            [],
             false);
     }
 
@@ -158,6 +272,10 @@ public sealed class PersonalChatService : IPersonalChatService
         (message.Contains("son ucus", StringComparison.Ordinal) ||
          message.Contains("latest flight", StringComparison.Ordinal) ||
          message.Contains("last flight", StringComparison.Ordinal));
+
+    private static bool IsSummaryQuestion(string message) =>
+        message.Contains("ozet", StringComparison.Ordinal) ||
+        message.Contains("summar", StringComparison.Ordinal);
 
     private static string FormatExpiry(DateOnly? date, DateOnly today, bool english)
     {

@@ -99,6 +99,82 @@ public class PersonalChatServiceTests
         result.Sources.Should().ContainSingle(source => source.Url == $"/flights/{latestFlight.Id}");
     }
 
+    [Fact]
+    public async Task AnswerAsync_Should_Use_Flight_Page_Context_For_A_Metar_Question()
+    {
+        await using var context = CreateContext();
+        var pilot = NewPilot();
+        var flight = NewFlight(new DateOnly(2026, 9, 20), TimeSpan.FromHours(2));
+        flight.METARInfo = "LTAC 201250Z 03008KT CAVOK 24/10 Q1018";
+        context.Pilots.Add(pilot);
+        context.Flights.Add(flight);
+        await context.SaveChangesAsync();
+        var service = CreateService(context, pilot.Id);
+
+        var result = await service.TryAnswerAsync(
+            new ChatRequest(
+                "Bu METAR kaydı ne?",
+                "tr",
+                [],
+                new ChatPageContext("flight", flight.Id.ToString())),
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Answer.Should().Contain(flight.METARInfo);
+        result.Sources.Should().ContainSingle(source => source.Url == $"/flights/{flight.Id}");
+    }
+
+    [Fact]
+    public async Task AnswerAsync_Should_Summarize_The_Flight_From_Page_Context()
+    {
+        await using var context = CreateContext();
+        var pilot = NewPilot();
+        var flight = NewFlight(new DateOnly(2026, 9, 20), TimeSpan.FromMinutes(135));
+        context.Pilots.Add(pilot);
+        context.Flights.Add(flight);
+        await context.SaveChangesAsync();
+        var service = CreateService(context, pilot.Id);
+
+        var result = await service.TryAnswerAsync(
+            new ChatRequest(
+                "Bu uçuşu özetle",
+                "tr",
+                [],
+                new ChatPageContext("flight", flight.Id.ToString())),
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Answer.Should().Contain("LTFM–LTAC").And.Contain("A320").And.Contain("2 saat 15 dakika");
+        result.Sources.Should().ContainSingle(source => source.Url == $"/flights/{flight.Id}");
+    }
+
+    [Fact]
+    public async Task AnswerAsync_Should_Summarize_The_Pilot_From_Profile_Page_Context()
+    {
+        await using var context = CreateContext();
+        var currentPilot = NewPilot();
+        var profilePilot = NewPilot();
+        profilePilot.Name = "Ayşe Yılmaz";
+        var flight = NewFlight(new DateOnly(2026, 9, 20), TimeSpan.FromHours(3));
+        context.Pilots.AddRange(currentPilot, profilePilot);
+        context.Flights.Add(flight);
+        context.Crew.Add(Assignment(profilePilot, flight));
+        await context.SaveChangesAsync();
+        var service = CreateService(context, currentPilot.Id);
+
+        var result = await service.TryAnswerAsync(
+            new ChatRequest(
+                "Bu pilotun uçuş durumunu özetle",
+                "tr",
+                [],
+                new ChatPageContext("pilot", profilePilot.Id.ToString())),
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Answer.Should().Contain("Ayşe Yılmaz").And.Contain("1 uçuş").And.Contain("3 saat");
+        result.Sources.Should().ContainSingle(source => source.Url == $"/pilots/{profilePilot.Id}");
+    }
+
     private static TestApplicationDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TestApplicationDbContext>()

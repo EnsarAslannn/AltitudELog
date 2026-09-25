@@ -17,6 +17,7 @@ import { useChatStore, type ChatConversation, type ChatMessage } from '../../sto
 import { hasCommandRank } from '../../routes/ranks'
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/Button'
+import type { ChatPageContext } from '../../types/chat'
 
 const MAX_HISTORY_MESSAGES = 8
 
@@ -29,6 +30,19 @@ function messageHistory(messages: ChatMessage[]) {
     .filter((message) => !message.isError)
     .slice(-MAX_HISTORY_MESSAGES)
     .map(({ role, content }) => ({ role, content }))
+}
+
+function currentPageContext(pathname: string): ChatPageContext | undefined {
+  const flight = pathname.match(/^\/flights\/([^/]+)(?:\/edit)?$/)
+  if (flight) return { page: 'flight', entityId: flight[1] }
+
+  const pilot = pathname.match(/^\/pilots\/([^/]+)$/)
+  if (pilot) return { page: 'pilot', entityId: pilot[1] }
+
+  if (pathname === '/dashboard') return { page: 'dashboard' }
+  if (pathname === '/safety-reports') return { page: 'safety-reports' }
+  if (pathname === '/admin/stats') return { page: 'admin-stats' }
+  return undefined
 }
 
 export function ChatAssistant() {
@@ -57,6 +71,7 @@ export function ChatAssistant() {
   const clearButtonRef = useRef<HTMLButtonElement>(null)
   const cancelClearRef = useRef<HTMLButtonElement>(null)
   const confirmClearRef = useRef<HTMLDivElement>(null)
+  const pageContext = currentPageContext(window.location.pathname)
 
   const activeConversation = useMemo(
     () =>
@@ -162,7 +177,7 @@ export function ChatAssistant() {
     setIsSending(true)
 
     try {
-      const response = await chatService.ask({ message, language, history }, isAuthenticated)
+      const response = await chatService.ask({ message, language, history, context: pageContext }, isAuthenticated)
       addMessage(conversationId, {
         role: 'assistant',
         content: response.answer,
@@ -330,7 +345,20 @@ export function ChatAssistant() {
                         {t('chat.welcomeBody')}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {[t('chat.starter.guide'), t('chat.starter.metar'), t('chat.starter.crm')].map(
+                        {(pageContext?.page === 'flight'
+                          ? [
+                              t('chat.starter.context.flightSummary'),
+                              t('chat.starter.context.flightMetar'),
+                              t('chat.starter.guide'),
+                            ]
+                          : pageContext?.page === 'pilot'
+                            ? [
+                                t('chat.starter.context.pilotSummary'),
+                                t('chat.starter.guide'),
+                                t('chat.starter.crm'),
+                              ]
+                            : [t('chat.starter.guide'), t('chat.starter.metar'), t('chat.starter.crm')]
+                        ).map(
                           (suggestion) => (
                             <button
                               key={suggestion}

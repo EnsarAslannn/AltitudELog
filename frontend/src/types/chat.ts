@@ -9,6 +9,14 @@ export interface ChatRequest {
   message: string
   language: 'tr' | 'en'
   history: ChatHistoryMessage[]
+  context?: ChatPageContext
+}
+
+export type ChatPage = 'flight' | 'pilot' | 'dashboard' | 'safety-reports' | 'admin-stats'
+
+export interface ChatPageContext {
+  page: ChatPage
+  entityId?: string
 }
 
 export interface ChatSource {
