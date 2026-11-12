@@ -38,7 +38,7 @@ jobs:
           dotnet list AltitudELog.slnx package --vulnerable --include-transitive > audit.txt
           cat audit.txt
           if grep -q 'has the following vulnerable packages' audit.txt; then
-            echo "::error::Vulnerable packages found. Three top-level PackageReferences exist purely to pin a vulnerable transitive up — see CLAUDE.md before removing any of them."
+            echo "::error::Vulnerable packages found. See the dependency pin notes in CLAUDE.md before changing package references."
             exit 1
           fi
 

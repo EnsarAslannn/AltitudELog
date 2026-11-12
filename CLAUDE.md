@@ -732,13 +732,15 @@ specifically.
   with nothing changed here. The CI audit step is the deliberate gate for those instead. A `csharpier` tool
   manifest used to sit at the repo root; it was never wired into CI and 133 of 186 files did not satisfy it, and
   its output was not more readable than the hand formatting — it was removed rather than adopted.
-- **Three top-level `PackageReference`s exist only to raise a vulnerable transitive dependency, and none of
+- **These top-level `PackageReference`s exist only to raise a vulnerable transitive dependency, and none of
   them is imported by any `.cs` file** — deleting one because "nothing uses it" silently reintroduces a high
   severity advisory:
   - `AltitudELog.API` → `Microsoft.OpenApi` 2.11.0, over `Microsoft.AspNetCore.OpenApi`'s 2.0.0.
   - `AltitudELog.Application` → `Newtonsoft.Json` 13.0.3, over `Hangfire.Core`'s 11.0.1 (GHSA-5crp-9r3c-p9vr).
   - `AltitudELog.IntegrationTests` → `SSH.NET` 2026.0.0, over Testcontainers → `Docker.DotNet.Enhanced`'s
     2025.1.0 (GHSA-q939-rpr3-3284).
+  - `AltitudELog.Infrastructure` → `System.Security.Cryptography.Pkcs` 10.0.13, over MailKit → MimeKit's
+    10.0.0 (GHSA-2fmv-rv2c-59x7 and GHSA-846f-f764-76mx).
 
   `dotnet list AltitudELog.slnx package --vulnerable --include-transitive` should report all six projects
   clean; re-run it when package versions move rather than assuming this stays fixed.

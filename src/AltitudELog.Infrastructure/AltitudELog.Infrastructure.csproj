@@ -19,6 +19,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <!-- MailKit -> MimeKit otherwise resolves the affected PKCS 10.0.0. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <PropertyGroup>
