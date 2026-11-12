@@ -13,8 +13,8 @@ register, log flights, assign crew with per-flight duty roles, and file CRM safe
 
 [Watch the demo · 46 sec](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4) — Flight creation, the pilot profile, and CRM safety reports.
 
-**🔗 Live demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) — register with any rank, including
-**Captain**, to unlock flight creation and crew management features.
+The hosted API has been retired. Watch the demo above or follow the setup instructions
+below to run the project locally.
 
 ## 📌 About the Project
 
@@ -113,8 +113,8 @@ This architecture ensures the project is readable, testable, and easily extensib
 
 **Deployment**
 
-- API: Docker container on Railway
-- Frontend: Vercel
+- API: Docker container for local use
+- Frontend: Published on Vercel; interactive flows require the API
 
 ## 🚀 Getting Started
 

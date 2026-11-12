@@ -13,8 +13,8 @@ Management) güvenlik raporu doldurabildiği modern bir uçuş günlükleme sist
 
 [Demoyu izle · 46 sn](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4) — Uçuş oluşturma, pilot profili ve CRM emniyet raporları.
 
-**🔗 Canlı demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) — herhangi bir
-rütbeyle (Kaptan dahil) kayıt olup uçuş oluşturma özelliklerini deneyebilirsiniz.
+Canlı API kapatıldı. Projeyi videodan inceleyebilir veya aşağıdaki kurulum adımlarıyla
+yerelde çalıştırabilirsiniz.
 
 ## 📌 Proje Hakkında
 
@@ -115,8 +115,8 @@ getirilmiştir.
 
 **Dağıtım**
 
-- API: Docker ile Railway üzerinde
-- Frontend: Vercel üzerinde
+- API: Docker ile yerelde çalıştırılabilir
+- Frontend: Vercel üzerinde yayımlandı; etkileşimli akışlar API gerektirir
 
 ## 🚀 Kurulum
 
