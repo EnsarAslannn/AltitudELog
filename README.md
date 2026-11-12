@@ -7,6 +7,12 @@
 .NET tabanlı, pilotların uçuş kaydı tuttuğu, mürettebat atadığı ve CRM (Crew Resource
 Management) güvenlik raporu doldurabildiği modern bir uçuş günlükleme sistemi
 
+## Video demosu
+
+[![AltitudELog ekran kaydını izle](docs/demo/altitudelog-cover.jpg)](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4)
+
+[Demoyu izle · 46 sn](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4) — Uçuş oluşturma, pilot profili ve CRM emniyet raporları.
+
 **🔗 Canlı demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) — herhangi bir
 rütbeyle (Kaptan dahil) kayıt olup uçuş oluşturma özelliklerini deneyebilirsiniz.
 

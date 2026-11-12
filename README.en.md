@@ -7,6 +7,12 @@
 A modern flight and crew resource management (CRM) logging system built with .NET, enabling pilots to
 register, log flights, assign crew with per-flight duty roles, and file CRM safety reports tied to specific flights.
 
+## Video demo
+
+[![Watch the AltitudELog screen recording](docs/demo/altitudelog-cover.jpg)](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4)
+
+[Watch the demo · 46 sec](https://raw.githubusercontent.com/EnsarAslannn/AltitudELog/main/docs/demo/altitudelog.mp4) — Flight creation, the pilot profile, and CRM safety reports.
+
 **🔗 Live demo:** [altitudelog.vercel.app](https://altitudelog.vercel.app) — register with any rank, including
 **Captain**, to unlock flight creation and crew management features.
 
